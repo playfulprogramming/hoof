@@ -50,6 +50,18 @@ services:
     depends_on:
       - pgsql
 
+  faktory:
+    image: contribsys/faktory:latest
+    container_name: faktory
+    environment:
+      - FAKTORY_PASSWORD=some_password
+    ports:
+      - "7419:7419"
+      - "7420:7420"
+    volumes:
+      - ./data:/var/lib/faktory/db
+    command: /faktory -b :7419 -w :7420 -e ${FAKTORY_ENV}
+    restart: unless-stopped
 
 volumes:
   minio_storage: {}
