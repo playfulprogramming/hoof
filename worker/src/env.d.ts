@@ -12,5 +12,9 @@ namespace NodeJS {
 		S3_KEY_ID: string;
 		S3_KEY_SECRET: string;
 		S3_BUCKET: string;
+
+		FAKTORY_URL: string;
+		FAKTORY_ENV: string;
+		FAKTORY_PASSWORD: string;
 	}
 }
