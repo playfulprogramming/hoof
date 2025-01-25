@@ -2,69 +2,43 @@ import { S3 } from "./s3";
 import sql from "./sql";
 import { urlMetadataTask } from "./url-metadata/task";
 import { setTimeout } from "node:timers/promises";
+import faktory from 'faktory-worker';
+import { UrlMetadataInput } from "./url-metadata/types";
 
-const BATCH_SIZE = 1;
+const VERBOSE = true;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const tasks: Record<string, (input: any) => Promise<any>> = {
-	["url-metadata"]: urlMetadataTask,
-};
-
-async function pollTasks(): Promise<boolean> {
-	let hadRequests: boolean = false;
-
-	await sql.begin(async tx => {
-		const requests = await tx`SELECT * FROM TaskRequests FOR UPDATE SKIP LOCKED LIMIT ${BATCH_SIZE}`;
-		hadRequests = requests.length > 0;
-
-		await Promise.all(requests.map(async request => {
-			const taskName = String(request.task);
-			const id = String(request.id);
-			console.log(`Begin task: ${taskName} / ${id}`);
-
-			const task = tasks[taskName];
-
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			let result: any|null;
-			if (task) {
-				result = await task(request.input)
-					.catch(e => {
-						console.error(`Error while processing task ${id}`, e);
-						return null;
-					});
-			} else {
-				result = null;
-			}
-
-			await tx`DELETE FROM TaskRequests WHERE task=${taskName} AND id=${id}`;
-			await tx`INSERT INTO TaskResults (task, id, output) VALUES (${taskName}, ${id}, ${result})`;
-
-			console.log(`End task: ${taskName} / ${id}`, result);
-		}));
-	});
-
-	return hadRequests;
+async function taskBegin(task: string, id: string) {
+	if (VERBOSE) {
+		console.log(`Begin task: ${task} / ${id}`);
+	}
 }
 
-let lastTaskTime = Date.now();
+async function taskEnd(task: string, id: string, result: any) {
+	if (VERBOSE) {
+		console.log(`End task: ${task} / ${id}`, result);
+	}
+
+	await sql.begin(async tx => {
+		await tx.prepare(`INSERT INTO TaskResults (task, id, output)
+               VALUES (${task}, ${id}, ${result})`);
+	})
+}
 
 try {
-	while (true) {
-		const hadRequests = await pollTasks();
+	faktory.register("url-metadata", (...args) => async ({ job }) => {
+		// @ts-ignore
+		const jobData = args as UrlMetadataInput;
+		const id = job.id;
+		const taskName = "url-metadata"
 
-		if (hadRequests) {
-			lastTaskTime = Date.now();
-		}
+		await taskBegin(taskName, id);
 
-		// WORKER_EXIT_WHEN_DONE will be used in production, to avoid running when no tasks are needed
-		// - workers are then manually invoked by the fly.io API on any incoming request
-		if (process.env.WORKER_EXIT_WHEN_DONE && Date.now() - lastTaskTime > 10000) {
-			console.log("10s without any new tasks; exiting task loop...")
-			break;
-		} else {
-			await setTimeout(100);
-		}
-	}
+		const result = await urlMetadataTask(jobData)
+
+		await taskEnd(taskName, id, result);
+	});
+
+	await faktory.work();
 } finally {
 	console.log("Closing sql connection...");
 	await sql.end();

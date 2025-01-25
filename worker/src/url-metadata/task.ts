@@ -3,16 +3,7 @@ import { fetchPageHtml, getOpenGraphImage, getPageTitle } from "./fetch-page-htm
 import { fetchPageIcon } from "./fetch-page-icon";
 import { imageToS3 } from "./image-to-s3";
 import { createBucket } from "src/s3";
-
-interface UrlMetadataInput {
-	url: string;
-}
-
-interface UrlMetadataOutput {
-	title?: string;
-	icon?: string;
-	banner?: string;
-}
+import { UrlMetadataInput, UrlMetadataOutput } from "./types";
 
 const BUCKET = await createBucket(process.env.S3_BUCKET);
 
