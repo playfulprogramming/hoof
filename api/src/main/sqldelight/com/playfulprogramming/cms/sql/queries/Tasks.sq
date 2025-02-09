@@ -1,5 +1,0 @@
-insertRequest:
-INSERT INTO TaskRequests (task, id, input) VALUES (?, ?, ?) ON CONFLICT DO NOTHING;
-
-getResultById:
-SELECT * FROM TaskResults WHERE task = ? AND id = ? LIMIT 1;

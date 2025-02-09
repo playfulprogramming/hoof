@@ -1,5 +1,29 @@
-.gradle
+# Development files
+node_modules
+npm-debug.log
+.git
+.gitignore
+.env
+.env.*
+*.md
+.vscode
 .idea
-.kotlin
+
+# Test files
+coverage
+*.test.js
+*.spec.js
+
+# Build artifacts
+dist
 build
-*.jar
+*.log
+
+# Docker files
+Dockerfile
+docker-compose.yml
+
+# Mac/Vim
+.DS_Store
+*.swp
+*.swo
