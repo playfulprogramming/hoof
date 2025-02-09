@@ -15,7 +15,8 @@
 		"skipLibCheck": true,
 		"jsxImportSource": "preact",
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": "."
+		"baseUrl": ".",
+		"erasableSyntaxOnly": true,
 	},
-	"include": ["**/*"]
+	"include": ["**/*.ts"]
 }
