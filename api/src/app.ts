@@ -1,9 +1,6 @@
 import { join } from 'node:path';
 import AutoLoad, {AutoloadPluginOptions} from '@fastify/autoload';
 import { FastifyPluginAsync, FastifyServerOptions } from 'fastify';
-import Fastify from "fastify";
-import queuePlugin from "./plugins/queue";
-import urlMetadataPlugin from "./plugins/tasks/url-metadata";
 
 export interface AppOptions extends FastifyServerOptions, Partial<AutoloadPluginOptions> {
 
@@ -12,17 +9,20 @@ export interface AppOptions extends FastifyServerOptions, Partial<AutoloadPlugin
 const options: AppOptions = {
 }
 
-const app: FastifyPluginAsync<AppOptions> = async (
+const api: FastifyPluginAsync<AppOptions> = async (
     fastify,
     opts
 ): Promise<void> => {
   // Place here your custom code!
 
   // Do not touch the following lines
+  // This loads all shared plugins
+  void fastify.register(AutoLoad, {
+    dir: '../../shared/plugins',
+    options: opts
+  });
 
-  // This loads all plugins defined in plugins
-  // those should be support plugins that are reused
-  // through your application
+  // Register API-specific plugins
   void fastify.register(AutoLoad, {
     dir: join(__dirname, 'plugins'),
     options: opts
@@ -36,17 +36,5 @@ const app: FastifyPluginAsync<AppOptions> = async (
   })
 };
 
-export async function createApp() {
-  const app = Fastify({
-    logger: true
-  });
-
-  // Remove these as they're now handled by AutoLoad
-  // await app.register(queuePlugin);
-  // await app.register(urlMetadataPlugin, { prefix: "/api" });
-
-  return app;
-}
-
-export default app;
-export { app, options }
+export default api;
+export { api, options }

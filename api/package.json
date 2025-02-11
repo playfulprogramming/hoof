@@ -19,6 +19,7 @@
   "author": "",
   "license": "MPL-2.0",
   "dependencies": {
+    "@aws-sdk/lib-storage": "^3.705.0",
     "@fastify/autoload": "^6.0.0",
     "@fastify/cors": "^10.0.2",
     "@fastify/csrf-protection": "^7.0.2",

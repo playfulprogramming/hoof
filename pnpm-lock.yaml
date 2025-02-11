@@ -8,18 +8,39 @@ importers:
 
   .:
     dependencies:
+      '@aws-sdk/client-s3':
+        specifier: ^3.705.0
+        version: 3.744.0
+      '@aws-sdk/lib-storage':
+        specifier: ^3.705.0
+        version: 3.744.0(@aws-sdk/client-s3@3.744.0)
+      '@fastify/autoload':
+        specifier: ^6.0.0
+        version: 6.1.0
+      '@sinclair/typebox':
+        specifier: ^0.34.16
+        version: 0.34.16
       aws-sdk:
         specifier: ^2.1692.0
         version: 2.1692.0
       bullmq:
         specifier: ^5.40.2
         version: 5.40.2
+      fastify:
+        specifier: ^5.0.0
+        version: 5.2.1
+      fastify-plugin:
+        specifier: ^5.0.0
+        version: 5.0.1
       ioredis:
         specifier: ^5.5.0
         version: 5.5.0
 
   api:
     dependencies:
+      '@aws-sdk/lib-storage':
+        specifier: ^3.705.0
+        version: 3.744.0(@aws-sdk/client-s3@3.744.0)
       '@fastify/autoload':
         specifier: ^6.0.0
         version: 6.1.0
