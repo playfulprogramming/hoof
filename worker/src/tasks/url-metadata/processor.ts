@@ -3,10 +3,14 @@ import { URL } from "url";
 import {
 	UrlMetadataInput,
 	UrlMetadataOutput,
-} from "../../../../shared/types/url-metadata";
-import { fetchPageHtml, getOpenGraphImage, getPageTitle } from "./utils/html";
-import { fetchPageIcon } from "./utils/icons";
-import { processImage } from "./utils/images";
+} from "../../../../shared/types/url-metadata.ts";
+import {
+	fetchPageHtml,
+	getOpenGraphImage,
+	getPageTitle,
+} from "./utils/html.ts";
+import { fetchPageIcon } from "./utils/icons.ts";
+import { processImage } from "./utils/images.ts";
 
 export async function processUrlMetadata(
 	job: { data: UrlMetadataInput },

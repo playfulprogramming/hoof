@@ -3,6 +3,8 @@
 		// Enable top-level await, and other modern ESM features.
 		"target": "ESNext",
 		"module": "NodeNext",
+		"allowImportingTsExtensions": true,
+		"rewriteRelativeImportExtensions": true,
 		// Enable JSON imports.
 		"resolveJsonModule": true,
 		// Enable stricter transpilation for better output.
