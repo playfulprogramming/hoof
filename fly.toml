@@ -1,0 +1,61 @@
+app = "hoof"
+primary_region = "ewr"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  # Environment variables from the API configuration
+  CLIENT_URL = "https://playfulprogramming.com"
+  S3_PUBLIC_URL = "https://fly.storage.tigris.dev"
+  S3_BUCKET = "hoof-storage"
+  POSTGRES_URL = "postgresql://hoof-db.internal/postgres"
+  FLY_API_URL = "http://_api.internal:4280"
+  FLY_WORKER_APP_NAME = "hoof-worker"
+  # Environment variables from the Worker configuration
+  WORKER_EXIT_WHEN_DONE = "true"
+
+[experimental]
+  processes = true
+
+[processes]
+# Define the command for running the API process.
+api = "pnpm --filter api start"
+# Define the command for running the Worker process.
+worker = "pnpm --filter worker start"
+
+[[services]]
+  # API service definition – exposed to external HTTP traffic
+  name = "api"
+  internal_port = 8080
+  processes = ["api"]
+  protocol = "tcp"
+
+  [services.http_checks]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/health"
+
+  [services.concurrency]
+    hard_limit = 25
+    soft_limit = 20
+    type = "connections"
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+
+[[services]]
+  # Worker service definition – runs as a background process in its own VM, as needed.
+  # No external port is required, but an internal port is provided for Fly’s requirements.
+  name = "worker"
+  processes = ["worker"]
+  internal_port = 3000
+  protocol = "tcp"
+
+  [services.concurrency]
+    type = "jobs"
+    hard_limit = 1
+    soft_limit = 1

@@ -1,6 +1,9 @@
 import { join } from 'node:path';
 import AutoLoad, {AutoloadPluginOptions} from '@fastify/autoload';
 import { FastifyPluginAsync, FastifyServerOptions } from 'fastify';
+import Fastify from "fastify";
+import queuePlugin from "./plugins/queue";
+import urlMetadataPlugin from "./plugins/tasks/url-metadata";
 
 export interface AppOptions extends FastifyServerOptions, Partial<AutoloadPluginOptions> {
 
@@ -32,6 +35,18 @@ const app: FastifyPluginAsync<AppOptions> = async (
     options: opts
   })
 };
+
+export async function createApp() {
+  const app = Fastify({
+    logger: true
+  });
+
+  // Remove these as they're now handled by AutoLoad
+  // await app.register(queuePlugin);
+  // await app.register(urlMetadataPlugin, { prefix: "/api" });
+
+  return app;
+}
 
 export default app;
 export { app, options }

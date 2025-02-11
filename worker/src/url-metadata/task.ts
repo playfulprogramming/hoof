@@ -2,7 +2,11 @@ import { URL } from "url";
 import { fetchPageHtml, getOpenGraphImage, getPageTitle } from "./fetch-page-html";
 import { fetchPageIcon } from "./fetch-page-icon";
 import { imageToS3 } from "./image-to-s3";
-import { createBucket } from "src/s3";
+import { Queue, Worker, QueueScheduler } from "bullmq";
+import IORedis from "ioredis";
+import { createQueueConnection, createWorkerConnection } from "../redis";
+import { FastifyInstance } from "fastify";
+import { createApp } from "../../api/src/app";
 
 interface UrlMetadataInput {
 	url: string;
@@ -14,7 +18,27 @@ interface UrlMetadataOutput {
 	banner?: string;
 }
 
-const BUCKET = await createBucket(process.env.S3_BUCKET);
+const queueConnection = createQueueConnection();
+const workerConnection = createWorkerConnection();
+
+const urlMetadataQueue = new Queue<UrlMetadataInput>("url-metadata", { 
+    connection: queueConnection 
+});
+
+new QueueScheduler("url-metadata", { 
+    connection: new IORedis(process.env.REDIS_URL) // Scheduler needs its own connection
+});
+
+let app: FastifyInstance;
+
+// Initialize Fastify instance to use plugins
+async function initApp() {
+  if (!app) {
+    app = await createApp();
+    await app.ready();
+  }
+  return app;
+}
 
 function handleError(name: string): (e: Error) => undefined {
 	return (e) => {
@@ -23,8 +47,11 @@ function handleError(name: string): (e: Error) => undefined {
 	};
 }
 
-export async function urlMetadataTask(input: UrlMetadataInput): Promise<UrlMetadataOutput> {
-	const inputUrl = new URL(input.url);
+async function processUrlMetadataJob(job: { data: UrlMetadataInput }): Promise<UrlMetadataOutput> {
+	const fastify = await initApp();
+	const BUCKET = await fastify.s3.createBucket(process.env.S3_BUCKET);
+
+	const inputUrl = new URL(job.data.url);
 	const root = await fetchPageHtml(inputUrl);
 	if (!root) throw Error("Unable to fetch page HTML");
 
@@ -50,4 +77,13 @@ export async function urlMetadataTask(input: UrlMetadataInput): Promise<UrlMetad
 		banner,
 		icon,
 	};
+}
+
+new Worker("url-metadata", processUrlMetadataJob, { 
+    connection: workerConnection,
+    concurrency: 5
+});
+
+export async function addUrlMetadataTask(input: UrlMetadataInput) {
+	await urlMetadataQueue.add("url-metadata-job", input);
 }
