@@ -29,13 +29,12 @@ const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 				// and if so, we would return the metadata.
 
 				const queue = fastify.queue.get("url-metadata");
-				const job = await queue.add(urlHash, {
+				await queue.add(urlHash, {
 					...request.body,
 					url: normalizedUrl,
 				});
 
 				reply.code(202);
-				return { jobId: job.id };
 			} catch (err) {
 				fastify.log.error(err);
 				reply.internalServerError();
