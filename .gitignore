@@ -1,2 +1,23 @@
 /.env
 /.data
+/.idea
+/.vscode
+
+# build output
+**/dist/
+
+# dependencies
+**/node_modules/
+
+# logs
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+
+# macOS-specific files
+**/.DS_Store
+**/.eslintcache
+**/.puppeteer
+
+./TODO
