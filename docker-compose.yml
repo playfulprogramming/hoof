@@ -16,6 +16,13 @@ services:
     ports:
       - "5432:5432"
 
+  redis:
+    image: redis:latest
+    volumes:
+      - redis_storage:/data
+    ports:
+      - "6379:6379"
+
   minio:
     image: minio/minio
     ports:
@@ -52,4 +59,5 @@ services:
 
 
 volumes:
+  redis_storage: {}
   minio_storage: {}

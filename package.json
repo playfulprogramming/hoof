@@ -8,8 +8,8 @@
 	},
 	"scripts": {
 		"dev": "drizzle-kit generate",
-		"api:dev": "tsx --watch src/api/app.ts",
-		"worker:dev": "tsx --watch src/worker/app.ts",
+		"api:dev": "tsx -r dotenv/config --watch src/api/app.ts",
+		"worker:dev": "tsx -r dotenv/config --watch src/worker/app.ts",
 		"build": "pkgroll --clean-dist --minify",
 		"test": "pnpm -r test",
 		"lint": "pnpm -r lint"

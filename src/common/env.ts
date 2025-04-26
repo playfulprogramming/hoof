@@ -8,14 +8,14 @@ export const EnvSchema = Type.Object({
 	]),
 	WORKER_EXIT_WHEN_DONE: Type.Boolean({ default: true }),
 
-	CLIENT_URL: Type.String({ format: "uri" }),
+	CLIENT_URL: Type.String(),
 
 	FLY_API_URL: Type.Optional(Type.String()),
 	FLY_API_TOKEN: Type.String(),
 	FLY_WORKER_APP_NAME: Type.String(),
 
-	S3_PUBLIC_URL: Type.String({ format: "uri" }),
-	S3_ENDPOINT: Type.String({ format: "uri" }),
+	S3_PUBLIC_URL: Type.String(),
+	S3_ENDPOINT: Type.String(),
 	S3_KEY_ID: Type.String(),
 	S3_KEY_SECRET: Type.String(),
 	S3_BUCKET: Type.String(),
