@@ -1,11 +1,12 @@
 import { Static, Type } from "@sinclair/typebox";
 
 export const EnvSchema = Type.Object({
+	PORT: Type.Integer({ default: 3000 }),
 	ENVIRONMENT: Type.Union([
 		Type.Literal("development"),
 		Type.Literal("production"),
 	]),
-	WORKER_EXIT_WHEN_DONE: Type.Boolean().default(true),
+	WORKER_EXIT_WHEN_DONE: Type.Boolean({ default: true }),
 
 	CLIENT_URL: Type.String({ format: "uri" }),
 

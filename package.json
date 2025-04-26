@@ -2,16 +2,21 @@
 	"name": "hoof",
 	"private": true,
 	"type": "module",
+	"exports": {
+		"./api": "./dist/api/app.js",
+		"./worker": "./dist/worker/app.js"
+	},
 	"scripts": {
-		"dev": "pnpm -r dev",
-		"build": "pnpm -r build",
+		"dev": "drizzle-kit generate",
+		"api:dev": "tsx --watch src/api/app.ts",
+		"worker:dev": "tsx --watch src/worker/app.ts",
+		"build": "pkgroll --clean-dist --minify",
 		"test": "pnpm -r test",
 		"lint": "pnpm -r lint"
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.705.0",
 		"@aws-sdk/lib-storage": "^3.705.0",
-		"@fastify/autoload": "^6.0.0",
 		"@fastify/cors": "^10.0.2",
 		"@fastify/csrf-protection": "^7.0.2",
 		"@fastify/env": "^5.0.2",
@@ -19,16 +24,17 @@
 		"@fastify/sensible": "^6.0.0",
 		"@fastify/swagger": "^9.4.2",
 		"@fastify/swagger-ui": "^5.2.1",
-		"@sinclair/typebox": "^0.34.16",
+		"@sinclair/typebox": "^0.34.33",
+		"@types/pg": "^8.11.11",
 		"bullmq": "^5.40.2",
 		"dotenv": "^16.4.7",
-		"drizzle-orm": "^0.39.2",
+		"drizzle-orm": "^0.43.1",
 		"fastify": "^5.0.0",
 		"fastify-plugin": "^5.0.0",
 		"hast-util-from-html": "^2.0.3",
 		"ioredis": "^5.5.0",
 		"octokit": "^4.1.1",
-		"pg-native": "^3.2.0",
+		"pg": "^8.15.6",
 		"sharp": "^0.33.5",
 		"svgo": "^3.3.2",
 		"unist-util-find": "^3.0.0"
@@ -37,13 +43,13 @@
 		"@aws-sdk/types": "^3.696.0",
 		"@types/hast": "^3.0.4",
 		"@types/node": "^22.10.1",
-		"@types/pg": "^8.11.11",
 		"@typescript-eslint/eslint-plugin": "^8.17.0",
 		"@typescript-eslint/parser": "^8.17.0",
-		"drizzle-kit": "^0.30.4",
+		"drizzle-kit": "^0.31.0",
 		"fastify-tsconfig": "^2.0.0",
+		"pkgroll": "^2.12.2",
 		"prettier": "^3.4.2",
-		"ts-node": "^10.4.0",
+		"tsx": "^4.19.3",
 		"typescript": "^5.7.3"
 	}
 }
