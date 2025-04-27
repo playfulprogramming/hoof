@@ -7,6 +7,6 @@ export enum Tasks {
 }
 
 export interface TaskInputs {
-	[Tasks.URL_METADATA]: UrlMetadataInput,
-	[Tasks.POST_IMAGE]: PostImageInput,
+	[Tasks.URL_METADATA]: UrlMetadataInput;
+	[Tasks.POST_IMAGE]: PostImageInput;
 }

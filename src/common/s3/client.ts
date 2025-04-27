@@ -43,7 +43,7 @@ export async function createBucket(name: string) {
 			new PutBucketPolicyCommand({
 				Bucket: name,
 				Policy: JSON.stringify(publicBucketPolicy),
-			})
+			}),
 		);
 
 		console.log(`Created bucket '${name}'`);
@@ -64,7 +64,7 @@ export async function createBucket(name: string) {
 export async function exists(bucket: string, key: string) {
 	try {
 		const obj = await client.send(
-			new GetObjectCommand({ Bucket: bucket, Key: key })
+			new GetObjectCommand({ Bucket: bucket, Key: key }),
 		);
 		return !!obj;
 	} catch (e) {
@@ -78,7 +78,7 @@ export async function upload(
 	key: string,
 	tags: Record<string, string>,
 	file: stream.Readable,
-	contentType: string
+	contentType: string,
 ) {
 	console.log(`Uploading ${bucket}/${key}`);
 	const searchParams = new URLSearchParams(tags);
@@ -100,7 +100,7 @@ export async function upload(
 			progress: Number(progress.loaded) / Number(progress.total),
 			bucket: progress.Bucket,
 			key: progress.Key,
-		})
+		}),
 	);
 
 	await upload.done();

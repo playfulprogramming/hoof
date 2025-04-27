@@ -1,7 +1,10 @@
 import { FastifyPluginAsync } from "fastify";
 import { createHash } from "crypto";
 import { eq } from "drizzle-orm";
-import { UrlMetadataInput, UrlMetadataInputSchema } from "src/common/tasks/url-metadata.ts";
+import {
+	UrlMetadataInput,
+	UrlMetadataInputSchema,
+} from "src/common/tasks/url-metadata.ts";
 import { db } from "src/db/client.ts";
 import { queues } from "src/common/tasks/queues.ts";
 
@@ -23,10 +26,9 @@ const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 
 			const urlHash = createHash("md5").update(normalizedUrl).digest("hex");
 
-			const existingMetadata =
-				await db.query.urlMetadata.findFirst({
-					where: (metadata) => eq(metadata.id, urlHash),
-				});
+			const existingMetadata = await db.query.urlMetadata.findFirst({
+				where: (metadata) => eq(metadata.id, urlHash),
+			});
 
 			if (existingMetadata) {
 				reply.code(200);

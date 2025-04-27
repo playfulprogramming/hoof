@@ -1,7 +1,7 @@
-import env from './plugins/env.ts';
-import sensible from './plugins/sensible.ts';
-import rootRoute from './routes/root.ts';
-import urlMetadataRoutes from './routes/tasks/url-metadata.ts';
+import env from "./plugins/env.ts";
+import sensible from "./plugins/sensible.ts";
+import rootRoute from "./routes/root.ts";
+import urlMetadataRoutes from "./routes/tasks/url-metadata.ts";
 import fastify from "fastify";
 
 const app = fastify({

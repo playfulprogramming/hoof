@@ -6,7 +6,7 @@ export const UrlMetadataInputSchema = Type.Object(
 	},
 	{
 		additionalProperties: false,
-	}
+	},
 );
 
 export type UrlMetadataInput = Static<typeof UrlMetadataInputSchema>;

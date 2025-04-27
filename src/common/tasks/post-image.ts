@@ -6,7 +6,7 @@ export const PostImageInputSchema = Type.Object(
 	},
 	{
 		additionalProperties: false,
-	}
+	},
 );
 
 export type PostImageInput = Static<typeof PostImageInputSchema>;
