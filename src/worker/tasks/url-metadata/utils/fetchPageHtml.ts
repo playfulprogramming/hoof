@@ -5,7 +5,7 @@ import { find } from "unist-util-find";
 export const isElement = (e: Root | Element | Node | undefined): e is Element =>
 	e?.type == "element";
 
-export async function fetchAsBrowser(input: string | URL, init?: RequestInit) {
+export async function fetchAsBrowser(input: URL, init?: RequestInit) {
 	const response = await fetch(input, {
 		...init,
 		headers: {

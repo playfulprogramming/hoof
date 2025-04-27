@@ -12,7 +12,7 @@
 		"dev:api": "tsx -r dotenv/config --watch src/api/app.ts",
 		"dev:worker": "tsx -r dotenv/config --watch src/worker/app.ts",
 		"build": "pkgroll --clean-dist",
-		"test": "pnpm -r test",
+		"test": "vitest",
 		"format": "prettier -w . --cache --plugin-search-dir=.",
 		"lint": "eslint \"src/**/*.{ts,tsx}\" \"*.{ts,tsx}\"",
 		"lint:fix": "eslint --cache --fix \"src/**/*.{ts,tsx}\" \"*.{ts,tsx}\"",
@@ -57,10 +57,17 @@
 		"globals": "^16.0.0",
 		"husky": "^9.1.7",
 		"lint-staged": "^15.5.1",
+		"msw": "^2.6.8",
 		"pkgroll": "^2.12.2",
 		"prettier": "^3.5.0",
 		"tsx": "^4.19.3",
 		"typescript": "^5.7.3",
-		"typescript-eslint": "^8.31.0"
+		"typescript-eslint": "^8.31.0",
+		"vitest": "^3.1.2"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"msw"
+		]
 	}
 }

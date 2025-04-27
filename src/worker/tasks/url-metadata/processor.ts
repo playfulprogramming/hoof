@@ -4,9 +4,9 @@ import {
 	fetchPageHtml,
 	getOpenGraphImage,
 	getPageTitle,
-} from "./utils/html.ts";
-import { fetchPageIcon } from "./utils/icons.ts";
-import { processImage } from "./utils/images.ts";
+} from "./utils/fetchPageHtml.ts";
+import { fetchPageIcon } from "./utils/fetchPageIcon.ts";
+import { processImage } from "./utils/processImage.ts";
 import { UrlMetadataInput } from "src/common/tasks/url-metadata.ts";
 import { createBucket } from "src/common/s3/client.ts";
 import { db } from "src/db/client.ts";

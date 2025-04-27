@@ -9,7 +9,9 @@
 		"sourceMap": true,
 		"baseUrl": ".",
 		"paths": {
-			"src/*": ["src/*"]
-		}
+			"src/*": ["src/*"],
+			"test-utils/*": ["test-utils/*"]
+		},
+		"types": ["vitest/globals"]
 	}
 }
