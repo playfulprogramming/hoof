@@ -8,8 +8,9 @@
 	},
 	"scripts": {
 		"db:generate": "drizzle-kit generate",
-		"api:dev": "tsx -r dotenv/config --watch src/api/app.ts",
-		"worker:dev": "tsx -r dotenv/config --watch src/worker/app.ts",
+		"dev": "pnpm run \"/^dev:.*/\"",
+		"dev:api": "tsx -r dotenv/config --watch src/api/app.ts",
+		"dev:worker": "tsx -r dotenv/config --watch src/worker/app.ts",
 		"build": "pkgroll --clean-dist",
 		"test": "pnpm -r test",
 		"format": "prettier -w . --cache --plugin-search-dir=.",
