@@ -1,4 +1,4 @@
-name: unicorn-utterances-cms
+name: playful-programming-cms
 
 services:
   pgsql:
