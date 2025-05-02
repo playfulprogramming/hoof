@@ -1,7 +1,7 @@
 import sharp from "sharp";
 import * as stream from "stream";
 import * as svgo from "svgo";
-import { fetchAsBrowser } from "./html.ts";
+import { fetchAsBrowser } from "./fetchPageHtml.ts";
 import path from "path";
 import crypto from "crypto";
 import * as s3 from "src/common/s3/client.ts";
