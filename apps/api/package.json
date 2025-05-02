@@ -1,0 +1,31 @@
+{
+	"name": "@playfulprogramming/api",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"main": "src/index.ts",
+	"scripts": {
+		"start": "node --env-file=../../.env --experimental-strip-types src/index.ts",
+		"debug": "node --inspect-brk --env-file=../../.env --experimental-strip-types src/index.ts",
+		"test:eslint": "eslint ./src",
+		"test:build": "publint --strict",
+		"build": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@playfulprogramming/common": "workspace:*",
+		"@playfulprogramming/db": "workspace:*",
+		"@fastify/cors": "^10.0.2",
+		"@fastify/csrf-protection": "^7.0.2",
+		"@fastify/env": "^5.0.2",
+		"@fastify/etag": "^6.0.3",
+		"@fastify/sensible": "^6.0.0",
+		"@fastify/swagger": "^9.4.2",
+		"@fastify/swagger-ui": "^5.2.1",
+		"fastify": "^5.0.0",
+		"fastify-plugin": "^5.0.0",
+		"drizzle-orm": "^0.43.1"
+	},
+	"devDependencies": {
+		"fastify-tsconfig": "^2.0.0"
+	}
+}
