@@ -1,33 +1,18 @@
-import { join } from "node:path";
-import AutoLoad, { AutoloadPluginOptions } from "@fastify/autoload";
-import { FastifyPluginAsync, FastifyServerOptions } from "fastify";
+import env from "./plugins/env.ts";
+import sensible from "./plugins/sensible.ts";
+import rootRoute from "./routes/root.ts";
+import urlMetadataRoutes from "./routes/tasks/url-metadata.ts";
+import fastify from "fastify";
 
-export interface AppOptions
-	extends FastifyServerOptions,
-		Partial<AutoloadPluginOptions> {}
-// Pass --options via CLI arguments in command to enable these options.
-const options: AppOptions = {};
+const app = fastify({
+	logger: true,
+});
 
-const api: FastifyPluginAsync<AppOptions> = async (
-	fastify,
-	opts,
-): Promise<void> => {
-	// Place here your custom code!
+app.register(env);
+app.register(sensible);
+app.register(rootRoute);
+app.register(urlMetadataRoutes);
 
-	// Do not touch the following lines
-	// This loads all shared plugins
-	void fastify.register(AutoLoad, {
-		dir: "../shared_lib/plugins",
-		options: opts,
-	});
-
-	// This loads all plugins defined in routes
-	// (Remember, everything in Fastify is a plugin)
-	void fastify.register(AutoLoad, {
-		dir: join(__dirname, "routes"),
-		options: opts,
-	});
-};
-
-export default api;
-export { api, options };
+app.listen({ port: 3000 }, (err) => {
+	if (err) throw err;
+});

@@ -6,8 +6,8 @@ services:
     env_file:
       - .env
     volumes:
-      - ./.data/pgsql:/var/lib/postgresql/data
-      - ./.data/pgsql_backups:/backups
+      - pgsql_storage:/var/lib/postgresql/data
+      - pgsql_backups:/backups
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "$POSTGRES_USER"]
       interval: 10s
@@ -15,6 +15,13 @@ services:
       retries: 5
     ports:
       - "5432:5432"
+
+  redis:
+    image: redis:latest
+    volumes:
+      - redis_storage:/data
+    ports:
+      - "6379:6379"
 
   minio:
     image: minio/minio
@@ -50,6 +57,8 @@ services:
     depends_on:
       - pgsql
 
-
 volumes:
+  pgsql_storage: {}
+  pgsql_backups: {}
+  redis_storage: {}
   minio_storage: {}

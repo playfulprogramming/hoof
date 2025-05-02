@@ -1,12 +1,15 @@
 {
 	"compilerOptions": {
-	  "target": "ESNext",
-	  "module": "NodeNext",
-	  "moduleResolution": "NodeNext",
-	  "allowImportingTsExtensions": true,
-	  "noEmit": true,
-	  "strict": true,
-	  "sourceMap": true,
-	  "baseUrl": ".",
-	},
+		"target": "ESNext",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"allowImportingTsExtensions": true,
+		"noEmit": true,
+		"strict": true,
+		"sourceMap": true,
+		"baseUrl": ".",
+		"paths": {
+			"src/*": ["src/*"]
+		}
+	}
 }

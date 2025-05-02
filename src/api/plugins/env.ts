@@ -1,6 +1,6 @@
 import fp from "fastify-plugin";
 import fastifyEnv from "@fastify/env";
-import { EnvSchema, EnvType } from "../types/env.ts";
+import { EnvSchema, EnvType } from "src/common/env.ts";
 
 declare module "fastify" {
 	interface FastifyInstance {
@@ -9,15 +9,9 @@ declare module "fastify" {
 }
 
 export default fp(
-	async (fastify) => {
+	(fastify) => {
 		const opts = {
 			schema: EnvSchema,
-			dotenv:
-				process.env.NODE_ENV === "development"
-					? {
-							path: "../../.env",
-						}
-					: false,
 		};
 
 		fastify.register(fastifyEnv, opts).ready((err) => {
