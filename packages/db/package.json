@@ -10,7 +10,7 @@
 		"build": "tsc --noEmit"
 	},
 	"dependencies": {
-		"drizzle-orm": "^0.43.1",
+		"drizzle-orm": "catalog:",
 		"pg": "^8.15.6"
 	},
 	"devDependencies": {

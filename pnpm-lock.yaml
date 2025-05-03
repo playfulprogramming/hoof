@@ -4,6 +4,15 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    bullmq:
+      specifier: ^5.40.2
+      version: 5.40.2
+    drizzle-orm:
+      specifier: ^0.43.1
+      version: 0.43.1
+
 importers:
 
   .:
@@ -93,7 +102,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/db
       drizzle-orm:
-        specifier: ^0.43.1
+        specifier: 'catalog:'
         version: 0.43.1(@types/pg@8.11.11)(pg@8.15.6(pg-native@3.4.5))
       fastify:
         specifier: ^5.0.0
@@ -115,7 +124,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/db
       bullmq:
-        specifier: ^5.40.2
+        specifier: 'catalog:'
         version: 5.40.2
       hast-util-from-html:
         specifier: ^2.0.3
@@ -146,7 +155,7 @@ importers:
         specifier: ^0.34.33
         version: 0.34.33
       bullmq:
-        specifier: ^5.40.2
+        specifier: 'catalog:'
         version: 5.40.2
       ioredis:
         specifier: ^5.5.0
@@ -159,7 +168,7 @@ importers:
   packages/db:
     dependencies:
       drizzle-orm:
-        specifier: ^0.43.1
+        specifier: 'catalog:'
         version: 0.43.1(@types/pg@8.11.11)(pg@8.15.6(pg-native@3.4.5))
       pg:
         specifier: ^8.15.6
