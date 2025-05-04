@@ -1,4 +1,5 @@
 /.env
+/.env.local
 /.data
 /.idea
 /.vscode
@@ -21,3 +22,6 @@
 **/.puppeteer
 
 /drizzle
+
+.nx/cache
+.nx/workspace-data

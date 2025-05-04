@@ -1,0 +1,12 @@
+packages:
+  - apps/**
+  - packages/**
+onlyBuiltDependencies:
+  - esbuild
+  - libpq
+  - msgpackr-extract
+  - nx
+  - sharp
+catalog:
+  bullmq: ^5.40.2
+  drizzle-orm: ^0.43.1

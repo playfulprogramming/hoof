@@ -3,13 +3,14 @@
 		"target": "ESNext",
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext",
-		"allowImportingTsExtensions": true,
 		"noEmit": true,
 		"strict": true,
-		"sourceMap": true,
-		"baseUrl": ".",
-		"paths": {
-			"src/*": ["src/*"]
-		}
-	}
+		"noImplicitAny": true,
+		"strictNullChecks": true,
+		"skipLibCheck": true,
+		"erasableSyntaxOnly": true,
+		"allowImportingTsExtensions": true,
+		"esModuleInterop": true
+	},
+	"include": ["eslint.config.js"]
 }
