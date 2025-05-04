@@ -5,8 +5,8 @@
 	"type": "module",
 	"main": "src/index.ts",
 	"scripts": {
-		"start": "node --env-file=../../.env --experimental-strip-types src/index.ts",
-		"debug": "node --inspect-brk --env-file=../../.env --experimental-strip-types src/index.ts",
+		"start": "node --env-file=../../.env --experimental-strip-types src/app.ts",
+		"debug": "node --inspect-brk --env-file=../../.env --experimental-strip-types src/app.ts",
 		"test:eslint": "eslint ./src",
 		"test:build": "publint --strict",
 		"build": "tsc --noEmit"
