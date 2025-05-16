@@ -24,10 +24,5 @@
 		"@types/hast": "^3.0.4",
 		"msw": "^2.8.2",
 		"vitest": "^3.1.2"
-	},
-	"pnpm": {
-		"onlyBuiltDependencies": [
-			"msw"
-		]
 	}
 }
