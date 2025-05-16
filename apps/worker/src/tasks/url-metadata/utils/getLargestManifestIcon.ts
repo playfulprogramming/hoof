@@ -1,25 +1,15 @@
-export interface WebManifestIcon {
+interface ManifestIcon {
 	src: string;
 	sizes: string;
 	type?: string;
 }
 
-export interface WebManifest {
-	icons?: WebManifestIcon[] | Record<string, string>;
-}
-
-export interface Manifest {
-	name: string;
-	short_name: string;
-	theme_color: string;
-	background_color: string;
-	icons:
-		| Array<{
-				src: string;
-				sizes: string;
-				type: string;
-		  }>
-		| Record<string, string>;
+interface Manifest {
+	name?: string;
+	short_name?: string;
+	theme_color?: string;
+	background_color?: string;
+	icons?: Array<ManifestIcon> | Record<string, string>;
 }
 
 const parseManifestIconSrcString = (str: string) => {
@@ -37,7 +27,7 @@ export const getLargestManifestIcon = (manifest: Manifest) => {
 
 	let largest = {
 		size: 0,
-		icon: null as WebManifestIcon | null,
+		icon: null as ManifestIcon | null,
 	};
 
 	if (Array.isArray(manifest.icons)) {

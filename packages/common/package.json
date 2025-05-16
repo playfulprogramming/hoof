@@ -12,9 +12,9 @@
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.705.0",
 		"@aws-sdk/lib-storage": "^3.705.0",
-		"ioredis": "^5.5.0",
+		"@sinclair/typebox": "^0.34.33",
 		"bullmq": "catalog:",
-		"@sinclair/typebox": "^0.34.33"
+		"ioredis": "^5.5.0"
 	},
 	"devDependencies": {
 		"@aws-sdk/types": "^3.696.0"

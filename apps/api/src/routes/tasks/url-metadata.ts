@@ -1,12 +1,19 @@
-import { FastifyPluginAsync } from "fastify";
+import type { FastifyPluginAsync } from "fastify";
 import { createHash } from "crypto";
 import { eq } from "drizzle-orm";
 import {
-	UrlMetadataInput,
+	type UrlMetadataInput,
 	UrlMetadataInputSchema,
 	queues,
 } from "@playfulprogramming/common";
 import { db } from "@playfulprogramming/db";
+import { Type } from "@sinclair/typebox";
+
+const UrlMetadataResponseSchema = Type.Object({
+	title: Type.Optional(Type.String()),
+	icon: Type.Optional(Type.String()),
+	banner: Type.Optional(Type.String()),
+});
 
 const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 	fastify.post<{ Body: UrlMetadataInput }>(
@@ -14,6 +21,19 @@ const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 		{
 			schema: {
 				body: UrlMetadataInputSchema,
+				response: {
+					200: {
+						description: "Task complete",
+						content: {
+							"application/json": {
+								schema: UrlMetadataResponseSchema,
+							},
+						},
+					},
+					202: {
+						description: "Task created",
+					},
+				},
 			},
 		},
 		async (request, reply) => {

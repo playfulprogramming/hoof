@@ -1,5 +1,10 @@
-import { Job, Worker } from "bullmq";
-import { TaskInputs, redis, TasksValues } from "@playfulprogramming/common";
+import type { Job} from "bullmq";
+import { Worker } from "bullmq";
+import {
+	type TaskInputs,
+	redis,
+	type TasksValues,
+} from "@playfulprogramming/common";
 
 export function createWorker<T extends TasksValues>(
 	task: T,

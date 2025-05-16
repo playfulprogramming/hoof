@@ -1,0 +1,64 @@
+name: unicorn-utterances-cms
+
+services:
+  pgsql:
+    image: postgres:16.3-alpine3.18
+    env_file:
+      - .env
+    volumes:
+      - pgsql_storage:/var/lib/postgresql/data
+      - pgsql_backups:/backups
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "$POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:latest
+    volumes:
+      - redis_storage:/data
+    ports:
+      - "6379:6379"
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000" # API Port
+      - "9001:9001" # Web UI Port
+    volumes:
+      - minio_storage:/data
+    environment:
+      MINIO_ROOT_USER: ${S3_KEY_ID}
+      MINIO_ROOT_PASSWORD: ${S3_KEY_SECRET}
+    command: server --console-address ":9001" /data
+
+  worker:
+    build: worker
+    env_file:
+      - .env
+    environment:
+      S3_ENDPOINT: http://minio:9000
+      POSTGRES_URL: postgresql://pgsql:5432/postgres
+    depends_on:
+      - minio
+      - pgsql
+
+  api:
+    build: api
+    env_file:
+      - .env
+    environment:
+      POSTGRES_URL: postgresql://pgsql:5432/postgres
+    ports:
+      - "8080:8080"
+    depends_on:
+      - pgsql
+
+volumes:
+  pgsql_storage: {}
+  pgsql_backups: {}
+  redis_storage: {}
+  minio_storage: {}

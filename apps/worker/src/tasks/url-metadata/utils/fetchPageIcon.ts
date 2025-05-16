@@ -1,8 +1,8 @@
-import { Root, Element } from "hast";
+import type { Root, Element } from "hast";
 import { find } from "unist-util-find";
 import * as path from "path";
-import { fetchAsBrowser, isElement } from "./html.ts";
-import { getLargestManifestIcon } from "./manifest.ts";
+import { fetchAsBrowser, isElement } from "./fetchPageHtml.ts";
+import { getLargestManifestIcon } from "./getLargestManifestIcon.ts";
 
 export async function fetchPageIcon(src: URL, root: Root): Promise<URL> {
 	const iconExtensions = [".svg", ".png", ".jpg", ".jpeg"];

@@ -1,11 +1,11 @@
-import { Element, Root, Node } from "hast";
+import type { Element, Root, Node } from "hast";
 import { fromHtml } from "hast-util-from-html";
 import { find } from "unist-util-find";
 
 export const isElement = (e: Root | Element | Node | undefined): e is Element =>
 	e?.type == "element";
 
-export async function fetchAsBrowser(input: string | URL, init?: RequestInit) {
+export async function fetchAsBrowser(input: URL, init?: RequestInit) {
 	const response = await fetch(input, {
 		...init,
 		headers: {
@@ -44,13 +44,4 @@ export async function getOpenGraphImage(
 	);
 	if (!metaNode?.properties.content) throw Error("No image metadata found");
 	return new URL(String(metaNode.properties.content), baseUrl);
-}
-
-export function escapeHtml(unsafe: string) {
-	return unsafe
-		.replace(/&/g, "&amp;")
-		.replace(/</g, "&lt;")
-		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;")
-		.replace(/'/g, "&#039;");
 }

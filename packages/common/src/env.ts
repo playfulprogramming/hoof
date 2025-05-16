@@ -1,4 +1,4 @@
-import { Static, Type } from "@sinclair/typebox";
+import { type Static, Type } from "@sinclair/typebox";
 
 export const EnvSchema = Type.Object({
 	PORT: Type.Integer({ default: 3000 }),

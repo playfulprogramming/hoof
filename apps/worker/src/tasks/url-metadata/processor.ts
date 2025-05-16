@@ -4,16 +4,16 @@ import {
 	fetchPageHtml,
 	getOpenGraphImage,
 	getPageTitle,
-} from "./utils/html.ts";
-import { fetchPageIcon } from "./utils/icons.ts";
-import { processImage } from "./utils/images.ts";
-import { UrlMetadataInput, createBucket } from "@playfulprogramming/common";
+} from "./utils/fetchPageHtml.ts";
+import { fetchPageIcon } from "./utils/fetchPageIcon.ts";
+import { processImage } from "./utils/processImage.ts";
+import { type UrlMetadataInput, s3 } from "@playfulprogramming/common";
 import { db, urlMetadata } from "@playfulprogramming/db";
 
 export async function processUrlMetadata(job: {
 	data: UrlMetadataInput;
 }): Promise<void> {
-	const BUCKET = await createBucket(process.env.S3_BUCKET);
+	const BUCKET = await s3.createBucket(process.env.S3_BUCKET);
 
 	const inputUrl = new URL(job.data.url);
 	const root = await fetchPageHtml(inputUrl);

@@ -1,5 +1,5 @@
-import { UrlMetadataInput } from "./url-metadata.ts";
-import { PostImageInput } from "./post-image.ts";
+import type { UrlMetadataInput } from "./url-metadata.ts";
+import type { PostImageInput } from "./post-image.ts";
 
 export const Tasks = {
 	URL_METADATA: "url-metadata",

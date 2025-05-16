@@ -1,10 +1,10 @@
 import sharp from "sharp";
 import * as stream from "stream";
 import * as svgo from "svgo";
-import { fetchAsBrowser } from "./html.ts";
+import { fetchAsBrowser } from "./fetchPageHtml.ts";
 import path from "path";
 import crypto from "crypto";
-import * as s3 from "@playfulprogramming/common";
+import { s3 } from "@playfulprogramming/common";
 
 export async function processImage(
 	url: URL,

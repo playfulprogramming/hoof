@@ -1,5 +1,10 @@
 import { Queue } from "bullmq";
-import { TaskInputs, TaskInputsKeys, Tasks, TasksValues } from "./types.ts";
+import {
+	type TaskInputs,
+	type TaskInputsKeys,
+	Tasks,
+	type TasksValues,
+} from "./types.ts";
 import { redis } from "../redis/client.ts";
 
 type Queues = { [T in TaskInputsKeys]: Queue<TaskInputs[T]> };
