@@ -1,4 +1,4 @@
-import type { Job} from "bullmq";
+import type { Job } from "bullmq";
 import { Worker } from "bullmq";
 import {
 	type TaskInputs,

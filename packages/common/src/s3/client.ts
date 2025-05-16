@@ -8,7 +8,7 @@ import {
 	S3Client,
 } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
-import * as stream from "stream";
+import type * as stream from "stream";
 
 const client = new S3Client({
 	region: "auto",

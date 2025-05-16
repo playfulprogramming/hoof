@@ -8,7 +8,6 @@
 		"preinstall": "node -e \"if(process.env.CI == 'true') {console.log('Skipping preinstall...')} else {process.exit(1)}\" || npx -y only-allow pnpm",
 		"test": "nx run-many --targets=test:sherif,test:knip,test:eslint,test:publint,test",
 		"test:eslint": "nx affected --target=test:eslint",
-		"test:format": "pnpm run prettier --check",
 		"test:publint": "publint --strict",
 		"test:sherif": "sherif",
 		"test:knip": "knip",
@@ -16,8 +15,8 @@
 		"build:all": "nx run-many --target=build",
 		"dev:libs": "nx watch --all -- nx run-many --targets=build --exclude=api,worker",
 		"dev": "pnpm run build:all && nx run-many --targets=dev,dev:libs",
-		"prettier": "prettier --ignore-unknown .",
-		"prettier:write": "pnpm run prettier --write"
+		"prettier": "prettier . --check --ignore-unknown",
+		"prettier:write": "prettier . --write --ignore-unknown"
 	},
 	"nx": {
 		"includedScripts": [
