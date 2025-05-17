@@ -76,12 +76,11 @@ export async function exists(bucket: string, key: string) {
 export async function upload(
 	bucket: string,
 	key: string,
-	tags: Record<string, string>,
+	tag: string | undefined,
 	file: stream.Readable,
 	contentType: string,
 ) {
 	console.log(`Uploading ${bucket}/${key}`);
-	const searchParams = new URLSearchParams(tags);
 
 	const upload = new Upload({
 		params: {
@@ -89,7 +88,7 @@ export async function upload(
 			Key: key,
 			Body: file,
 			ContentType: contentType,
-			Tagging: searchParams.toString(),
+			Tagging: tag,
 		},
 		client,
 	});

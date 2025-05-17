@@ -11,7 +11,7 @@ export async function processImage(
 	width: number,
 	bucket: string,
 	key: string,
-	tags: Record<string, string>,
+	tag?: string,
 ): Promise<string> {
 	const request = await fetchAsBrowser(url);
 	const body = request.body;
@@ -22,17 +22,12 @@ export async function processImage(
 	if (path.extname(url.pathname) === ".svg") {
 		const uploadKey = `${key}-${urlHash}.svg`;
 
-		if (await s3.exists(bucket, uploadKey)) {
-			await body.cancel();
-			return uploadKey;
-		}
-
 		const svg = await request.text();
 		const optimizedSvg = svgo.optimize(svg, { multipass: true }).data;
 		await s3.upload(
 			bucket,
 			uploadKey,
-			tags,
+			tag,
 			stream.Readable.from([optimizedSvg]),
 			"image/svg+xml",
 		);
@@ -48,9 +43,6 @@ export async function processImage(
 	}
 
 	const uploadKey = `${key}-${urlHash}.${metadata.format}`;
-	if (await s3.exists(bucket, uploadKey)) {
-		return uploadKey;
-	}
 
 	const transformer = sharp().resize(Math.min(width, metadata.width || width));
 	const transformerStream = metadataStream.pipe(transformer);
@@ -58,7 +50,7 @@ export async function processImage(
 	await s3.upload(
 		bucket,
 		uploadKey,
-		tags,
+		tag,
 		transformerStream,
 		`image/${metadata.format}`,
 	);
