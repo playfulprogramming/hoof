@@ -1,5 +1,4 @@
 import { mockEndpoint } from "../../../../test-utils/server.ts";
-import { expect, test } from "vitest";
 import {
 	fetchAsBrowser,
 	fetchPageHtml,

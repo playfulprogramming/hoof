@@ -1,4 +1,3 @@
-import { expect, test } from "vitest";
 import { getLargestManifestIcon } from "./getLargestManifestIcon.ts";
 
 test("Should return null if no manifest icon found", async () => {
