@@ -1,66 +1,48 @@
 {
 	"name": "hoof",
 	"private": true,
+	"version": "0.0.1",
 	"type": "module",
-	"exports": {
-		"./api": "./dist/api/app.js",
-		"./worker": "./dist/worker/app.js"
-	},
 	"scripts": {
-		"db:generate": "drizzle-kit generate",
-		"dev": "pnpm run \"/^dev:.*/\"",
-		"dev:api": "tsx -r dotenv/config --watch src/api/app.ts",
-		"dev:worker": "tsx -r dotenv/config --watch src/worker/app.ts",
-		"build": "pkgroll --clean-dist",
-		"test": "pnpm -r test",
-		"format": "prettier -w . --cache --plugin-search-dir=.",
-		"lint": "eslint \"src/**/*.{ts,tsx}\" \"*.{ts,tsx}\"",
-		"lint:fix": "eslint --cache --fix \"src/**/*.{ts,tsx}\" \"*.{ts,tsx}\"",
-		"prepare": "husky"
+		"prepare": "husky",
+		"preinstall": "node -e \"if(process.env.CI == 'true') {console.log('Skipping preinstall...')} else {process.exit(1)}\" || npx -y only-allow pnpm",
+		"test": "nx run-many --targets=test:sherif,test:knip,test:eslint,test:publint,test",
+		"test:eslint": "nx affected --target=test:eslint",
+		"test:publint": "publint --strict",
+		"test:sherif": "sherif",
+		"test:knip": "knip",
+		"build": "nx affected --target=build",
+		"build:all": "nx run-many --target=build",
+		"dev:libs": "nx watch --all -- nx run-many --targets=build --exclude=api,worker",
+		"dev": "pnpm run build:all && nx run-many --targets=dev,dev:libs",
+		"prettier": "prettier . --check --ignore-unknown",
+		"prettier:write": "prettier . --write --ignore-unknown"
 	},
-	"dependencies": {
-		"@aws-sdk/client-s3": "^3.705.0",
-		"@aws-sdk/lib-storage": "^3.705.0",
-		"@fastify/cors": "^10.0.2",
-		"@fastify/csrf-protection": "^7.0.2",
-		"@fastify/env": "^5.0.2",
-		"@fastify/etag": "^6.0.3",
-		"@fastify/sensible": "^6.0.0",
-		"@fastify/swagger": "^9.4.2",
-		"@fastify/swagger-ui": "^5.2.1",
-		"@sinclair/typebox": "^0.34.33",
-		"@types/pg": "^8.11.11",
-		"bullmq": "^5.40.2",
-		"dotenv": "^16.4.7",
-		"drizzle-orm": "^0.43.1",
-		"fastify": "^5.0.0",
-		"fastify-plugin": "^5.0.0",
-		"hast-util-from-html": "^2.0.3",
-		"ioredis": "^5.5.0",
-		"octokit": "^4.1.1",
-		"pg": "^8.15.6",
-		"sharp": "^0.33.5",
-		"svgo": "^3.3.2",
-		"unist-util-find": "^3.0.0"
+	"nx": {
+		"includedScripts": [
+			"test:knip",
+			"test:sherif",
+			"test:publint"
+		]
 	},
+	"engines": {
+		"node": ">=22.6.0"
+	},
+	"packageManager": "pnpm@10.6.1",
 	"devDependencies": {
-		"@aws-sdk/types": "^3.696.0",
-		"@eslint/eslintrc": "^3.3.1",
 		"@eslint/js": "^9.25.1",
-		"@types/hast": "^3.0.4",
-		"@types/node": "^22.10.1",
-		"@typescript-eslint/eslint-plugin": "^8.24.0",
-		"@typescript-eslint/parser": "^8.24.0",
+		"@types/node": "^22.15.3",
 		"drizzle-kit": "^0.31.0",
 		"eslint": "^9.25.1",
-		"fastify-tsconfig": "^2.0.0",
 		"globals": "^16.0.0",
 		"husky": "^9.1.7",
+		"knip": "^5.50.5",
 		"lint-staged": "^15.5.1",
-		"pkgroll": "^2.12.2",
+		"nx": "^20.8.1",
 		"prettier": "^3.5.0",
-		"tsx": "^4.19.3",
-		"typescript": "^5.7.3",
-		"typescript-eslint": "^8.31.0"
+		"publint": "^0.3.12",
+		"sherif": "^1.5.0",
+		"typescript": "^5.8.3",
+		"typescript-eslint": "^8.31.1"
 	}
 }
