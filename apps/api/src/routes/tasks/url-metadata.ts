@@ -6,7 +6,7 @@ import {
 	queues,
 } from "@playfulprogramming/common";
 import { db } from "@playfulprogramming/db";
-import { Type } from "@sinclair/typebox";
+import { Type, type Static } from "@sinclair/typebox";
 
 const UrlMetadataResponseSchema = Type.Object({
 	title: Type.Optional(Type.String()),
@@ -14,13 +14,16 @@ const UrlMetadataResponseSchema = Type.Object({
 	banner: Type.Optional(Type.String()),
 });
 
-function getPublicUrl(key: string): URL {
+function getPublicUrl(key: string): string {
 	const s3PublicUrl = `${process.env.S3_PUBLIC_URL}/${process.env.S3_BUCKET}/`;
-	return new URL(key, s3PublicUrl);
+	return new URL(key, s3PublicUrl).toString();
 }
 
 const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
-	fastify.post<{ Body: UrlMetadataInput }>(
+	fastify.post<{
+		Body: UrlMetadataInput;
+		Reply: Static<typeof UrlMetadataResponseSchema>;
+	}>(
 		"/tasks/url-metadata",
 		{
 			schema: {
@@ -55,7 +58,7 @@ const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 			if (existingMetadata) {
 				reply.code(200);
 				reply.send({
-					title: existingMetadata.title,
+					title: existingMetadata.title || undefined,
 					icon: existingMetadata.icon
 						? getPublicUrl(existingMetadata.icon)
 						: undefined,
