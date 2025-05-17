@@ -6,6 +6,7 @@ export const isElement = (e: Root | Element | Node | undefined): e is Element =>
 	e?.type == "element";
 
 export async function fetchAsBrowser(input: URL, init?: RequestInit) {
+	console.log(`Fetching URL: ${input}`);
 	const response = await fetch(input, {
 		...init,
 		headers: {

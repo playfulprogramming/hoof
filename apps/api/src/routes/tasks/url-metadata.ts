@@ -1,5 +1,4 @@
 import type { FastifyPluginAsync } from "fastify";
-import { createHash } from "crypto";
 import { eq } from "drizzle-orm";
 import {
 	type UrlMetadataInput,
@@ -7,7 +6,7 @@ import {
 	queues,
 } from "@playfulprogramming/common";
 import { db } from "@playfulprogramming/db";
-import { Type } from "@sinclair/typebox";
+import { Type, type Static } from "@sinclair/typebox";
 
 const UrlMetadataResponseSchema = Type.Object({
 	title: Type.Optional(Type.String()),
@@ -15,8 +14,16 @@ const UrlMetadataResponseSchema = Type.Object({
 	banner: Type.Optional(Type.String()),
 });
 
+function getPublicUrl(key: string): string {
+	const s3PublicUrl = `${process.env.S3_PUBLIC_URL}/${process.env.S3_BUCKET}/`;
+	return new URL(key, s3PublicUrl).toString();
+}
+
 const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
-	fastify.post<{ Body: UrlMetadataInput }>(
+	fastify.post<{
+		Body: UrlMetadataInput;
+		Reply: Static<typeof UrlMetadataResponseSchema>;
+	}>(
 		"/tasks/url-metadata",
 		{
 			schema: {
@@ -44,22 +51,36 @@ const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 				inputUrl.origin.toLowerCase(),
 			).toString();
 
-			const urlHash = createHash("md5").update(normalizedUrl).digest("hex");
-
 			const existingMetadata = await db.query.urlMetadata.findFirst({
-				where: (metadata) => eq(metadata.id, urlHash),
+				where: (metadata) => eq(metadata.url, normalizedUrl),
 			});
 
 			if (existingMetadata) {
 				reply.code(200);
-				reply.send(existingMetadata);
+				reply.send({
+					title: existingMetadata.title || undefined,
+					icon: existingMetadata.icon
+						? getPublicUrl(existingMetadata.icon)
+						: undefined,
+					banner: existingMetadata.banner
+						? getPublicUrl(existingMetadata.banner)
+						: undefined,
+				});
 				return;
 			}
 
-			await queues["url-metadata"].add(urlHash, {
-				...request.body,
-				url: normalizedUrl,
-			});
+			await queues["url-metadata"].add(
+				normalizedUrl,
+				{
+					...request.body,
+					url: normalizedUrl,
+				},
+				{
+					deduplication: {
+						id: normalizedUrl,
+					},
+				},
+			);
 
 			reply.code(202);
 		},
