@@ -15,6 +15,7 @@ export async function fetchAsBrowser(input: URL, init?: RequestInit) {
 			"Accept-Language": "en",
 			...init?.headers,
 		},
+		signal: AbortSignal.timeout(10 * 1000),
 	});
 	if (!response.ok)
 		throw new Error(`Request ${input} returned ${response.status}`);
@@ -35,7 +36,7 @@ export function getPageTitle(root: Root): string | undefined {
 export async function getOpenGraphImage(
 	root: Root,
 	baseUrl: URL,
-): Promise<URL> {
+): Promise<URL | undefined> {
 	const metaNode = find<Element>(
 		root,
 		(e) =>
@@ -43,6 +44,6 @@ export async function getOpenGraphImage(
 			e.tagName === "meta" &&
 			["twitter:image", "og:image"].includes(String(e.properties.property)),
 	);
-	if (!metaNode?.properties.content) throw Error("No image metadata found");
+	if (!metaNode?.properties.content) return undefined;
 	return new URL(String(metaNode.properties.content), baseUrl);
 }

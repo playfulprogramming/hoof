@@ -4,7 +4,10 @@ import * as path from "path";
 import { fetchAsBrowser, isElement } from "./fetchPageHtml.ts";
 import { getLargestManifestIcon } from "./getLargestManifestIcon.ts";
 
-export async function fetchPageIcon(src: URL, root: Root): Promise<URL> {
+export async function fetchPageIcon(
+	src: URL,
+	root: Root,
+): Promise<URL | undefined> {
 	const iconExtensions = [".svg", ".png", ".jpg", ".jpeg"];
 
 	// Try getting icon from link tags first
@@ -49,5 +52,5 @@ export async function fetchPageIcon(src: URL, root: Root): Promise<URL> {
 		}
 	}
 
-	throw Error("Could not find page icon");
+	return undefined;
 }

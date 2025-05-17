@@ -22,19 +22,13 @@ export async function processUrlMetadata(job: {
 
 	const title = getPageTitle(root);
 
-	const iconPromise = fetchPageIcon(inputUrl, root)
-		.then((url) => processImage(url, 24, BUCKET, "remote-icon", job.id))
-		.catch((e) => {
-			console.error(e, "Error processing icon");
-			return undefined;
-		});
+	const iconPromise = fetchPageIcon(inputUrl, root).then(
+		(url) => url && processImage(url, 24, BUCKET, "remote-icon", job.id),
+	);
 
-	const bannerPromise = getOpenGraphImage(root, inputUrl)
-		.then((url) => processImage(url, 896, BUCKET, "remote-banner", job.id))
-		.catch((e) => {
-			console.error(e, "Error processing banner");
-			return undefined;
-		});
+	const bannerPromise = getOpenGraphImage(root, inputUrl).then(
+		(url) => url && processImage(url, 896, BUCKET, "remote-banner", job.id),
+	);
 
 	const [icon, banner] = await Promise.all([iconPromise, bannerPromise]);
 
@@ -42,8 +36,12 @@ export async function processUrlMetadata(job: {
 	await db.insert(urlMetadata).values({
 		url: inputUrl.href,
 		title,
-		icon,
-		banner,
+		iconKey: icon?.key,
+		iconWidth: icon?.width,
+		iconHeight: icon?.height,
+		bannerKey: banner?.key,
+		bannerWidth: banner?.width,
+		bannerHeight: banner?.height,
+		fetchedAt: new Date(),
 	});
-	console.log("Done");
 }

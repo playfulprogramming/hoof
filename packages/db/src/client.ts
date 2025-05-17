@@ -1,8 +1,9 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "./schema/index.ts";
-import { Pool } from "pg";
+import pg from "pg";
 
-const pool = new Pool({
+const native = pg.native!;
+const pool = new native.Pool({
 	connectionString: process.env.POSTGRES_URL,
 });
 

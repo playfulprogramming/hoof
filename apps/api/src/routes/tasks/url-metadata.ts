@@ -8,15 +8,30 @@ import {
 import { db } from "@playfulprogramming/db";
 import { Type, type Static } from "@sinclair/typebox";
 
-const UrlMetadataResponseSchema = Type.Object({
-	title: Type.Optional(Type.String()),
-	icon: Type.Optional(Type.String()),
-	banner: Type.Optional(Type.String()),
+const ImageSchema = Type.Object({
+	src: Type.String(),
+	width: Type.Optional(Type.Number()),
+	height: Type.Optional(Type.Number()),
 });
 
-function getPublicUrl(key: string): string {
+const UrlMetadataResponseSchema = Type.Object({
+	title: Type.Optional(Type.String()),
+	icon: Type.Optional(ImageSchema),
+	banner: Type.Optional(ImageSchema),
+});
+
+function mapImageData(
+	key: string,
+	width: number | null,
+	height?: number | null,
+): Static<typeof ImageSchema> {
 	const s3PublicUrl = `${process.env.S3_PUBLIC_URL}/${process.env.S3_BUCKET}/`;
-	return new URL(key, s3PublicUrl).toString();
+	const src = new URL(key, s3PublicUrl).toString();
+	return {
+		src,
+		width: width || undefined,
+		height: height || undefined,
+	};
 }
 
 const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
@@ -39,6 +54,11 @@ const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 					},
 					202: {
 						description: "Task created",
+						content: {
+							"application/json": {
+								schema: Type.Object({}),
+							},
+						},
 					},
 				},
 			},
@@ -51,19 +71,23 @@ const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 				inputUrl.origin.toLowerCase(),
 			).toString();
 
-			const existingMetadata = await db.query.urlMetadata.findFirst({
+			const result = await db.query.urlMetadata.findFirst({
 				where: (metadata) => eq(metadata.url, normalizedUrl),
 			});
 
-			if (existingMetadata) {
+			if (result) {
 				reply.code(200);
 				reply.send({
-					title: existingMetadata.title || undefined,
-					icon: existingMetadata.icon
-						? getPublicUrl(existingMetadata.icon)
+					title: result.title || undefined,
+					icon: result.iconKey
+						? mapImageData(result.iconKey, result.iconWidth, result.iconHeight)
 						: undefined,
-					banner: existingMetadata.banner
-						? getPublicUrl(existingMetadata.banner)
+					banner: result.bannerKey
+						? mapImageData(
+								result.bannerKey,
+								result.bannerWidth,
+								result.bannerHeight,
+							)
 						: undefined,
 				});
 				return;
@@ -83,6 +107,7 @@ const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 			);
 
 			reply.code(202);
+			reply.send({});
 		},
 	);
 };

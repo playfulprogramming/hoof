@@ -85,7 +85,7 @@ importers:
         version: 0.34.33
       drizzle-orm:
         specifier: 'catalog:'
-        version: 0.43.1(@types/pg@8.11.11)(pg@8.15.6(pg-native@3.4.5))
+        version: 0.43.1(@types/pg@8.11.11)(pg@8.15.6(pg-native@3.5.0))
       fastify:
         specifier: ^5.0.0
         version: 5.2.1
@@ -153,10 +153,13 @@ importers:
     dependencies:
       drizzle-orm:
         specifier: 'catalog:'
-        version: 0.43.1(@types/pg@8.11.11)(pg@8.15.6(pg-native@3.4.5))
+        version: 0.43.1(@types/pg@8.11.11)(pg@8.15.6(pg-native@3.5.0))
       pg:
         specifier: ^8.15.6
-        version: 8.15.6(pg-native@3.4.5)
+        version: 8.15.6(pg-native@3.5.0)
+      pg-native:
+        specifier: ^3.5.0
+        version: 3.5.0
     devDependencies:
       '@types/pg':
         specifier: ^8.11.11
@@ -2400,8 +2403,8 @@ packages:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
 
-  libpq@1.8.14:
-    resolution: {integrity: sha512-/DDvQCiXP0KBMZ31U2mmURKaxoKt9kNqqgrSO2RuBKS+OJjw5b7uHi5jFoV8zPAUa2TNtq2XfcWL1OWDEyjwlg==}
+  libpq@1.8.15:
+    resolution: {integrity: sha512-4lSWmly2Nsj3LaTxxtFmJWuP3Kx+0hYHEd+aNrcXEWT0nKWaPd9/QZPiMkkC680zeALFGHQdQWjBvnilL+vgWA==}
 
   light-my-request@6.5.1:
     resolution: {integrity: sha512-0q82RyxIextuDtkA0UDofhPHIiQ2kmpa7fwElCSlm/8nQl36cDU1Cw+CAO90Es0lReH2HChClKL84I86Nc52hg==}
@@ -2544,8 +2547,8 @@ packages:
     resolution: {integrity: sha512-WWdIxpyjEn+FhQJQQv9aQAYlHoNVdzIzUySNV1gHUPDSdZJ3yZn7pAAbQcV7B56Mvu881q9FZV+0Vx2xC44VWA==}
     engines: {node: ^18.17.0 || >=20.5.0}
 
-  nan@2.22.0:
-    resolution: {integrity: sha512-nbajikzWTMwsW+eSsNm3QwlOs7het9gGJU5dDZzRTQGk03vyBOauxgI4VakDzE0PtsGTmXPsXTbbjVhRwR5mpw==}
+  nan@2.22.2:
+    resolution: {integrity: sha512-DANghxFkS1plDdRsX0X9pm0Z6SJNN6gBdtXfanwoZ8hooC5gosGFSBGRYHUVPz1asKA/kMRqDRdHrluZ61SpBQ==}
 
   nanoid@3.3.11:
     resolution: {integrity: sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==}
@@ -2687,8 +2690,8 @@ packages:
     resolution: {integrity: sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==}
     engines: {node: '>=4.0.0'}
 
-  pg-native@3.4.5:
-    resolution: {integrity: sha512-X6fwcza2fuYdAWll48Cj0Xa9ikvfaLWjbKmNWZ7iC6caEMMeN7mpFtSEDjS2HgPxhCEHEjlhE7v1jLyM1k+4kA==}
+  pg-native@3.5.0:
+    resolution: {integrity: sha512-rj4LYouevTdKxvRLnvtOLEPOerkiPAqUdZE1K48IfQluEH/x7GrldEDdSaEOmJ6z7s6LQwDTpAPhm2s00iG8xw==}
 
   pg-numeric@1.0.2:
     resolution: {integrity: sha512-BM/Thnrw5jm2kKLE5uJkXqqExRUY/toLHda65XgFTBTFYZyopbKjBe29Ii3RbkvlsMoFwD+tHeGaCjjv0gHlyw==}
@@ -5021,7 +5024,6 @@ snapshots:
   bindings@1.5.0:
     dependencies:
       file-uri-to-path: 1.0.0
-    optional: true
 
   bl@4.1.0:
     dependencies:
@@ -5253,10 +5255,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.43.1(@types/pg@8.11.11)(pg@8.15.6(pg-native@3.4.5)):
+  drizzle-orm@0.43.1(@types/pg@8.11.11)(pg@8.15.6(pg-native@3.5.0)):
     optionalDependencies:
       '@types/pg': 8.11.11
-      pg: 8.15.6(pg-native@3.4.5)
+      pg: 8.15.6(pg-native@3.5.0)
 
   dunder-proto@1.0.1:
     dependencies:
@@ -5542,8 +5544,7 @@ snapshots:
     dependencies:
       flat-cache: 4.0.1
 
-  file-uri-to-path@1.0.0:
-    optional: true
+  file-uri-to-path@1.0.0: {}
 
   fill-range@7.1.1:
     dependencies:
@@ -5837,11 +5838,10 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
-  libpq@1.8.14:
+  libpq@1.8.15:
     dependencies:
       bindings: 1.5.0
-      nan: 2.22.0
-    optional: true
+      nan: 2.22.2
 
   light-my-request@6.5.1:
     dependencies:
@@ -6000,8 +6000,7 @@ snapshots:
 
   mute-stream@2.0.0: {}
 
-  nan@2.22.0:
-    optional: true
+  nan@2.22.2: {}
 
   nanoid@3.3.11: {}
 
@@ -6169,17 +6168,16 @@ snapshots:
 
   pg-int8@1.0.1: {}
 
-  pg-native@3.4.5:
+  pg-native@3.5.0:
     dependencies:
-      libpq: 1.8.14
+      libpq: 1.8.15
       pg-types: 2.2.0
-    optional: true
 
   pg-numeric@1.0.2: {}
 
-  pg-pool@3.9.6(pg@8.15.6(pg-native@3.4.5)):
+  pg-pool@3.9.6(pg@8.15.6(pg-native@3.5.0)):
     dependencies:
-      pg: 8.15.6(pg-native@3.4.5)
+      pg: 8.15.6(pg-native@3.5.0)
 
   pg-protocol@1.9.5: {}
 
@@ -6201,16 +6199,16 @@ snapshots:
       postgres-interval: 3.0.0
       postgres-range: 1.1.4
 
-  pg@8.15.6(pg-native@3.4.5):
+  pg@8.15.6(pg-native@3.5.0):
     dependencies:
       pg-connection-string: 2.8.5
-      pg-pool: 3.9.6(pg@8.15.6(pg-native@3.4.5))
+      pg-pool: 3.9.6(pg@8.15.6(pg-native@3.5.0))
       pg-protocol: 1.9.5
       pg-types: 2.2.0
       pgpass: 1.0.5
     optionalDependencies:
       pg-cloudflare: 1.2.5
-      pg-native: 3.4.5
+      pg-native: 3.5.0
 
   pgpass@1.0.5:
     dependencies:

@@ -6,13 +6,19 @@ import path from "path";
 import crypto from "crypto";
 import { s3 } from "@playfulprogramming/common";
 
+interface ProcessImageResult {
+	key: string;
+	width?: number;
+	height?: number;
+}
+
 export async function processImage(
 	url: URL,
 	width: number,
 	bucket: string,
 	key: string,
 	tag?: string,
-): Promise<string> {
+): Promise<ProcessImageResult> {
 	const request = await fetchAsBrowser(url);
 	const body = request.body;
 	if (!body) throw new Error(`Request body for ${url} is null`);
@@ -31,7 +37,7 @@ export async function processImage(
 			stream.Readable.from([optimizedSvg]),
 			"image/svg+xml",
 		);
-		return uploadKey;
+		return { key: uploadKey };
 	}
 
 	const pipeline = sharp();
@@ -44,7 +50,12 @@ export async function processImage(
 
 	const uploadKey = `${key}-${urlHash}.${metadata.format}`;
 
-	const transformer = sharp().resize(Math.min(width, metadata.width || width));
+	const transformWidth = Math.min(width, metadata.width || width);
+	const transformHeight =
+		metadata.height && metadata.width
+			? Math.round(metadata.height * (transformWidth / metadata.width))
+			: undefined;
+	const transformer = sharp().resize(transformWidth);
 	const transformerStream = metadataStream.pipe(transformer);
 
 	await s3.upload(
@@ -55,5 +66,9 @@ export async function processImage(
 		`image/${metadata.format}`,
 	);
 
-	return uploadKey;
+	return {
+		key: uploadKey,
+		width: transformWidth,
+		height: transformHeight,
+	};
 }
