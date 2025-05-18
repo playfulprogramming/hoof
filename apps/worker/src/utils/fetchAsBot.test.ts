@@ -1,6 +1,8 @@
 import { http, HttpResponse } from "msw";
 import { server } from "../../test-utils/server.ts";
-import { fetchAsBot } from "./fetchAsBot.ts";
+import { fetchAsBot, resetCache } from "./fetchAsBot.ts";
+
+beforeEach(() => resetCache());
 
 test("Should throw error when a 400 status code is returned", async () => {
 	const url = "https://example.com/test";
