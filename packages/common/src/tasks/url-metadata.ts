@@ -10,3 +10,14 @@ export const UrlMetadataInputSchema = Type.Object(
 );
 
 export type UrlMetadataInput = Static<typeof UrlMetadataInputSchema>;
+
+export interface UrlMetadataOutput {
+	url: string;
+	title: string | null;
+	iconKey: string | null;
+	iconWidth: number | null;
+	iconHeight: number | null;
+	bannerKey: string | null;
+	bannerWidth: number | null;
+	bannerHeight: number | null;
+}

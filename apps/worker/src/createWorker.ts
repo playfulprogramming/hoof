@@ -4,13 +4,17 @@ import {
 	type TaskInputs,
 	redis,
 	type TasksValues,
+	type TaskOutputs,
 } from "@playfulprogramming/common";
 
 const JOB_TIMEOUT = 60 * 1000;
 
 export function createWorker<T extends TasksValues>(
 	task: T,
-	callback: (job: Job<TaskInputs[T]>, signal: AbortSignal) => Promise<void>,
+	callback: (
+		job: Job<TaskInputs[T]>,
+		signal: AbortSignal,
+	) => Promise<TaskOutputs[T]>,
 ): Worker {
 	const worker = new Worker(
 		task,
@@ -18,11 +22,14 @@ export function createWorker<T extends TasksValues>(
 			const controller = new AbortController();
 			const timer = setTimeout(() => controller.abort(), JOB_TIMEOUT);
 
+			let result: TaskOutputs[T];
 			try {
-				await callback(job, controller.signal);
+				result = await callback(job, controller.signal);
 			} finally {
 				clearTimeout(timer);
 			}
+
+			return result;
 		},
 		{ connection: redis, concurrency: 16 },
 	);

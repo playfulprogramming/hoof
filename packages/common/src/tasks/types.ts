@@ -1,4 +1,4 @@
-import type { UrlMetadataInput } from "./url-metadata.ts";
+import type { UrlMetadataInput, UrlMetadataOutput } from "./url-metadata.ts";
 import type { PostImageInput } from "./post-image.ts";
 
 export const Tasks = {
@@ -14,5 +14,11 @@ export interface TaskInputs {
 	[Tasks.POST_IMAGE]: PostImageInput;
 }
 
-export type TaskInputsKeys = keyof TaskInputs;
-export type TaskInputsValues = TaskInputs[TaskInputsKeys];
+export type TaskInputsValues = TaskInputs[TasksValues];
+
+export interface TaskOutputs {
+	[Tasks.URL_METADATA]: UrlMetadataOutput;
+	[Tasks.POST_IMAGE]: void;
+}
+
+export type TaskOutputsValues = TaskOutputs[TasksValues];

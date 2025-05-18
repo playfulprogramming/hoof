@@ -2,7 +2,9 @@ import type { FastifyPluginAsync } from "fastify";
 import { eq } from "drizzle-orm";
 import {
 	type UrlMetadataInput,
+	type UrlMetadataOutput,
 	UrlMetadataInputSchema,
+	queueEvents,
 	queues,
 } from "@playfulprogramming/common";
 import { db } from "@playfulprogramming/db";
@@ -23,7 +25,7 @@ const UrlMetadataResponseSchema = Type.Object({
 function mapImageData(
 	key: string,
 	width: number | null,
-	height?: number | null,
+	height: number | null,
 ): Static<typeof ImageSchema> {
 	const s3PublicUrl = `${process.env.S3_PUBLIC_URL}/${process.env.S3_BUCKET}/`;
 	const src = new URL(key, s3PublicUrl).toString();
@@ -31,6 +33,20 @@ function mapImageData(
 		src,
 		width: width || undefined,
 		height: height || undefined,
+	};
+}
+
+function mapUrlMetadata(
+	result: UrlMetadataOutput,
+): Static<typeof UrlMetadataResponseSchema> {
+	return {
+		title: result.title || undefined,
+		icon: result.iconKey
+			? mapImageData(result.iconKey, result.iconWidth, result.iconHeight)
+			: undefined,
+		banner: result.bannerKey
+			? mapImageData(result.bannerKey, result.bannerWidth, result.bannerHeight)
+			: undefined,
 	};
 }
 
@@ -52,14 +68,6 @@ const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 							},
 						},
 					},
-					202: {
-						description: "Task created",
-						content: {
-							"application/json": {
-								schema: Type.Object({}),
-							},
-						},
-					},
 				},
 			},
 		},
@@ -77,23 +85,11 @@ const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 
 			if (result) {
 				reply.code(200);
-				reply.send({
-					title: result.title || undefined,
-					icon: result.iconKey
-						? mapImageData(result.iconKey, result.iconWidth, result.iconHeight)
-						: undefined,
-					banner: result.bannerKey
-						? mapImageData(
-								result.bannerKey,
-								result.bannerWidth,
-								result.bannerHeight,
-							)
-						: undefined,
-				});
+				reply.send(mapUrlMetadata(result));
 				return;
 			}
 
-			await queues["url-metadata"].add(
+			const job = await queues["url-metadata"].add(
 				normalizedUrl,
 				{
 					...request.body,
@@ -106,8 +102,13 @@ const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 				},
 			);
 
-			reply.code(202);
-			reply.send({});
+			const jobResult = await job.waitUntilFinished(
+				queueEvents["url-metadata"]!,
+				10 * 1000,
+			);
+
+			reply.code(200);
+			reply.send(mapUrlMetadata(jobResult));
 		},
 	);
 };
