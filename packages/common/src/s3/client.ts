@@ -3,6 +3,7 @@ import {
 	BucketAlreadyOwnedByYou,
 	CreateBucketCommand,
 	GetObjectCommand,
+	HeadObjectCommand,
 	NoSuchKey,
 	PutBucketPolicyCommand,
 	S3Client,
@@ -70,6 +71,21 @@ export async function exists(bucket: string, key: string) {
 	} catch (e) {
 		if (e instanceof NoSuchKey) return false;
 		throw e;
+	}
+}
+
+export async function matchesEtag(
+	bucket: string,
+	key: string,
+	etag: string,
+): Promise<boolean> {
+	try {
+		const obj = await client.send(
+			new HeadObjectCommand({ Bucket: bucket, Key: key, IfMatch: etag }),
+		);
+		return !!obj;
+	} catch (_e) {
+		return false;
 	}
 }
 
