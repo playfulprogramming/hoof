@@ -16,6 +16,7 @@
 		"@playfulprogramming/db": "workspace:*",
 		"bullmq": "catalog:",
 		"hast-util-from-html": "^2.0.3",
+		"robots-parser": "^3.0.1",
 		"sharp": "^0.33.5",
 		"svgo": "^3.3.2",
 		"unist-util-find": "^3.0.0"

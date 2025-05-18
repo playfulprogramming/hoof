@@ -1,23 +1,10 @@
 import { mockEndpoint } from "../../../../test-utils/server.ts";
 import {
-	fetchAsBrowser,
 	fetchPageHtml,
 	getOpenGraphImage,
 	getPageTitle,
 } from "./fetchPageHtml.ts";
 import { removePositions } from "../../../../test-utils/hast.ts";
-
-test("Should throw error when 400 status code", async () => {
-	const domain = "https://example.com/test";
-	mockEndpoint({
-		path: domain,
-		body: {},
-		method: "get",
-		status: 400,
-		bodyType: "json",
-	});
-	await expect(() => fetchAsBrowser(new URL(domain))).rejects.toThrow();
-});
 
 const html = `
 <!DOCTYPE html>

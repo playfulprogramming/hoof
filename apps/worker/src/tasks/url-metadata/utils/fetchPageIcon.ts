@@ -1,8 +1,9 @@
 import type { Root, Element } from "hast";
 import { find } from "unist-util-find";
 import * as path from "path";
-import { fetchAsBrowser, isElement } from "./fetchPageHtml.ts";
+import { isElement } from "./fetchPageHtml.ts";
 import { getLargestManifestIcon } from "./getLargestManifestIcon.ts";
+import { fetchAsBot } from "../../../utils/fetchAsBot.ts";
 
 export async function fetchPageIcon(
 	src: URL,
@@ -40,7 +41,7 @@ export async function fetchPageIcon(
 
 	if (manifestLink?.properties?.href) {
 		const manifestUrl = new URL(String(manifestLink.properties.href), src);
-		const manifest = await fetchAsBrowser(manifestUrl)
+		const manifest = await fetchAsBot(manifestUrl)
 			.then((r) => r.json())
 			.catch(() => null);
 

@@ -1,10 +1,10 @@
 import sharp from "sharp";
 import * as stream from "stream";
 import * as svgo from "svgo";
-import { fetchAsBrowser } from "./fetchPageHtml.ts";
 import path from "path";
 import crypto from "crypto";
 import { s3 } from "@playfulprogramming/common";
+import { fetchAsBot } from "../../../utils/fetchAsBot.ts";
 
 interface ProcessImageResult {
 	key: string;
@@ -50,7 +50,7 @@ export async function processImage(
 	key: string,
 	tag?: string,
 ): Promise<ProcessImageResult> {
-	const request = await fetchAsBrowser(url);
+	const request = await fetchAsBot(url);
 	const body = request.body;
 	if (!body) throw new Error(`Request body for ${url} is null`);
 
