@@ -1,0 +1,19 @@
+{
+	"name": "@playfulprogramming/post-images",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"main": "dist/index.js",
+	"scripts": {
+		"test:eslint": "eslint ./src",
+		"test:build": "publint --strict",
+		"build": "tsc --noEmit",
+		"dev": "node --env-file=../../.env --watch --experimental-strip-types src/live-server.ts"
+	},
+	"dependencies": {
+		"@playfulprogramming/common": "workspace:*",
+		"@resvg/resvg-js": "^2.6.2",
+		"satori": "^0.13.1",
+		"xhtm": "^1.6.3"
+	}
+}

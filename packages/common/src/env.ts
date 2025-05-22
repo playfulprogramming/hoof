@@ -8,7 +8,7 @@ export const EnvSchema = Type.Object({
 	]),
 	WORKER_EXIT_WHEN_DONE: Type.Boolean({ default: true }),
 
-	CLIENT_URL: Type.String(),
+	SITE_URL: Type.String(),
 
 	FLY_API_URL: Type.Optional(Type.String()),
 	FLY_API_TOKEN: Type.String(),
