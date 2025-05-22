@@ -24,11 +24,11 @@ function code(post: PostImageInput) {
 				background: "hsl(205 100% 60%)",
 				opacity: 0.5,
 				borderRadius: 8,
-				padding: 24,
+				padding: "24px 48px",
 				fontFamily: "Roboto Mono",
 				fontWeight: 700,
 				fontSize: "28px",
-				boxShadow: "0 0 28px hsl(205 100% 30%)",
+				boxShadow: "0 0 48px hsl(205 100% 30%)",
 			}}
 		>
 			${post.code.split("\n").map(
@@ -40,7 +40,14 @@ function code(post: PostImageInput) {
 							whiteSpace: "nowrap",
 						}}
 					>
-						<span style=${{ width: 64, color: "#FFFA" }}>${index + 1}</span>
+						<span
+							style=${{
+								width: 64,
+								color: "#FFFA",
+								paddingLeft: index > 8 ? "" : "0.5em",
+							}}
+							>${index + 1}</span
+						>
 						<span style=${{ color: "#FFF" }}>${line + "\n"}</span>
 					</span>
 				`,
@@ -50,6 +57,14 @@ function code(post: PostImageInput) {
 }
 
 export const linkPreview: LayoutFunction = async (post) => {
+	const transforms = [
+		"translateX(150px) scaleY(0.7) skew(15deg, -10deg)",
+		"translateX(-50px) scaleY(0.7) skew(-15deg, 10deg)",
+		"scaleX(0.8) skew(10deg, 10deg)",
+	];
+
+	const transform = transforms[post.title.length % transforms.length];
+
 	return html`
 		<div
 			style="${{
@@ -57,6 +72,7 @@ export const linkPreview: LayoutFunction = async (post) => {
 				height: "100%",
 				display: "flex",
 				background: "hsl(205 100% 73%)",
+				fontFamily: "Figtree, 'Noto Color Emoji'",
 			}}"
 		>
 			<div
@@ -73,7 +89,7 @@ export const linkPreview: LayoutFunction = async (post) => {
 						position: "absolute",
 						top: -150,
 						left: 0,
-						transform: "translateX(-50px) scaleY(0.7) skew(-15deg, 10deg)",
+						transform,
 						width: "100%",
 						height: "200%",
 						maskImage: "linear-gradient(to left, #66bfff00, #66bfffff)",
@@ -96,7 +112,6 @@ export const linkPreview: LayoutFunction = async (post) => {
 							position: "absolute",
 							top: 64,
 							right: 64,
-							fontFamily: "Figtree",
 							fontWeight: 700,
 							fontSize: "36px",
 							color: "#00344D",
@@ -113,7 +128,6 @@ export const linkPreview: LayoutFunction = async (post) => {
 							position: "absolute",
 							left: 64,
 							bottom: 120 + 56 + 42,
-							fontFamily: "Figtree",
 							fontWeight: 800,
 							fontSize: "72px",
 							color: "#00344D",
@@ -123,22 +137,25 @@ export const linkPreview: LayoutFunction = async (post) => {
 					>
 						${post.title}
 					</div>
-					${post.authors.map(
-						(author) => html`
-							<img
-								style=${{
-									width: 102,
-									height: 102,
-									position: "absolute",
-									left: 64,
-									bottom: 56 + 9,
-									border: "6px solid #FFF",
-									borderRadius: "50%",
-								}}
-								src="${author.image}"
-							/>
-						`,
-					)}
+					${post.authors
+						.map((author, index) => [author, index] as const)
+						.reverse()
+						.map(
+							([author, index]) => html`
+								<img
+									style=${{
+										width: 102,
+										height: 102,
+										position: "absolute",
+										left: 64 + index * 52,
+										bottom: 56 + 9,
+										border: "6px solid #FFF",
+										borderRadius: "50%",
+									}}
+									src="${author.image}"
+								/>
+							`,
+						)}
 					<div
 						style=${{
 							height: 120,
@@ -149,7 +166,6 @@ export const linkPreview: LayoutFunction = async (post) => {
 							position: "absolute",
 							left: 64 + 102 + 24 + (post.authors.length - 1) * 52,
 							bottom: 56,
-							fontFamily: "Figtree",
 							fontWeight: 700,
 						}}
 					>
@@ -167,8 +183,9 @@ export const linkPreview: LayoutFunction = async (post) => {
 								color: "#006590",
 							}}
 						>
-							${post.publishedMeta} · ${post.wordCount.toLocaleString("en")}
-							words
+							${post.publishedMeta}
+							<span style=${{ margin: "0 0.5em" }}>·</span>
+							${post.wordCount.toLocaleString("en") + " words"}
 						</span>
 					</div>
 					<img

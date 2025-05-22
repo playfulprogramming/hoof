@@ -12,6 +12,10 @@ const server = http.createServer(async (req, res) => {
 				image:
 					"https://playfulprogramming.com/content/crutchcorn/crutchcorn.png",
 			},
+			{
+				name: "Eduardo Pratti",
+				image: "https://playfulprogramming.com/content/edpratti/edpratti.jpg",
+			},
 		],
 		tags: [],
 		publishedMeta: "May 7, 2025",

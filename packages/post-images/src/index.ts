@@ -22,9 +22,9 @@ const figtreeExtraBoldTtf = import.meta
 const robotoMonoBoldTtf = import.meta
 	.resolve("./assets/Roboto_Mono/RobotoMono-Bold.ttf")
 	.replace(/^file:\/\//, "");
-const _colorEmojiTtf = import.meta.resolve(
-	"./assets/NotoColorEmoji/NotoColorEmoji-Regular.ttf",
-);
+const colorEmojiTtf = import.meta
+	.resolve("./assets/NotoColorEmoji/NotoColorEmoji-Regular.ttf")
+	.replace(/^file:\/\//, "");
 
 const fonts: Parameters<typeof satori>[1]["fonts"] = [
 	{
@@ -56,6 +56,10 @@ const fonts: Parameters<typeof satori>[1]["fonts"] = [
 		data: await readFile(robotoMonoBoldTtf),
 		weight: 700,
 		style: "normal",
+	},
+	{
+		name: "Noto Color Emoji",
+		data: await readFile(colorEmojiTtf),
 	},
 ];
 
