@@ -21,17 +21,8 @@ async function getRobots(input: URL): Promise<Robot | undefined> {
 			cache: "force-cache",
 		}).catch(() => undefined);
 
-		if (
-			!robotsResponse ||
-			(robotsResponse.status > 400 && robotsResponse.status < 499)
-		) {
+		if (!robotsResponse || !robotsResponse.ok) {
 			return undefined;
-		}
-
-		if (!robotsResponse.ok) {
-			throw Error(
-				`GET robots.txt for ${input.hostname} returned ${robotsResponse.status}`,
-			);
 		}
 
 		if (
@@ -48,11 +39,25 @@ async function getRobots(input: URL): Promise<Robot | undefined> {
 	return robotsParser(robotsUrl.toString(), robots);
 }
 
-export async function fetchAsBot(input: URL, init?: RequestInit) {
-	const robots = await getRobots(input);
+type FetchAsBotInit = RequestInit & {
+	skipRobotsCheck?: boolean;
+};
 
-	if (robots && robots.isDisallowed(input.toString(), userAgent)) {
-		throw new Error(`${userAgent} is disallowed from ${input.hostname}!`);
+export class RobotDeniedError extends Error {
+	constructor(message?: string) {
+		super(message);
+	}
+}
+
+export async function fetchAsBot(input: URL, init?: FetchAsBotInit) {
+	if (!init?.skipRobotsCheck) {
+		const robots = await getRobots(input);
+
+		if (robots && robots.isDisallowed(input.toString(), userAgent)) {
+			throw new RobotDeniedError(
+				`${userAgent} is disallowed from ${input.hostname}!`,
+			);
+		}
 	}
 
 	const response = await fetch(input, {

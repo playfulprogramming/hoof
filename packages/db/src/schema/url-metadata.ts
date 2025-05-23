@@ -1,4 +1,10 @@
-import { integer, pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
+import {
+	integer,
+	pgTable,
+	timestamp,
+	varchar,
+	boolean,
+} from "drizzle-orm/pg-core";
 
 export const urlMetadata = pgTable("url_metadata", {
 	url: varchar("url", { length: 2048 }).primaryKey(),
@@ -10,4 +16,5 @@ export const urlMetadata = pgTable("url_metadata", {
 	bannerWidth: integer("banner_width"),
 	bannerHeight: integer("banner_height"),
 	fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull(),
+	error: boolean("error").notNull(),
 });

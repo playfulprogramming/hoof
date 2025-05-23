@@ -58,6 +58,8 @@ const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 		"/tasks/url-metadata",
 		{
 			schema: {
+				description:
+					"Fetch and cache metadata for a given URL, including the page title, icon, and banner image.",
 				body: UrlMetadataInputSchema,
 				response: {
 					200: {

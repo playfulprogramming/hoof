@@ -16,6 +16,7 @@
 		"pg-native": "^3.5.0"
 	},
 	"devDependencies": {
+		"@playfulprogramming/types": "workspace:*",
 		"@types/pg": "^8.11.11",
 		"dotenv": "^16.5.0",
 		"drizzle-kit": "^0.31.0"

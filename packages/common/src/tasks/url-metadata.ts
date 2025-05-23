@@ -20,4 +20,5 @@ export interface UrlMetadataOutput {
 	bannerKey: string | null;
 	bannerWidth: number | null;
 	bannerHeight: number | null;
+	error: boolean;
 }
