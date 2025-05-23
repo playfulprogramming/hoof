@@ -1,10 +1,47 @@
 import sharp from "sharp";
 import * as stream from "stream";
 import * as svgo from "svgo";
-import { fetchAsBrowser } from "./fetchPageHtml.ts";
 import path from "path";
 import crypto from "crypto";
 import { s3 } from "@playfulprogramming/common";
+import { fetchAsBot } from "../../../utils/fetchAsBot.ts";
+
+interface ProcessImageResult {
+	key: string;
+	width?: number;
+	height?: number;
+}
+
+async function compareLastModified(
+	request: Response,
+	bucket: string,
+	key: string,
+): Promise<boolean> {
+	// If there is a last-modified header, compare it to the header from S3
+	if (request.headers.has("last-modified")) {
+		const existingFile = await fetch(
+			`${process.env.S3_PUBLIC_URL}/${bucket}/${key}`,
+			{
+				method: "HEAD",
+				signal: AbortSignal.timeout(10 * 1000),
+			},
+		).catch(() => undefined);
+
+		if (existingFile && existingFile.ok) {
+			const modS3 = existingFile.headers.get("last-modified");
+			const modExternal = request.headers.get("last-modified");
+
+			if (modS3 && modExternal) {
+				return new Date(modS3) > new Date(modExternal);
+			} else {
+				console.error("File exists in S3, but has no last-modified header.");
+				return false;
+			}
+		}
+	}
+
+	return false;
+}
 
 export async function processImage(
 	url: URL,
@@ -12,8 +49,8 @@ export async function processImage(
 	bucket: string,
 	key: string,
 	tag?: string,
-): Promise<string> {
-	const request = await fetchAsBrowser(url);
+): Promise<ProcessImageResult> {
+	const request = await fetchAsBot(url);
 	const body = request.body;
 	if (!body) throw new Error(`Request body for ${url} is null`);
 
@@ -22,16 +59,22 @@ export async function processImage(
 	if (path.extname(url.pathname) === ".svg") {
 		const uploadKey = `${key}-${urlHash}.svg`;
 
-		const svg = await request.text();
-		const optimizedSvg = svgo.optimize(svg, { multipass: true }).data;
-		await s3.upload(
-			bucket,
-			uploadKey,
-			tag,
-			stream.Readable.from([optimizedSvg]),
-			"image/svg+xml",
-		);
-		return uploadKey;
+		if (await compareLastModified(request, bucket, uploadKey)) {
+			console.log(`Skipping ${uploadKey}, as it has already been stored.`);
+			await body.cancel();
+		} else {
+			const svg = await request.text();
+			const optimizedSvg = svgo.optimize(svg, { multipass: true }).data;
+			await s3.upload(
+				bucket,
+				uploadKey,
+				tag,
+				stream.Readable.from([optimizedSvg]),
+				"image/svg+xml",
+			);
+		}
+
+		return { key: uploadKey };
 	}
 
 	const pipeline = sharp();
@@ -44,16 +87,31 @@ export async function processImage(
 
 	const uploadKey = `${key}-${urlHash}.${metadata.format}`;
 
-	const transformer = sharp().resize(Math.min(width, metadata.width || width));
-	const transformerStream = metadataStream.pipe(transformer);
+	const transformWidth = Math.min(width, metadata.width || width);
+	const transformHeight =
+		metadata.height && metadata.width
+			? Math.round(metadata.height * (transformWidth / metadata.width))
+			: undefined;
 
-	await s3.upload(
-		bucket,
-		uploadKey,
-		tag,
-		transformerStream,
-		`image/${metadata.format}`,
-	);
+	if (await compareLastModified(request, bucket, uploadKey)) {
+		console.log(`Skipping ${uploadKey}, as it has already been stored.`);
+		metadataStream.destroy();
+	} else {
+		const transformer = sharp().resize(transformWidth);
+		const transformerStream = metadataStream.pipe(transformer);
 
-	return uploadKey;
+		await s3.upload(
+			bucket,
+			uploadKey,
+			tag,
+			transformerStream,
+			`image/${metadata.format}`,
+		);
+	}
+
+	return {
+		key: uploadKey,
+		width: transformWidth,
+		height: transformHeight,
+	};
 }
