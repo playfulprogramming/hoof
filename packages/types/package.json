@@ -16,6 +16,5 @@
 	},
 	"dependencies": {
 		"@sinclair/typebox": "catalog:"
-	},
-	"devDependencies": {}
+	}
 }
