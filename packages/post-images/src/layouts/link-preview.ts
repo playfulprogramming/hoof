@@ -144,6 +144,8 @@ export const linkPreview: LayoutFunction = async (post) => {
 						.map(
 							([author, index]) => html`
 								<img
+									width="102"
+									height="102"
 									style=${{
 										width: 102,
 										height: 102,
@@ -194,6 +196,8 @@ export const linkPreview: LayoutFunction = async (post) => {
 						</span>
 					</div>
 					<img
+						width="120"
+						height="120"
 						style=${{
 							width: 120,
 							height: 120,

@@ -126,7 +126,17 @@ export async function fetchPostData(
 		.then((json) => Value.Parse(TagsInfo, json));
 	const tags = (indexInfo.tags ?? [])
 		.map((tagId) => tagsJson[tagId])
-		.filter((tag) => tag?.emoji || (tag?.image && tag.shownWithBranding));
+		.filter((tag) => tag?.emoji || (tag?.image && tag.shownWithBranding))
+		.map((tag) => ({
+			displayName: tag.displayName,
+			emoji: tag.emoji,
+			image:
+				tag.image &&
+				new URL(
+					tag.image.replace(/^\//, ""),
+					rawUrlPrefix + "public/",
+				).toString(),
+		}));
 
 	return {
 		slug: input.slug,

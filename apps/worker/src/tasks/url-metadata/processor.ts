@@ -13,6 +13,7 @@ import {
 	s3,
 } from "@playfulprogramming/common";
 import { db, urlMetadata } from "@playfulprogramming/db";
+import { RobotDeniedError } from "../../utils/fetchAsBot.ts";
 
 export async function processUrlMetadata(job: {
 	id?: string;
@@ -20,19 +21,41 @@ export async function processUrlMetadata(job: {
 }): Promise<UrlMetadataOutput> {
 	const BUCKET = await s3.createBucket(process.env.S3_BUCKET);
 
+	let error: boolean = false;
 	const inputUrl = new URL(job.data.url);
-	const root = await fetchPageHtml(inputUrl);
-	if (!root) throw Error("Unable to fetch page HTML");
+	const root = await fetchPageHtml(inputUrl).catch((e) => {
+		console.error(`Unable to fetch HTML for ${inputUrl}`, e);
+		if (e! instanceof RobotDeniedError) {
+			error = true;
+		}
+		return undefined;
+	});
 
-	const title = getPageTitle(root);
+	const title = root && getPageTitle(root);
 
-	const iconPromise = fetchPageIcon(inputUrl, root).then(
-		(url) => url && processImage(url, 24, BUCKET, "remote-icon", job.id),
-	);
+	const iconPromise =
+		root &&
+		fetchPageIcon(inputUrl, root)
+			.then(
+				(url) => url && processImage(url, 24, BUCKET, "remote-icon", job.id),
+			)
+			.catch((e) => {
+				console.error(`Unable to fetch icon for ${inputUrl}`, e);
+				error = true;
+				return undefined;
+			});
 
-	const bannerPromise = getOpenGraphImage(root, inputUrl).then(
-		(url) => url && processImage(url, 896, BUCKET, "remote-banner", job.id),
-	);
+	const bannerPromise =
+		root &&
+		getOpenGraphImage(root, inputUrl)
+			.then(
+				(url) => url && processImage(url, 896, BUCKET, "remote-banner", job.id),
+			)
+			.catch((e) => {
+				console.error(`Unable to fetch banner for ${inputUrl}`, e);
+				error = true;
+				return undefined;
+			});
 
 	const [icon, banner] = await Promise.all([iconPromise, bannerPromise]);
 
@@ -47,6 +70,7 @@ export async function processUrlMetadata(job: {
 		bannerWidth: banner?.width ?? null,
 		bannerHeight: banner?.height ?? null,
 		fetchedAt: new Date(),
+		error,
 	};
 	await db.insert(urlMetadata).values(result);
 	return result;

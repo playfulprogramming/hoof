@@ -51,13 +51,15 @@ ${post.code}</pre
 }
 
 export const banner: LayoutFunction = async (post) => {
-	const transforms = ["rotate(25deg)"];
+	const transforms = ["rotate(25deg)", "rotate(10deg)", "rotate(-25deg)"];
 
 	const transform = transforms[post.title.length % transforms.length];
 
 	const tagSvg = post.tags[0]?.image ?? fallbackSticker;
 	const tagEmoji = post.tags[0]?.emoji;
-	const tagName = post.tags.map((t) => t.displayName).join(" ");
+	const tagName = post.tags.length
+		? post.tags.map((t) => t.displayName).join(" ")
+		: post.title;
 
 	return html`
 		<div
@@ -134,9 +136,12 @@ export const banner: LayoutFunction = async (post) => {
 				tagEmoji === undefined &&
 				html`
 					<img
+						width="160"
+						height="160"
 						style=${{
 							width: 160,
 							height: 160,
+							filter: "grayscale(1)",
 						}}
 						src=${tagSvg}
 					/>

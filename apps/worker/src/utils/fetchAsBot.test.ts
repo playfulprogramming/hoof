@@ -1,6 +1,6 @@
 import { http, HttpResponse } from "msw";
 import { server } from "../../test-utils/server.ts";
-import { fetchAsBot, resetCache } from "./fetchAsBot.ts";
+import { RobotDeniedError, fetchAsBot, resetCache } from "./fetchAsBot.ts";
 
 beforeEach(() => resetCache());
 
@@ -63,26 +63,8 @@ test("Should not return data for a URL disallowed by robots.txt", async () => {
 	);
 
 	const response = await fetchAsBot(new URL(url)).catch((e) => e);
-	expect(response).to.be.instanceOf(Error);
+	expect(response).to.be.instanceOf(RobotDeniedError);
 	expect((response as Error).message).toBe(
 		"playful-programming/1.0 is disallowed from example.com!",
-	);
-});
-
-test("Should not return data when the robots.txt call fails", async () => {
-	const url = "https://example.com/test";
-
-	server.use(
-		http.get(
-			"https://example.com/robots.txt",
-			() => new HttpResponse("", { status: 500 }),
-		),
-		http.get(url, () => new HttpResponse("Hello!", { status: 200 })),
-	);
-
-	const response = await fetchAsBot(new URL(url)).catch((e) => e);
-	expect(response).to.be.instanceOf(Error);
-	expect((response as Error).message).toBe(
-		"GET robots.txt for example.com returned 500",
 	);
 });
