@@ -1,7 +1,6 @@
 import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
-import type { PostImageInput } from "../../common/src/index.ts";
-import type { LayoutFunction } from "./types.ts";
+import type { LayoutFunction, PostImageData } from "./types.ts";
 import { readFile } from "fs/promises";
 
 const PAGE_WIDTH = 1280;
@@ -19,11 +18,14 @@ const figtreeBoldTtf = import.meta
 const figtreeExtraBoldTtf = import.meta
 	.resolve("./assets/Figtree/Figtree-ExtraBold.ttf")
 	.replace(/^file:\/\//, "");
+const robotoMonoRegularTtf = import.meta
+	.resolve("./assets/Roboto_Mono/RobotoMono-Regular.ttf")
+	.replace(/^file:\/\//, "");
 const robotoMonoBoldTtf = import.meta
 	.resolve("./assets/Roboto_Mono/RobotoMono-Bold.ttf")
 	.replace(/^file:\/\//, "");
-const colorEmojiTtf = import.meta
-	.resolve("./assets/NotoColorEmoji/NotoColorEmoji-Regular.ttf")
+const notoEmojiTtf = import.meta
+	.resolve("./assets/Noto_Emoji/NotoEmoji-Regular.ttf")
 	.replace(/^file:\/\//, "");
 
 const fonts: Parameters<typeof satori>[1]["fonts"] = [
@@ -53,19 +55,25 @@ const fonts: Parameters<typeof satori>[1]["fonts"] = [
 	},
 	{
 		name: "Roboto Mono",
+		data: await readFile(robotoMonoRegularTtf),
+		weight: 500,
+		style: "normal",
+	},
+	{
+		name: "Roboto Mono",
 		data: await readFile(robotoMonoBoldTtf),
 		weight: 700,
 		style: "normal",
 	},
 	{
-		name: "Noto Color Emoji",
-		data: await readFile(colorEmojiTtf),
+		name: "Noto Emoji",
+		data: await readFile(notoEmojiTtf),
 	},
 ];
 
 export async function createPostImage(
 	layout: LayoutFunction,
-	post: PostImageInput,
+	post: PostImageData,
 ): Promise<Buffer> {
 	const html = await layout(post);
 	const svg = await satori(html, {
@@ -74,8 +82,14 @@ export async function createPostImage(
 		fonts,
 	});
 
-	const resvg = new Resvg(svg);
+	const resvg = new Resvg(svg, {
+		font: {
+			loadSystemFonts: false,
+		},
+	});
 	return resvg.render().asPng();
 }
 
+export * from "./layouts/banner.ts";
 export * from "./layouts/link-preview.ts";
+export * from "./fetch-post-data.ts";

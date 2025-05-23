@@ -1,7 +1,6 @@
 import { readFile } from "fs/promises";
 import { html } from "../html.ts";
-import type { LayoutFunction } from "../types.ts";
-import type { PostImageInput } from "@playfulprogramming/common";
+import type { LayoutFunction, PostImageData } from "../types.ts";
 
 const path = import.meta
 	.resolve("../assets/playfulprogramming_sticker.svg")
@@ -9,15 +8,14 @@ const path = import.meta
 const playfulProgrammingStickerSvg = await readFile(path, "utf-8");
 const playfulProgrammingSticker = `data:image/svg+xml,${encodeURIComponent(playfulProgrammingStickerSvg)}`;
 
-function code(post: PostImageInput) {
+function code(post: PostImageData) {
 	return html`
 		<div
 			style=${{
 				width: "100%",
 				height: "200%",
 				display: "flex",
-				flexDirection: "column",
-				gap: 4,
+				flexDirection: "row",
 				position: "absolute",
 				top: 0,
 				left: 0,
@@ -31,27 +29,29 @@ function code(post: PostImageInput) {
 				boxShadow: "0 0 48px hsl(205 100% 30%)",
 			}}
 		>
-			${post.code.split("\n").map(
-				(line, index) => html`
-					<span
-						style=${{
-							width: "100%",
-							filter: "blur(1px)",
-							whiteSpace: "nowrap",
-						}}
-					>
-						<span
-							style=${{
-								width: 64,
-								color: "#FFFA",
-								paddingLeft: index > 8 ? "" : "0.5em",
-							}}
-							>${index + 1}</span
-						>
-						<span style=${{ color: "#FFF" }}>${line + "\n"}</span>
-					</span>
-				`,
-			)}
+			<pre
+				style=${{
+					width: 64,
+					filter: "blur(1px)",
+					color: "#fffa",
+					fontFamily: "Roboto Mono",
+				}}
+			>
+${post.code
+					.split("\n")
+					.map((_, index) => String(index + 1).padStart(2))
+					.join("\n")}</pre
+			>
+			<pre
+				style=${{
+					width: "80%",
+					filter: "blur(1px)",
+					color: "#fff",
+					fontFamily: "Roboto Mono",
+				}}
+			>
+${post.code}</pre
+			>
 		</div>
 	`;
 }
@@ -72,7 +72,7 @@ export const linkPreview: LayoutFunction = async (post) => {
 				height: "100%",
 				display: "flex",
 				background: "hsl(205 100% 73%)",
-				fontFamily: "Figtree, 'Noto Color Emoji'",
+				fontFamily: "Figtree, 'Noto Emoji'",
 			}}"
 		>
 			<div
@@ -92,7 +92,7 @@ export const linkPreview: LayoutFunction = async (post) => {
 						transform,
 						width: "100%",
 						height: "200%",
-						maskImage: "linear-gradient(to left, #66bfff00, #66bfffff)",
+						maskImage: "linear-gradient(to left, #66bfff00 10%, #66bfffff)",
 					}}
 				>
 					${code(post)}
@@ -125,6 +125,7 @@ export const linkPreview: LayoutFunction = async (post) => {
 					<div
 						style=${{
 							display: "flex",
+							width: "90%",
 							position: "absolute",
 							left: 64,
 							bottom: 120 + 56 + 42,
@@ -159,6 +160,7 @@ export const linkPreview: LayoutFunction = async (post) => {
 					<div
 						style=${{
 							height: 120,
+							width: "60%",
 							display: "flex",
 							flexDirection: "column",
 							justifyContent: "center",
@@ -173,6 +175,9 @@ export const linkPreview: LayoutFunction = async (post) => {
 							style=${{
 								fontSize: "36px",
 								color: "#00344D",
+								whiteSpace: "nowrap",
+								overflow: "hidden",
+								textOverflow: "ellipsis",
 							}}
 						>
 							${post.authors.map((a) => a.name).join(", ")}
