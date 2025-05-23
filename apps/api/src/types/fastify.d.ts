@@ -1,4 +1,4 @@
-import type { EnvType } from "@playfulprogramming/common";
+import type { EnvType } from "@playfulprogramming/types";
 
 declare module "fastify" {
 	interface FastifyInstance {

@@ -1,6 +1,6 @@
 import fp from "fastify-plugin";
 import fastifyEnv from "@fastify/env";
-import { EnvSchema } from "@playfulprogramming/common";
+import { EnvSchema } from "@playfulprogramming/types";
 
 export default fp(
 	(fastify) => {
