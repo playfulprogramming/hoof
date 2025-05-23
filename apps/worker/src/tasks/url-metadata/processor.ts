@@ -25,7 +25,7 @@ export async function processUrlMetadata(job: {
 	const inputUrl = new URL(job.data.url);
 	const root = await fetchPageHtml(inputUrl).catch((e) => {
 		console.error(`Unable to fetch HTML for ${inputUrl}`, e);
-		if (e! instanceof RobotDeniedError) {
+		if (!(e instanceof RobotDeniedError)) {
 			error = true;
 		}
 		return undefined;
