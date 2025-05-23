@@ -93,7 +93,7 @@ export async function upload(
 	bucket: string,
 	key: string,
 	tag: string | undefined,
-	file: stream.Readable,
+	file: stream.Readable | Buffer,
 	contentType: string,
 ) {
 	console.log(`Uploading ${bucket}/${key}`);

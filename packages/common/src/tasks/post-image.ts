@@ -3,23 +3,9 @@ import { Type, type Static } from "@sinclair/typebox";
 export const PostImageInputSchema = Type.Object(
 	{
 		slug: Type.String(),
-		title: Type.String(),
-		authors: Type.Array(
-			Type.Object({
-				name: Type.String(),
-				image: Type.String(),
-			}),
-		),
-		tags: Type.Array(
-			Type.Object({
-				displayName: Type.String(),
-				image: Type.Optional(Type.String()),
-				emoji: Type.Optional(Type.String()),
-			}),
-		),
-		publishedMeta: Type.String(),
-		wordCount: Type.Number(),
-		code: Type.String(),
+		// `path` and `author` are temporary, will be removed after https://github.com/playfulprogramming/hoof/issues/18
+		author: Type.String(),
+		path: Type.String(),
 	},
 	{
 		additionalProperties: false,
@@ -27,3 +13,8 @@ export const PostImageInputSchema = Type.Object(
 );
 
 export type PostImageInput = Static<typeof PostImageInputSchema>;
+
+export interface PostImageOutput {
+	bannerKey: string;
+	linkPreviewKey: string;
+}
