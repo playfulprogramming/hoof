@@ -52,22 +52,6 @@ const postImagesRoutes: FastifyPluginAsync = async (fastify) => {
 					content: {
 						"application/json": {
 							schema: PostImageInputSchema,
-							examples: [
-								{
-									slug: "example",
-									author: "fennifith",
-									path: "content/fennifith/posts/example/index.md",
-								} satisfies PostImageInput,
-							],
-						},
-					},
-					"x-examples": {
-						default: {
-							value: {
-								slug: "example",
-								author: "fennifith",
-								path: "content/fennifith/posts/example/index.md",
-							} satisfies PostImageInput,
 						},
 					},
 				},
