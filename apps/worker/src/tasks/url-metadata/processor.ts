@@ -70,6 +70,9 @@ export default createProcessor(Tasks.URL_METADATA, async (job) => {
 		fetchedAt: new Date(),
 		error,
 	};
-	await db.insert(urlMetadata).values(result);
+	await db
+		.insert(urlMetadata)
+		.values(result)
+		.onConflictDoUpdate({ target: urlMetadata.url, set: result });
 	return result;
 });

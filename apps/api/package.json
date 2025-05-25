@@ -20,7 +20,7 @@
 		"@scalar/fastify-api-reference": "^1.28.32",
 		"@sinclair/typebox": "catalog:",
 		"drizzle-orm": "catalog:",
-		"fastify": "^5.0.0",
-		"fastify-plugin": "^5.0.0"
+		"fastify": "^5.3.3",
+		"fastify-plugin": "^5.0.1"
 	}
 }

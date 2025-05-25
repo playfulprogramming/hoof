@@ -9,6 +9,13 @@ export const PostImageInputSchema = Type.Object(
 	},
 	{
 		additionalProperties: false,
+		examples: [
+			{
+				slug: "example",
+				author: "fennifith",
+				path: "content/fennifith/posts/example/index.md",
+			},
+		],
 	},
 );
 

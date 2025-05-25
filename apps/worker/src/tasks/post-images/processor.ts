@@ -23,14 +23,18 @@ export default createProcessor(Tasks.POST_IMAGES, async (job) => {
 		),
 	]);
 
-	await db.insert(postImages).values({
-		slug: data.slug,
-		bannerKey,
-		linkPreviewKey,
-	});
-
-	return {
+	const result = {
 		bannerKey,
 		linkPreviewKey,
 	};
+
+	await db
+		.insert(postImages)
+		.values({
+			slug: data.slug,
+			...result,
+		})
+		.onConflictDoUpdate({ target: postImages.slug, set: result });
+
+	return result;
 });

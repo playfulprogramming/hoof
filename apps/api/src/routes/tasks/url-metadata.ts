@@ -16,11 +16,30 @@ const ImageSchema = Type.Object({
 	height: Type.Optional(Type.Number()),
 });
 
-const UrlMetadataResponseSchema = Type.Object({
-	title: Type.Optional(Type.String()),
-	icon: Type.Optional(ImageSchema),
-	banner: Type.Optional(ImageSchema),
-});
+const UrlMetadataResponseSchema = Type.Object(
+	{
+		title: Type.Optional(Type.String()),
+		icon: Type.Optional(ImageSchema),
+		banner: Type.Optional(ImageSchema),
+	},
+	{
+		examples: [
+			{
+				title: "Homepage | Playful Programming",
+				icon: {
+					src: "http://localhost:9000/hoof-storage/remote-icon-b4dcfb60d116d9a1af3a3c151dd7b1ce.png",
+					width: 24,
+					height: 24,
+				},
+				banner: {
+					src: "http://localhost:9000/hoof-storage/remote-banner-e1d1aca0d6ccd594d4f68ac95f1a32e2.png",
+					width: 896,
+					height: 448,
+				},
+			},
+		],
+	},
+);
 
 function mapImageData(
 	key: string,

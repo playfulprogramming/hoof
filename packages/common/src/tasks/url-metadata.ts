@@ -6,6 +6,11 @@ export const UrlMetadataInputSchema = Type.Object(
 	},
 	{
 		additionalProperties: false,
+		examples: [
+			{
+				url: "https://playfulprogramming.com",
+			},
+		],
 	},
 );
 

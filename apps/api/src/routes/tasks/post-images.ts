@@ -11,10 +11,22 @@ import {
 import { db } from "@playfulprogramming/db";
 import { Type, type Static } from "@sinclair/typebox";
 
-const PostImagesResponseSchema = Type.Object({
-	banner: Type.String(),
-	linkPreview: Type.String(),
-});
+const PostImagesResponseSchema = Type.Object(
+	{
+		banner: Type.String(),
+		linkPreview: Type.String(),
+	},
+	{
+		examples: [
+			{
+				banner:
+					"http://localhost:9000/hoof-storage/post-images/example.banner.png",
+				linkPreview:
+					"http://localhost:9000/hoof-storage/post-images/example.link-preview.png",
+			},
+		],
+	},
+);
 
 function mapPostImages(
 	result: PostImageOutput,
@@ -36,7 +48,29 @@ const postImagesRoutes: FastifyPluginAsync = async (fastify) => {
 			schema: {
 				description:
 					"Generate static images for a post, to be used for social media metadata / post list banners.",
-				body: PostImageInputSchema,
+				body: {
+					content: {
+						"application/json": {
+							schema: PostImageInputSchema,
+							examples: [
+								{
+									slug: "example",
+									author: "fennifith",
+									path: "content/fennifith/posts/example/index.md",
+								} satisfies PostImageInput,
+							],
+						},
+					},
+					"x-examples": {
+						default: {
+							value: {
+								slug: "example",
+								author: "fennifith",
+								path: "content/fennifith/posts/example/index.md",
+							} satisfies PostImageInput,
+						},
+					},
+				},
 				response: {
 					200: {
 						description: "Task complete",
