@@ -1,4 +1,5 @@
 import env from "./plugins/env.ts";
+import opentelemetry from "./plugins/opentelemetry.ts";
 import sensible from "./plugins/sensible.ts";
 import swagger from "./plugins/swagger.ts";
 import rootRoute from "./routes/root.ts";
@@ -11,6 +12,7 @@ const app = fastify({
 });
 
 app.register(env);
+app.register(opentelemetry);
 app.register(sensible);
 app.register(swagger);
 app.register(rootRoute);
