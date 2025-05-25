@@ -3,7 +3,7 @@ import * as stream from "stream";
 import * as svgo from "svgo";
 import path from "path";
 import crypto from "crypto";
-import { s3 } from "@playfulprogramming/common";
+import { env, s3 } from "@playfulprogramming/common";
 import { fetchAsBot } from "../../../utils/fetchAsBot.ts";
 import { setTimeout } from "timers/promises";
 
@@ -21,7 +21,7 @@ async function compareLastModified(
 	// If there is a last-modified header, compare it to the header from S3
 	if (request.headers.has("last-modified")) {
 		const existingFile = await fetchAsBot(
-			new URL(`${bucket}/${key}`, process.env.S3_PUBLIC_URL),
+			new URL(`${bucket}/${key}`, env.S3_PUBLIC_URL),
 			{
 				method: "HEAD",
 				skipRobotsCheck: true,

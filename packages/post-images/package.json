@@ -12,7 +12,6 @@
 	},
 	"dependencies": {
 		"@playfulprogramming/common": "workspace:*",
-		"@playfulprogramming/types": "workspace:*",
 		"@resvg/resvg-js": "2.5.0",
 		"@sinclair/typebox": "catalog:",
 		"dayjs": "^1.11.13",

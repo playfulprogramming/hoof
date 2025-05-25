@@ -4,6 +4,7 @@ import {
 	type UrlMetadataInput,
 	type UrlMetadataOutput,
 	UrlMetadataInputSchema,
+	env,
 	queueEvents,
 	queues,
 } from "@playfulprogramming/common";
@@ -48,7 +49,7 @@ function mapImageData(
 	width: number | null,
 	height: number | null,
 ): Static<typeof ImageSchema> {
-	const s3PublicUrl = `${process.env.S3_PUBLIC_URL}/${process.env.S3_BUCKET}/`;
+	const s3PublicUrl = `${env.S3_PUBLIC_URL}/${env.S3_BUCKET}/`;
 	const src = new URL(key, s3PublicUrl).toString();
 	return {
 		src,

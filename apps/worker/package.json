@@ -15,7 +15,6 @@
 		"@playfulprogramming/common": "workspace:*",
 		"@playfulprogramming/db": "workspace:*",
 		"@playfulprogramming/post-images": "workspace:*",
-		"@playfulprogramming/types": "workspace:*",
 		"bullmq": "catalog:",
 		"hast-util-from-html": "^2.0.3",
 		"lru-cache": "^11.1.0",

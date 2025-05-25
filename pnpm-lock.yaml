@@ -80,9 +80,6 @@ importers:
       '@playfulprogramming/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@playfulprogramming/types':
-        specifier: workspace:*
-        version: link:../../packages/types
       '@scalar/fastify-api-reference':
         specifier: ^1.28.32
         version: 1.28.32
@@ -110,9 +107,6 @@ importers:
       '@playfulprogramming/post-images':
         specifier: workspace:*
         version: link:../../packages/post-images
-      '@playfulprogramming/types':
-        specifier: workspace:*
-        version: link:../../packages/types
       bullmq:
         specifier: 'catalog:'
         version: 5.40.2
@@ -156,9 +150,6 @@ importers:
       '@aws-sdk/lib-storage':
         specifier: ^3.705.0
         version: 3.744.0(@aws-sdk/client-s3@3.744.0)
-      '@playfulprogramming/types':
-        specifier: workspace:*
-        version: link:../types
       '@sinclair/typebox':
         specifier: 'catalog:'
         version: 0.34.33
@@ -175,6 +166,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@playfulprogramming/common':
+        specifier: workspace:*
+        version: link:../common
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.43.1(@types/pg@8.11.11)(pg@8.15.6(pg-native@3.5.0))
@@ -185,9 +179,6 @@ importers:
         specifier: ^3.5.0
         version: 3.5.0
     devDependencies:
-      '@playfulprogramming/types':
-        specifier: workspace:*
-        version: link:../types
       '@types/pg':
         specifier: ^8.11.11
         version: 8.11.11
@@ -203,9 +194,6 @@ importers:
       '@playfulprogramming/common':
         specifier: workspace:*
         version: link:../common
-      '@playfulprogramming/types':
-        specifier: workspace:*
-        version: link:../types
       '@resvg/resvg-js':
         specifier: 2.5.0
         version: 2.5.0
@@ -246,12 +234,6 @@ importers:
       '@types/unist':
         specifier: ^3.0.3
         version: 3.0.3
-
-  packages/types:
-    dependencies:
-      '@sinclair/typebox':
-        specifier: 'catalog:'
-        version: 0.34.33
 
 packages:
 

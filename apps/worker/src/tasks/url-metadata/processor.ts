@@ -7,13 +7,13 @@ import {
 } from "./utils/fetchPageHtml.ts";
 import { fetchPageIcons } from "./utils/fetchPageIcons.ts";
 import { processImages } from "./utils/processImage.ts";
-import { Tasks, s3 } from "@playfulprogramming/common";
+import { Tasks, env, s3 } from "@playfulprogramming/common";
 import { db, urlMetadata } from "@playfulprogramming/db";
 import { RobotDeniedError } from "../../utils/fetchAsBot.ts";
 import { createProcessor } from "../../createProcessor.ts";
 
 export default createProcessor(Tasks.URL_METADATA, async (job) => {
-	const BUCKET = await s3.createBucket(process.env.S3_BUCKET);
+	const BUCKET = await s3.createBucket(env.S3_BUCKET);
 
 	let error: boolean = false;
 	const inputUrl = new URL(job.data.url);

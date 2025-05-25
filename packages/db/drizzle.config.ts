@@ -3,8 +3,6 @@ import { config } from "dotenv";
 
 config({ path: "../../.env" });
 
-console.log(process.env.POSTGRES_URL);
-
 export default defineConfig({
 	out: "./drizzle",
 	schema: "./src/schema",

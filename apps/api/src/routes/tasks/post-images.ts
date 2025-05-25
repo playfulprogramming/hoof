@@ -5,6 +5,7 @@ import {
 	PostImageInputSchema,
 	type PostImageOutput,
 	Tasks,
+	env,
 	queueEvents,
 	queues,
 } from "@playfulprogramming/common";
@@ -31,7 +32,7 @@ const PostImagesResponseSchema = Type.Object(
 function mapPostImages(
 	result: PostImageOutput,
 ): Static<typeof PostImagesResponseSchema> {
-	const s3PublicUrl = `${process.env.S3_PUBLIC_URL}/${process.env.S3_BUCKET}/`;
+	const s3PublicUrl = `${env.S3_PUBLIC_URL}/${env.S3_BUCKET}/`;
 	return {
 		banner: new URL(result.bannerKey, s3PublicUrl).toString(),
 		linkPreview: new URL(result.linkPreviewKey, s3PublicUrl).toString(),
