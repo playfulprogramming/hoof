@@ -1,4 +1,5 @@
 import { defineConfig } from "drizzle-kit";
+import { env } from "@playfulprogramming/common";
 
 export default defineConfig({
 	out: "./drizzle",
@@ -6,6 +7,6 @@ export default defineConfig({
 	dialect: "postgresql",
 	casing: "snake_case",
 	dbCredentials: {
-		url: process.env.POSTGRES_URL!,
+		url: env.POSTGRES_URL,
 	},
 });

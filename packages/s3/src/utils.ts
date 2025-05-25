@@ -6,23 +6,14 @@ import {
 	HeadObjectCommand,
 	NoSuchKey,
 	PutBucketPolicyCommand,
-	S3Client,
 } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import type * as stream from "stream";
-
-const client = new S3Client({
-	region: "auto",
-	endpoint: process.env.S3_ENDPOINT!,
-	credentials: {
-		accessKeyId: process.env.S3_KEY_ID!,
-		secretAccessKey: process.env.S3_KEY_SECRET!,
-	},
-	forcePathStyle: true,
-});
+import { env } from "@playfulprogramming/common";
+import { client } from "./client.ts";
 
 export async function createBucket(name: string) {
-	if (process.env.ENVIRONMENT === "production") return name;
+	if (env.ENVIRONMENT === "production") return name;
 
 	try {
 		await client.send(new CreateBucketCommand({ Bucket: name }));

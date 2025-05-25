@@ -1,5 +1,5 @@
 {
 	"$schema": "https://unpkg.com/knip@5/schema.json",
 	"ignore": ["*/*/scripts/*"],
-	"ignoreDependencies": ["@aws-sdk/types", "@playfulprogramming/types"]
+	"ignoreDependencies": ["@aws-sdk/types"]
 }

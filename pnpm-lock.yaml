@@ -83,15 +83,18 @@ importers:
       '@playfulprogramming/opentelemetry':
         specifier: workspace:*
         version: link:../../packages/opentelemetry
-      '@playfulprogramming/types':
+      '@playfulprogramming/redis':
         specifier: workspace:*
-        version: link:../../packages/types
+        version: link:../../packages/redis
       '@scalar/fastify-api-reference':
         specifier: ^1.28.32
         version: 1.28.32
       '@sinclair/typebox':
         specifier: 'catalog:'
         version: 0.34.33
+      bullmq:
+        specifier: 'catalog:'
+        version: 5.40.2
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.43.1(@opentelemetry/api@1.9.0)(@types/pg@8.11.11)(pg@8.15.6(pg-native@3.5.0))
@@ -113,9 +116,12 @@ importers:
       '@playfulprogramming/post-images':
         specifier: workspace:*
         version: link:../../packages/post-images
-      '@playfulprogramming/types':
+      '@playfulprogramming/redis':
         specifier: workspace:*
-        version: link:../../packages/types
+        version: link:../../packages/redis
+      '@playfulprogramming/s3':
+        specifier: workspace:*
+        version: link:../../packages/s3
       bullmq:
         specifier: 'catalog:'
         version: 5.40.2
@@ -153,31 +159,15 @@ importers:
 
   packages/common:
     dependencies:
-      '@aws-sdk/client-s3':
-        specifier: ^3.705.0
-        version: 3.744.0
-      '@aws-sdk/lib-storage':
-        specifier: ^3.705.0
-        version: 3.744.0(@aws-sdk/client-s3@3.744.0)
-      '@playfulprogramming/types':
-        specifier: workspace:*
-        version: link:../types
       '@sinclair/typebox':
         specifier: 'catalog:'
         version: 0.34.33
-      bullmq:
-        specifier: 'catalog:'
-        version: 5.40.2
-      ioredis:
-        specifier: ^5.5.0
-        version: 5.5.0
-    devDependencies:
-      '@aws-sdk/types':
-        specifier: ^3.696.0
-        version: 3.734.0
 
   packages/db:
     dependencies:
+      '@playfulprogramming/common':
+        specifier: workspace:*
+        version: link:../common
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.43.1(@opentelemetry/api@1.9.0)(@types/pg@8.11.11)(pg@8.15.6(pg-native@3.5.0))
@@ -188,9 +178,6 @@ importers:
         specifier: ^3.5.0
         version: 3.5.0
     devDependencies:
-      '@playfulprogramming/types':
-        specifier: workspace:*
-        version: link:../types
       '@types/pg':
         specifier: ^8.11.11
         version: 8.11.11
@@ -221,18 +208,12 @@ importers:
       '@opentelemetry/sdk-trace-node':
         specifier: ^2.0.1
         version: 2.0.1(@opentelemetry/api@1.9.0)
-      '@playfulprogramming/types':
-        specifier: workspace:*
-        version: link:../types
 
   packages/post-images:
     dependencies:
       '@playfulprogramming/common':
         specifier: workspace:*
         version: link:../common
-      '@playfulprogramming/types':
-        specifier: workspace:*
-        version: link:../types
       '@resvg/resvg-js':
         specifier: 2.5.0
         version: 2.5.0
@@ -274,11 +255,30 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3
 
-  packages/types:
+  packages/redis:
     dependencies:
-      '@sinclair/typebox':
-        specifier: 'catalog:'
-        version: 0.34.33
+      '@playfulprogramming/common':
+        specifier: workspace:*
+        version: link:../common
+      ioredis:
+        specifier: ^5.5.0
+        version: 5.5.0
+
+  packages/s3:
+    dependencies:
+      '@aws-sdk/client-s3':
+        specifier: ^3.705.0
+        version: 3.744.0
+      '@aws-sdk/lib-storage':
+        specifier: ^3.705.0
+        version: 3.744.0(@aws-sdk/client-s3@3.744.0)
+      '@playfulprogramming/common':
+        specifier: workspace:*
+        version: link:../common
+    devDependencies:
+      '@aws-sdk/types':
+        specifier: ^3.696.0
+        version: 3.734.0
 
 packages:
 

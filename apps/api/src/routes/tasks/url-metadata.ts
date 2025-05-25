@@ -4,11 +4,11 @@ import {
 	type UrlMetadataInput,
 	type UrlMetadataOutput,
 	UrlMetadataInputSchema,
-	queueEvents,
-	queues,
+	env,
 } from "@playfulprogramming/common";
 import { db } from "@playfulprogramming/db";
 import { Type, type Static } from "@sinclair/typebox";
+import { queueEvents, queues } from "../../utils/queues.ts";
 
 const ImageSchema = Type.Object({
 	src: Type.String(),
@@ -48,7 +48,7 @@ function mapImageData(
 	width: number | null,
 	height: number | null,
 ): Static<typeof ImageSchema> {
-	const s3PublicUrl = `${process.env.S3_PUBLIC_URL}/${process.env.S3_BUCKET}/`;
+	const s3PublicUrl = `${env.S3_PUBLIC_URL}/${env.S3_BUCKET}/`;
 	const src = new URL(key, s3PublicUrl).toString();
 	return {
 		src,

@@ -10,8 +10,7 @@
 		"skipLibCheck": true,
 		"erasableSyntaxOnly": true,
 		"allowImportingTsExtensions": true,
-		"esModuleInterop": true,
-		"types": ["@playfulprogramming/types/global"]
+		"esModuleInterop": true
 	},
 	"include": ["eslint.config.js"]
 }

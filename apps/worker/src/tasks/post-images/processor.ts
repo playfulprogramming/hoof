@@ -1,4 +1,4 @@
-import { Tasks, s3 } from "@playfulprogramming/common";
+import { Tasks, env } from "@playfulprogramming/common";
 import { db, postImages } from "@playfulprogramming/db";
 import {
 	fetchPostData,
@@ -6,10 +6,11 @@ import {
 	banner,
 	linkPreview,
 } from "@playfulprogramming/post-images";
+import { s3 } from "@playfulprogramming/s3";
 import { createProcessor } from "../../createProcessor.ts";
 
 export default createProcessor(Tasks.POST_IMAGES, async (job) => {
-	const BUCKET = await s3.createBucket(process.env.S3_BUCKET);
+	const BUCKET = await s3.createBucket(env.S3_BUCKET);
 
 	const data = await fetchPostData(job.data);
 	const bannerKey = `post-images/${data.slug}.banner.png`;
