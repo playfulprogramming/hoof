@@ -21,7 +21,7 @@ jobs:
         run: pnpm install --ignore-scripts
 
       - name: Run tests
-        run: pnpm run test
+        run: source .env.example && pnpm run test
 
       - name: Check formatting
         run: pnpm run prettier

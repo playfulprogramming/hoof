@@ -11,10 +11,6 @@ export const EnvSchema = Type.Object({
 
 	SITE_URL: Type.String(),
 
-	FLY_API_URL: Type.Optional(Type.String()),
-	FLY_API_TOKEN: Type.String(),
-	FLY_WORKER_APP_NAME: Type.String(),
-
 	S3_PUBLIC_URL: Type.String(),
 	S3_ENDPOINT: Type.String(),
 	S3_KEY_ID: Type.String(),
