@@ -76,6 +76,10 @@ const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 		async (request, reply) => {
 			// Normalize URL
 			const inputUrl = new URL(request.body.url);
+			if (!["http:", "https:"].includes(inputUrl.protocol)) {
+				throw new Error(`Protocol '${inputUrl.protocol}' is not spported!`);
+			}
+
 			const normalizedUrl = new URL(
 				inputUrl.pathname,
 				inputUrl.origin.toLowerCase(),

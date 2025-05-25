@@ -1,8 +1,4 @@
-import {
-	s3,
-	type PostImageInput,
-	type PostImageOutput,
-} from "@playfulprogramming/common";
+import { Tasks, s3 } from "@playfulprogramming/common";
 import { db, postImages } from "@playfulprogramming/db";
 import {
 	fetchPostData,
@@ -10,11 +6,9 @@ import {
 	banner,
 	linkPreview,
 } from "@playfulprogramming/post-images";
+import { createProcessor } from "../../createProcessor.ts";
 
-export async function processPostImages(job: {
-	id?: string;
-	data: PostImageInput;
-}): Promise<PostImageOutput> {
+export default createProcessor(Tasks.POST_IMAGES, async (job) => {
 	const BUCKET = await s3.createBucket(process.env.S3_BUCKET);
 
 	const data = await fetchPostData(job.data);
@@ -39,4 +33,4 @@ export async function processPostImages(job: {
 		bannerKey,
 		linkPreviewKey,
 	};
-}
+});

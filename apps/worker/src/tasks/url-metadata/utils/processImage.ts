@@ -5,6 +5,7 @@ import path from "path";
 import crypto from "crypto";
 import { s3 } from "@playfulprogramming/common";
 import { fetchAsBot } from "../../../utils/fetchAsBot.ts";
+import { setTimeout } from "timers/promises";
 
 interface ProcessImageResult {
 	key: string;
@@ -19,11 +20,11 @@ async function compareLastModified(
 ): Promise<boolean> {
 	// If there is a last-modified header, compare it to the header from S3
 	if (request.headers.has("last-modified")) {
-		const existingFile = await fetch(
-			`${process.env.S3_PUBLIC_URL}/${bucket}/${key}`,
+		const existingFile = await fetchAsBot(
+			new URL(`${bucket}/${key}`, process.env.S3_PUBLIC_URL),
 			{
 				method: "HEAD",
-				signal: AbortSignal.timeout(10 * 1000),
+				skipRobotsCheck: true,
 			},
 		).catch(() => undefined);
 
@@ -43,20 +44,34 @@ async function compareLastModified(
 	return false;
 }
 
-export async function processImage(
+async function processImage(
 	url: URL,
 	width: number,
 	bucket: string,
 	key: string,
 	tag?: string,
-): Promise<ProcessImageResult> {
-	const request = await fetchAsBot(url);
-	const body = request.body;
-	if (!body) throw new Error(`Request body for ${url} is null`);
+): Promise<ProcessImageResult | undefined> {
+	const request = await fetchAsBot(url).catch((e) => {
+		console.error(`Error fetching ${url}`, e);
+		if (e instanceof DOMException && e.name === "TimeoutError") {
+			throw e;
+		}
+		return undefined;
+	});
+	const body = request?.body;
+	if (!body) {
+		console.error(`Request body for ${url} is null`);
+		return undefined;
+	}
 
 	const urlHash = crypto.createHash("md5").update(url.href).digest("hex");
 
-	if (path.extname(url.pathname) === ".svg") {
+	const isSvg =
+		request.headers.get("content-type")?.includes("image/svg") ||
+		(!request.headers.has("content-type") &&
+			path.extname(url.pathname) === ".svg");
+
+	if (isSvg) {
 		const uploadKey = `${key}-${urlHash}.svg`;
 
 		if (await compareLastModified(request, bucket, uploadKey)) {
@@ -79,10 +94,14 @@ export async function processImage(
 
 	const pipeline = sharp();
 	const metadataStream = stream.Readable.fromWeb(body as never).pipe(pipeline);
-	const metadata = await pipeline.metadata();
+	const metadata = await Promise.race([
+		setTimeout(10 * 1000).then(() => undefined),
+		pipeline.metadata().catch(() => undefined),
+	]);
 
-	if (!metadata.format) {
-		throw new Error(`Image format for ${url} could not be found.`);
+	if (!metadata || !metadata.format) {
+		console.error(`Image format for ${url} could not be found.`);
+		return undefined;
 	}
 
 	const uploadKey = `${key}-${urlHash}.${metadata.format}`;
@@ -114,4 +133,19 @@ export async function processImage(
 		width: transformWidth,
 		height: transformHeight,
 	};
+}
+
+export async function processImages(
+	urls: URL[],
+	width: number,
+	bucket: string,
+	key: string,
+	tag?: string,
+): Promise<ProcessImageResult | undefined> {
+	for (const url of urls) {
+		const result = await processImage(url, width, bucket, key, tag);
+		if (result) {
+			return result;
+		}
+	}
 }

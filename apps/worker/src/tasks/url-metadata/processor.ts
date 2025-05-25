@@ -2,23 +2,17 @@ import { URL } from "url";
 
 import {
 	fetchPageHtml,
-	getOpenGraphImage,
+	getOpenGraphImages,
 	getPageTitle,
 } from "./utils/fetchPageHtml.ts";
-import { fetchPageIcon } from "./utils/fetchPageIcon.ts";
-import { processImage } from "./utils/processImage.ts";
-import {
-	type UrlMetadataInput,
-	type UrlMetadataOutput,
-	s3,
-} from "@playfulprogramming/common";
+import { fetchPageIcons } from "./utils/fetchPageIcons.ts";
+import { processImages } from "./utils/processImage.ts";
+import { Tasks, s3 } from "@playfulprogramming/common";
 import { db, urlMetadata } from "@playfulprogramming/db";
 import { RobotDeniedError } from "../../utils/fetchAsBot.ts";
+import { createProcessor } from "../../createProcessor.ts";
 
-export async function processUrlMetadata(job: {
-	id?: string;
-	data: UrlMetadataInput;
-}): Promise<UrlMetadataOutput> {
+export default createProcessor(Tasks.URL_METADATA, async (job) => {
 	const BUCKET = await s3.createBucket(process.env.S3_BUCKET);
 
 	let error: boolean = false;
@@ -28,6 +22,9 @@ export async function processUrlMetadata(job: {
 		if (!(e instanceof RobotDeniedError)) {
 			error = true;
 		}
+		if (e instanceof DOMException && e.name === "TimeoutError") {
+			throw e;
+		}
 		return undefined;
 	});
 
@@ -35,9 +32,9 @@ export async function processUrlMetadata(job: {
 
 	const iconPromise =
 		root &&
-		fetchPageIcon(inputUrl, root)
+		fetchPageIcons(inputUrl, root)
 			.then(
-				(url) => url && processImage(url, 24, BUCKET, "remote-icon", job.id),
+				(url) => url && processImages(url, 24, BUCKET, "remote-icon", job.id),
 			)
 			.catch((e) => {
 				console.error(`Unable to fetch icon for ${inputUrl}`, e);
@@ -47,9 +44,10 @@ export async function processUrlMetadata(job: {
 
 	const bannerPromise =
 		root &&
-		getOpenGraphImage(root, inputUrl)
+		getOpenGraphImages(root, inputUrl)
 			.then(
-				(url) => url && processImage(url, 896, BUCKET, "remote-banner", job.id),
+				(url) =>
+					url && processImages(url, 896, BUCKET, "remote-banner", job.id),
 			)
 			.catch((e) => {
 				console.error(`Unable to fetch banner for ${inputUrl}`, e);
@@ -74,4 +72,4 @@ export async function processUrlMetadata(job: {
 	};
 	await db.insert(urlMetadata).values(result);
 	return result;
-}
+});

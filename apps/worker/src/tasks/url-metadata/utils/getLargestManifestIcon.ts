@@ -22,36 +22,33 @@ const parseManifestIconSrcString = (str: string) => {
 	});
 };
 
-export const getLargestManifestIcon = (manifest: Manifest) => {
-	if (!manifest.icons) return null;
+interface ManifestIconResult {
+	src: URL;
+	size: number;
+}
 
-	let largest = {
-		size: 0,
-		icon: null as ManifestIcon | null,
-	};
+export const getLargestManifestIcon = (
+	manifestUrl: URL,
+	manifest: Manifest,
+) => {
+	if (!manifest.icons) return [];
+
+	let manifestIcons: ManifestIconResult[];
 
 	if (Array.isArray(manifest.icons)) {
-		for (const icon of manifest.icons) {
-			for (const size of parseManifestIconSrcString(icon.sizes)) {
-				if (size > largest.size) {
-					largest = { size, icon };
-				}
-			}
-		}
+		manifestIcons = manifest.icons.map((icon) => ({
+			src: new URL(icon.src, manifestUrl),
+			size: Math.max(...parseManifestIconSrcString(icon.sizes)),
+		}));
 	} else {
-		for (const [sizes, src] of Object.entries(manifest.icons)) {
-			const size = parseManifestIconSrcString(sizes)[0];
-			if (size > largest.size) {
-				largest = {
-					size,
-					icon: {
-						src,
-						sizes: `${size}x${size}`,
-					},
-				};
-			}
-		}
+		manifestIcons = Object.entries(manifest.icons)
+			.map(([sizes, src]) => ({ sizes, src }))
+			.map((icon) => ({
+				src: new URL(icon.src, manifestUrl),
+				size: Math.max(...parseManifestIconSrcString(icon.sizes)),
+			}));
 	}
 
-	return largest;
+	manifestIcons.sort((a, b) => b.size - a.size);
+	return manifestIcons;
 };

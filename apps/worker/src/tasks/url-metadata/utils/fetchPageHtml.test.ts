@@ -1,7 +1,7 @@
 import { mockEndpoint } from "../../../../test-utils/server.ts";
 import {
 	fetchPageHtml,
-	getOpenGraphImage,
+	getOpenGraphImages,
 	getPageTitle,
 } from "./fetchPageHtml.ts";
 import { removePositions } from "../../../../test-utils/hast.ts";
@@ -145,6 +145,8 @@ test("Should gather image URL from OpenGraph metadata", async () => {
 		bodyType: "text",
 	});
 	const root = await fetchPageHtml(new URL(domain));
-	const response = await getOpenGraphImage(root!, new URL(domain));
-	expect(response).toMatchInlineSnapshot(`"https://example.com/image.jpg"`);
+	const response = await getOpenGraphImages(root!, new URL(domain));
+	expect(response).toMatchInlineSnapshot(`[
+  "https://example.com/image.jpg",
+]`);
 });

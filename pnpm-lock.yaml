@@ -6,9 +6,9 @@ settings:
 
 catalogs:
   default:
-    '@sinclair/typebox':
-      specifier: ^0.34.33
-      version: 0.34.33
+    bullmq:
+      specifier: ^5.40.2
+      version: 5.40.2
 
 importers:
 
@@ -128,6 +128,9 @@ importers:
       unist-util-find:
         specifier: ^3.0.0
         version: 3.0.0
+      unist-util-visit:
+        specifier: ^5.0.0
+        version: 5.0.0
     devDependencies:
       '@types/hast':
         specifier: ^3.0.4
