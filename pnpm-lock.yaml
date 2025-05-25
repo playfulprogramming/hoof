@@ -4,18 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-catalogs:
-  default:
-    '@sinclair/typebox':
-      specifier: ^0.34.33
-      version: 0.34.33
-    bullmq:
-      specifier: ^5.40.2
-      version: 5.40.2
-    drizzle-orm:
-      specifier: ^0.43.1
-      version: 0.43.1
-
 importers:
 
   .:
@@ -26,9 +14,6 @@ importers:
       '@types/node':
         specifier: ^22.15.3
         version: 22.15.3
-      drizzle-kit:
-        specifier: ^0.31.0
-        version: 0.31.0
       eslint:
         specifier: ^9.25.1
         version: 9.25.1(jiti@2.4.2)
