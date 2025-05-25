@@ -21,6 +21,7 @@ const UrlMetadataResponseSchema = Type.Object(
 		title: Type.Optional(Type.String()),
 		icon: Type.Optional(ImageSchema),
 		banner: Type.Optional(ImageSchema),
+		error: Type.Boolean(),
 	},
 	{
 		examples: [
@@ -36,6 +37,7 @@ const UrlMetadataResponseSchema = Type.Object(
 					width: 896,
 					height: 448,
 				},
+				error: false,
 			},
 		],
 	},
@@ -66,6 +68,7 @@ function mapUrlMetadata(
 		banner: result.bannerKey
 			? mapImageData(result.bannerKey, result.bannerWidth, result.bannerHeight)
 			: undefined,
+		error: result.error,
 	};
 }
 
