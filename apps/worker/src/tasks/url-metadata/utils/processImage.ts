@@ -3,7 +3,8 @@ import * as stream from "stream";
 import * as svgo from "svgo";
 import path from "path";
 import crypto from "crypto";
-import { env, s3 } from "@playfulprogramming/common";
+import { env } from "@playfulprogramming/common";
+import { s3 } from "@playfulprogramming/s3";
 import { fetchAsBot } from "../../../utils/fetchAsBot.ts";
 import { setTimeout } from "timers/promises";
 

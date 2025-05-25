@@ -5,11 +5,10 @@ import {
 	type UrlMetadataOutput,
 	UrlMetadataInputSchema,
 	env,
-	queueEvents,
-	queues,
 } from "@playfulprogramming/common";
 import { db } from "@playfulprogramming/db";
 import { Type, type Static } from "@sinclair/typebox";
+import { queueEvents, queues } from "../../utils/queues.ts";
 
 const ImageSchema = Type.Object({
 	src: Type.String(),

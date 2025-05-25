@@ -1,5 +1,6 @@
 import { Worker } from "bullmq";
-import { redis, type TasksValues } from "@playfulprogramming/common";
+import type { TasksValues } from "@playfulprogramming/common";
+import { redis } from "@playfulprogramming/redis";
 import type { TaskProcessor } from "./createProcessor.ts";
 
 export function createWorker<T extends TasksValues>(

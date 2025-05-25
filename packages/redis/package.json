@@ -1,5 +1,5 @@
 {
-	"name": "@playfulprogramming/common",
+	"name": "@playfulprogramming/redis",
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
@@ -10,6 +10,7 @@
 		"build": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@sinclair/typebox": "catalog:"
+		"@playfulprogramming/common": "workspace:*",
+		"ioredis": "^5.5.0"
 	}
 }

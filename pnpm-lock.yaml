@@ -80,12 +80,18 @@ importers:
       '@playfulprogramming/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@playfulprogramming/redis':
+        specifier: workspace:*
+        version: link:../../packages/redis
       '@scalar/fastify-api-reference':
         specifier: ^1.28.32
         version: 1.28.32
       '@sinclair/typebox':
         specifier: 'catalog:'
         version: 0.34.33
+      bullmq:
+        specifier: 'catalog:'
+        version: 5.40.2
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.43.1(@types/pg@8.11.11)(pg@8.15.6(pg-native@3.5.0))
@@ -107,6 +113,12 @@ importers:
       '@playfulprogramming/post-images':
         specifier: workspace:*
         version: link:../../packages/post-images
+      '@playfulprogramming/redis':
+        specifier: workspace:*
+        version: link:../../packages/redis
+      '@playfulprogramming/s3':
+        specifier: workspace:*
+        version: link:../../packages/s3
       bullmq:
         specifier: 'catalog:'
         version: 5.40.2
@@ -144,25 +156,9 @@ importers:
 
   packages/common:
     dependencies:
-      '@aws-sdk/client-s3':
-        specifier: ^3.705.0
-        version: 3.744.0
-      '@aws-sdk/lib-storage':
-        specifier: ^3.705.0
-        version: 3.744.0(@aws-sdk/client-s3@3.744.0)
       '@sinclair/typebox':
         specifier: 'catalog:'
         version: 0.34.33
-      bullmq:
-        specifier: 'catalog:'
-        version: 5.40.2
-      ioredis:
-        specifier: ^5.5.0
-        version: 5.5.0
-    devDependencies:
-      '@aws-sdk/types':
-        specifier: ^3.696.0
-        version: 3.734.0
 
   packages/db:
     dependencies:
@@ -234,6 +230,31 @@ importers:
       '@types/unist':
         specifier: ^3.0.3
         version: 3.0.3
+
+  packages/redis:
+    dependencies:
+      '@playfulprogramming/common':
+        specifier: workspace:*
+        version: link:../common
+      ioredis:
+        specifier: ^5.5.0
+        version: 5.5.0
+
+  packages/s3:
+    dependencies:
+      '@aws-sdk/client-s3':
+        specifier: ^3.705.0
+        version: 3.744.0
+      '@aws-sdk/lib-storage':
+        specifier: ^3.705.0
+        version: 3.744.0(@aws-sdk/client-s3@3.744.0)
+      '@playfulprogramming/common':
+        specifier: workspace:*
+        version: link:../common
+    devDependencies:
+      '@aws-sdk/types':
+        specifier: ^3.696.0
+        version: 3.734.0
 
 packages:
 

@@ -4,8 +4,8 @@ import {
 	type TaskInputs,
 	type TaskOutputs,
 	Tasks,
-} from "./types.ts";
-import { redis } from "../redis/client.ts";
+} from "@playfulprogramming/common";
+import { redis } from "@playfulprogramming/redis";
 
 type Queues = { [T in TasksValues]: Queue<TaskInputs[T], TaskOutputs[T]> };
 

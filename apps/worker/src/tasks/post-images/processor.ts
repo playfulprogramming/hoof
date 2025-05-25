@@ -1,4 +1,4 @@
-import { Tasks, env, s3 } from "@playfulprogramming/common";
+import { Tasks, env } from "@playfulprogramming/common";
 import { db, postImages } from "@playfulprogramming/db";
 import {
 	fetchPostData,
@@ -6,6 +6,7 @@ import {
 	banner,
 	linkPreview,
 } from "@playfulprogramming/post-images";
+import { s3 } from "@playfulprogramming/s3";
 import { createProcessor } from "../../createProcessor.ts";
 
 export default createProcessor(Tasks.POST_IMAGES, async (job) => {
