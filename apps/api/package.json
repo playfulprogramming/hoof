@@ -16,10 +16,12 @@
 		"@fastify/swagger": "^9.4.2",
 		"@playfulprogramming/common": "workspace:*",
 		"@playfulprogramming/db": "workspace:*",
+		"@playfulprogramming/redis": "workspace:*",
 		"@scalar/fastify-api-reference": "^1.28.32",
-		"@sinclair/typebox": "^0.34.33",
+		"@sinclair/typebox": "catalog:",
+		"bullmq": "catalog:",
 		"drizzle-orm": "catalog:",
-		"fastify": "^5.0.0",
-		"fastify-plugin": "^5.0.0"
+		"fastify": "^5.3.3",
+		"fastify-plugin": "^5.0.1"
 	}
 }

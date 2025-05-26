@@ -2,37 +2,59 @@ import { URL } from "url";
 
 import {
 	fetchPageHtml,
-	getOpenGraphImage,
+	getOpenGraphImages,
 	getPageTitle,
 } from "./utils/fetchPageHtml.ts";
-import { fetchPageIcon } from "./utils/fetchPageIcon.ts";
-import { processImage } from "./utils/processImage.ts";
-import {
-	type UrlMetadataInput,
-	type UrlMetadataOutput,
-	s3,
-} from "@playfulprogramming/common";
+import { fetchPageIcons } from "./utils/fetchPageIcons.ts";
+import { processImages } from "./utils/processImage.ts";
+import { Tasks, env } from "@playfulprogramming/common";
 import { db, urlMetadata } from "@playfulprogramming/db";
+import { s3 } from "@playfulprogramming/s3";
+import { RobotDeniedError } from "../../utils/fetchAsBot.ts";
+import { createProcessor } from "../../createProcessor.ts";
 
-export async function processUrlMetadata(job: {
-	id?: string;
-	data: UrlMetadataInput;
-}): Promise<UrlMetadataOutput> {
-	const BUCKET = await s3.createBucket(process.env.S3_BUCKET);
+export default createProcessor(Tasks.URL_METADATA, async (job) => {
+	const BUCKET = await s3.createBucket(env.S3_BUCKET);
 
+	let error: boolean = false;
 	const inputUrl = new URL(job.data.url);
-	const root = await fetchPageHtml(inputUrl);
-	if (!root) throw Error("Unable to fetch page HTML");
+	const root = await fetchPageHtml(inputUrl).catch((e) => {
+		console.error(`Unable to fetch HTML for ${inputUrl}`, e);
+		if (!(e instanceof RobotDeniedError)) {
+			error = true;
+		}
+		if (e instanceof DOMException && e.name === "TimeoutError") {
+			throw e;
+		}
+		return undefined;
+	});
 
-	const title = getPageTitle(root);
+	const title = root && getPageTitle(root);
 
-	const iconPromise = fetchPageIcon(inputUrl, root).then(
-		(url) => url && processImage(url, 24, BUCKET, "remote-icon", job.id),
-	);
+	const iconPromise =
+		root &&
+		fetchPageIcons(inputUrl, root)
+			.then(
+				(url) => url && processImages(url, 24, BUCKET, "remote-icon", job.id),
+			)
+			.catch((e) => {
+				console.error(`Unable to fetch icon for ${inputUrl}`, e);
+				error = true;
+				return undefined;
+			});
 
-	const bannerPromise = getOpenGraphImage(root, inputUrl).then(
-		(url) => url && processImage(url, 896, BUCKET, "remote-banner", job.id),
-	);
+	const bannerPromise =
+		root &&
+		getOpenGraphImages(root, inputUrl)
+			.then(
+				(url) =>
+					url && processImages(url, 896, BUCKET, "remote-banner", job.id),
+			)
+			.catch((e) => {
+				console.error(`Unable to fetch banner for ${inputUrl}`, e);
+				error = true;
+				return undefined;
+			});
 
 	const [icon, banner] = await Promise.all([iconPromise, bannerPromise]);
 
@@ -47,7 +69,11 @@ export async function processUrlMetadata(job: {
 		bannerWidth: banner?.width ?? null,
 		bannerHeight: banner?.height ?? null,
 		fetchedAt: new Date(),
+		error,
 	};
-	await db.insert(urlMetadata).values(result);
+	await db
+		.insert(urlMetadata)
+		.values(result)
+		.onConflictDoUpdate({ target: urlMetadata.url, set: result });
 	return result;
-}
+});

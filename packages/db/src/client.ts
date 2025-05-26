@@ -1,10 +1,11 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "./schema/index.ts";
 import pg from "pg";
+import { env } from "@playfulprogramming/common";
 
 const native = pg.native!;
 const pool = new native.Pool({
-	connectionString: process.env.POSTGRES_URL,
+	connectionString: env.POSTGRES_URL,
 });
 
 export const db = drizzle(pool, { schema });

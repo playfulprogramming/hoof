@@ -11,6 +11,7 @@
 		"build": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@playfulprogramming/common": "workspace:*",
 		"drizzle-orm": "catalog:",
 		"pg": "^8.15.6",
 		"pg-native": "^3.5.0"

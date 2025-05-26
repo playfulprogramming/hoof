@@ -1,6 +1,6 @@
 import { mockEndpoint } from "../../../../test-utils/server.ts";
 import { fetchPageHtml } from "./fetchPageHtml.ts";
-import { fetchPageIcon } from "./fetchPageIcon.ts";
+import { fetchPageIcons } from "./fetchPageIcons.ts";
 
 test("Should fetch basic page icon", async () => {
 	const html = `
@@ -23,9 +23,9 @@ test("Should fetch basic page icon", async () => {
 		bodyType: "text",
 	});
 	const srcHast = await fetchPageHtml(new URL(domain));
-	const iconHref = await fetchPageIcon(new URL(domain), srcHast!);
+	const iconHref = await fetchPageIcons(new URL(domain), srcHast!);
 
-	expect(iconHref).toEqual(new URL("https://example.com/img.png"));
+	expect(iconHref).toEqual([new URL("https://example.com/img.png")]);
 });
 
 test("Should fetch page icon from manifest as backup", async () => {
@@ -66,7 +66,7 @@ test("Should fetch page icon from manifest as backup", async () => {
 	});
 
 	const srcHast = await fetchPageHtml(new URL(domain));
-	const iconHref = await fetchPageIcon(new URL(domain), srcHast!);
+	const iconHref = await fetchPageIcons(new URL(domain), srcHast!);
 
-	expect(iconHref).toEqual(new URL("https://example.com/manifest-img.png"));
+	expect(iconHref).toEqual([new URL("https://example.com/manifest-img.png")]);
 });

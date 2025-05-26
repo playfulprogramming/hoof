@@ -1,4 +1,5 @@
 import { type Static, Type } from "@sinclair/typebox";
+import { Value } from "@sinclair/typebox/value";
 
 export const EnvSchema = Type.Object({
 	PORT: Type.Integer({ default: 3000 }),
@@ -8,11 +9,7 @@ export const EnvSchema = Type.Object({
 	]),
 	WORKER_EXIT_WHEN_DONE: Type.Boolean({ default: true }),
 
-	CLIENT_URL: Type.String(),
-
-	FLY_API_URL: Type.Optional(Type.String()),
-	FLY_API_TOKEN: Type.String(),
-	FLY_WORKER_APP_NAME: Type.String(),
+	SITE_URL: Type.String(),
 
 	S3_PUBLIC_URL: Type.String(),
 	S3_ENDPOINT: Type.String(),
@@ -25,3 +22,5 @@ export const EnvSchema = Type.Object({
 });
 
 export type EnvType = Static<typeof EnvSchema>;
+
+export const env = Value.Parse(EnvSchema, process.env);

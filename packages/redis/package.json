@@ -1,0 +1,16 @@
+{
+	"name": "@playfulprogramming/redis",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"main": "src/index.ts",
+	"scripts": {
+		"test:eslint": "eslint ./src",
+		"test:build": "publint --strict",
+		"build": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@playfulprogramming/common": "workspace:*",
+		"ioredis": "^5.5.0"
+	}
+}

@@ -4,15 +4,24 @@ import {
 	type TaskInputs,
 	type TaskOutputs,
 	Tasks,
-} from "./types.ts";
-import { redis } from "../redis/client.ts";
+} from "@playfulprogramming/common";
+import { redis } from "@playfulprogramming/redis";
 
 type Queues = { [T in TasksValues]: Queue<TaskInputs[T], TaskOutputs[T]> };
 
 function createQueues(): Queues {
 	const queues: Record<TasksValues, unknown> = {} as never;
 	for (const task of Object.values(Tasks)) {
-		queues[task] = new Queue(task, { connection: redis });
+		queues[task] = new Queue(task, {
+			connection: redis,
+			defaultJobOptions: {
+				attempts: 3,
+				backoff: {
+					type: "exponential",
+					delay: 1000,
+				},
+			},
+		});
 	}
 	return queues as Queues;
 }

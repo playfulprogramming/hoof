@@ -1,0 +1,20 @@
+{
+	"name": "@playfulprogramming/s3",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"main": "src/index.ts",
+	"scripts": {
+		"test:eslint": "eslint ./src",
+		"test:build": "publint --strict",
+		"build": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@aws-sdk/client-s3": "^3.705.0",
+		"@aws-sdk/lib-storage": "^3.705.0",
+		"@playfulprogramming/common": "workspace:*"
+	},
+	"devDependencies": {
+		"@aws-sdk/types": "^3.696.0"
+	}
+}

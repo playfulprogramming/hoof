@@ -1,38 +1,18 @@
-import type { Job } from "bullmq";
 import { Worker } from "bullmq";
-import {
-	type TaskInputs,
-	redis,
-	type TasksValues,
-	type TaskOutputs,
-} from "@playfulprogramming/common";
-
-const JOB_TIMEOUT = 60 * 1000;
+import type { TasksValues } from "@playfulprogramming/common";
+import { redis } from "@playfulprogramming/redis";
+import type { TaskProcessor } from "./createProcessor.ts";
 
 export function createWorker<T extends TasksValues>(
 	task: T,
-	callback: (
-		job: Job<TaskInputs[T]>,
-		signal: AbortSignal,
-	) => Promise<TaskOutputs[T]>,
+	processor: TaskProcessor<T>,
 ): Worker {
-	const worker = new Worker(
-		task,
-		async (job) => {
-			const controller = new AbortController();
-			const timer = setTimeout(() => controller.abort(), JOB_TIMEOUT);
-
-			let result: TaskOutputs[T];
-			try {
-				result = await callback(job, controller.signal);
-			} finally {
-				clearTimeout(timer);
-			}
-
-			return result;
-		},
-		{ connection: redis, concurrency: 16 },
-	);
+	const worker = new Worker(task, processor, {
+		connection: redis,
+		concurrency: 16,
+		removeOnComplete: { count: 1000 },
+		removeOnFail: { count: 5000 },
+	});
 
 	worker.on("completed", (job) => {
 		console.info("Job completed:", {
