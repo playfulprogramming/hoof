@@ -8,4 +8,9 @@ import sensible, { type FastifySensibleOptions } from "@fastify/sensible";
  */
 export default fp<FastifySensibleOptions>(async (fastify) => {
 	fastify.register(sensible);
+
+	fastify.addHook("onSend", (_request, reply, _payload, done) => {
+		reply.header("x-robots-tag", "noindex");
+		done();
+	});
 });

@@ -11,7 +11,6 @@
 		"build": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@fastify/env": "^5.0.2",
 		"@fastify/sensible": "^6.0.0",
 		"@fastify/swagger": "^9.4.2",
 		"@playfulprogramming/common": "workspace:*",

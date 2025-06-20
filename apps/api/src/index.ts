@@ -1,4 +1,4 @@
-import env from "./plugins/env.ts";
+import { env } from "@playfulprogramming/common";
 import sensible from "./plugins/sensible.ts";
 import swagger from "./plugins/swagger.ts";
 import rootRoute from "./routes/root.ts";
@@ -10,13 +10,12 @@ const app = fastify({
 	logger: true,
 });
 
-app.register(env);
 app.register(sensible);
 app.register(swagger);
 app.register(rootRoute);
 app.register(postImagesRoutes);
 app.register(urlMetadataRoutes);
 
-app.listen({ port: 3000 }, (err) => {
+app.listen({ port: env.PORT, host: "0.0.0.0" }, (err) => {
 	if (err) throw err;
 });

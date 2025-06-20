@@ -36,6 +36,14 @@ pnpm dev
 
 Once it's running, you should see the API documentation hosted at `http://localhost:3000/docs/`. This can also be used to test the endpoints!
 
+### Testing in Docker
+
+To test the server in its docker container, instead of running `pnpm dev`, you can build & start the docker image with:
+
+```bash
+docker compose --profile=app watch
+```
+
 ## Roadmap
 
 - Manage tasks for post image & metadata generation (initial deployment)
