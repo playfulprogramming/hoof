@@ -22,6 +22,11 @@ services:
       - redis_storage:/data
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   minio:
     image: minio/minio
@@ -34,28 +39,35 @@ services:
       MINIO_ROOT_USER: ${S3_KEY_ID}
       MINIO_ROOT_PASSWORD: ${S3_KEY_SECRET}
     command: server --console-address ":9001" /data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  worker:
-    build: worker
+  app:
+    build: .
     env_file:
       - .env
     environment:
       S3_ENDPOINT: http://minio:9000
-      POSTGRES_URL: postgresql://pgsql:5432/postgres
-    depends_on:
-      - minio
-      - pgsql
-
-  api:
-    build: api
-    env_file:
-      - .env
-    environment:
-      POSTGRES_URL: postgresql://pgsql:5432/postgres
+      POSTGRES_URL: postgresql://postgres:unicorn@pgsql:5432/postgres
+      REDIS_URL: redis://redis:6379
     ports:
-      - "8080:8080"
-    depends_on:
-      - pgsql
+      - "3000:3000"
+    depends_on: [pgsql, redis, minio]
+    profiles: [app]
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    develop:
+      watch:
+        - path: .
+          action: rebuild
+    post_start:
+      - command: node --experimental-strip-types packages/db/src/migrate.ts
 
 volumes:
   pgsql_storage: {}
