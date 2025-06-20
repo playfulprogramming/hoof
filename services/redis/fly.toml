@@ -1,0 +1,20 @@
+# fly.toml app configuration file generated for hoof-redis on 2025-06-19T10:19:08-04:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'hoof-redis'
+primary_region = 'ewr'
+
+[build]
+
+[[mounts]]
+  source = 'hoof_redis'
+  destination = '/data'
+
+[[vm]]
+  size = 'shared-cpu-1x'
+
+[[metrics]]
+  port = 9091
+  path = '/metrics'
