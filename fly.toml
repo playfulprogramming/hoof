@@ -5,7 +5,7 @@ primary_region = 'ewr'
 [build]
 
 [deploy]
-  release_command = "node --experimental-strip-types packages/db/src/migrate.ts"
+  release_command = "node --experimental-strip-types packages/db/scripts/migrate.ts"
 
 [env]
   PORT = "8080"

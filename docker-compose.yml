@@ -67,7 +67,7 @@ services:
         - path: .
           action: rebuild
     post_start:
-      - command: node --experimental-strip-types packages/db/src/migrate.ts
+      - command: node --experimental-strip-types packages/db/scripts/migrate.ts
 
 volumes:
   pgsql_storage: {}

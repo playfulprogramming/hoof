@@ -1,5 +1,5 @@
 import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { db } from "./client.ts";
+import { db } from "../src/client.ts";
 
 const migrationsFolder = import.meta
 	.resolve("../drizzle")
