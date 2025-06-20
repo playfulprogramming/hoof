@@ -1,0 +1,15 @@
+.git
+.gitignore
+.github
+.husky
+.nx
+**/node_modules
+**/dist
+npm-debug.log
+docker-compose.yml
+Dockerfile
+.lintstagedrc
+.prettier*
+.env
+.env.example
+services
