@@ -1,3 +1,4 @@
+import { env } from "@playfulprogramming/common";
 import fp from "fastify-plugin";
 import fastifySwagger from "@fastify/swagger";
 import fastifyApiReference from "@scalar/fastify-api-reference";
@@ -15,7 +16,7 @@ export default fp(
 				},
 				servers: [
 					{
-						url: `http://localhost:${fastify.config.PORT}`,
+						url: `http://localhost:${env.PORT}`,
 						description: "localhost",
 					},
 					{

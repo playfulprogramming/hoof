@@ -18,7 +18,9 @@ export const EnvSchema = Type.Object({
 	S3_BUCKET: Type.String(),
 
 	POSTGRES_URL: Type.String({ pattern: "^postgresql://.+$" }),
+
 	REDIS_URL: Type.String({ pattern: "^redis://.+$" }),
+	REDIS_PASSWORD: Type.Optional(Type.String()),
 });
 
 export type EnvType = Static<typeof EnvSchema>;

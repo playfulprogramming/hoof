@@ -14,7 +14,7 @@
 		"build": "nx affected --target=build",
 		"build:all": "nx run-many --target=build",
 		"dev:libs": "nx watch --all -- nx run-many --targets=build --exclude=api,worker",
-		"dev": "pnpm run build:all && nx run-many --targets=drizzle:push,dev,dev:libs",
+		"dev": "pnpm run build:all && nx drizzle:push db && nx run-many --targets=dev,dev:libs",
 		"prettier": "prettier . --check --ignore-unknown",
 		"prettier:write": "prettier . --write --ignore-unknown"
 	},
