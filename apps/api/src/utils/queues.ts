@@ -1,4 +1,4 @@
-import { Queue, QueueEvents } from "bullmq";
+import { Queue } from "bullmq";
 import {
 	type TasksValues,
 	type TaskInputs,
@@ -26,15 +26,18 @@ function createQueues(): Queues {
 	return queues as Queues;
 }
 
-type QueueEventsRecord = { [T in TasksValues]: QueueEvents };
+const queues = createQueues();
 
-function createQueueEvents(): QueueEventsRecord {
-	const queueEvents: Record<TasksValues, QueueEvents> = {} as never;
-	for (const task of Object.values(Tasks)) {
-		queueEvents[task] = new QueueEvents(task, { connection: redis });
-	}
-	return queueEvents as QueueEventsRecord;
+export function createJob<T extends TasksValues>(
+	task: T,
+	id: string,
+	data: TaskInputs[T],
+) {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const queue = queues[task] as Queue<any>;
+	queue.add(id, data, {
+		deduplication: {
+			id: id,
+		},
+	});
 }
-
-export const queues = createQueues();
-export const queueEvents = createQueueEvents();
