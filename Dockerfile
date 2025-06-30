@@ -2,7 +2,7 @@
 FROM node:22-alpine3.22 AS base
 
 # Install postgres client dependencies
-RUN apk --update add make g++ python3 libpq libpq-dev
+RUN apk --update add make g++ python3 libpq libpq-dev parallel
 
 # Create app directory
 ENV NODE_ENV=production
@@ -23,4 +23,4 @@ RUN pnpm install
 COPY . .
 RUN pnpm build:all
 
-CMD [ "/bin/sh", "-c", "node --experimental-strip-types apps/api/src/index.ts & node --experimental-strip-types apps/worker/src/index.ts & wait" ]
+CMD [ "/bin/sh", "-c", "parallel --jobs 2 --line-buffer --halt now,done=1 node --experimental-strip-types {} ::: apps/api/src/index.ts apps/worker/src/index.ts" ]

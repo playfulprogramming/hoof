@@ -38,3 +38,17 @@ function createQueueEvents(): QueueEventsRecord {
 
 export const queues = createQueues();
 export const queueEvents = createQueueEvents();
+
+export function createJob<T extends TasksValues>(
+	task: T,
+	id: string,
+	data: TaskInputs[T],
+) {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const queue = queues[task] as Queue<any>;
+	queue.add(id, data, {
+		deduplication: {
+			id: id,
+		},
+	});
+}

@@ -3,12 +3,13 @@ import { eq } from "drizzle-orm";
 import {
 	type UrlMetadataInput,
 	type UrlMetadataOutput,
+	Tasks,
 	UrlMetadataInputSchema,
 	env,
 } from "@playfulprogramming/common";
 import { db } from "@playfulprogramming/db";
 import { Type, type Static } from "@sinclair/typebox";
-import { queueEvents, queues } from "../../utils/queues.ts";
+import { createJob } from "../../utils/queues.ts";
 
 const ImageSchema = Type.Object({
 	src: Type.String(),
@@ -117,26 +118,12 @@ const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 				return;
 			}
 
-			const job = await queues["url-metadata"].add(
-				normalizedUrl,
-				{
-					...request.body,
-					url: normalizedUrl,
-				},
-				{
-					deduplication: {
-						id: normalizedUrl,
-					},
-				},
-			);
+			createJob(Tasks.URL_METADATA, normalizedUrl, {
+				...request.body,
+				url: normalizedUrl,
+			});
 
-			const jobResult = await job.waitUntilFinished(
-				queueEvents["url-metadata"]!,
-				10 * 1000,
-			);
-
-			reply.code(200);
-			reply.send(mapUrlMetadata(jobResult));
+			reply.code(201);
 		},
 	);
 };

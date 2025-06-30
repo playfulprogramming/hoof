@@ -9,7 +9,7 @@ import {
 } from "@playfulprogramming/common";
 import { db } from "@playfulprogramming/db";
 import { Type, type Static } from "@sinclair/typebox";
-import { queueEvents, queues } from "../../utils/queues.ts";
+import { createJob } from "../../utils/queues.ts";
 
 const PostImagesResponseSchema = Type.Object(
 	{
@@ -78,25 +78,11 @@ const postImagesRoutes: FastifyPluginAsync = async (fastify) => {
 				return;
 			}
 
-			const job = await queues[Tasks.POST_IMAGES].add(
-				request.body.slug,
-				{
-					...request.body,
-				},
-				{
-					deduplication: {
-						id: request.body.slug,
-					},
-				},
-			);
+			createJob(Tasks.POST_IMAGES, request.body.slug, {
+				...request.body,
+			});
 
-			const jobResult = await job.waitUntilFinished(
-				queueEvents[Tasks.POST_IMAGES]!,
-				10 * 1000,
-			);
-
-			reply.code(200);
-			reply.send(mapPostImages(jobResult));
+			reply.code(201);
 		},
 	);
 };
