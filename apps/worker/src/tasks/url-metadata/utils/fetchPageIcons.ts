@@ -8,7 +8,7 @@ import { fetchAsBot } from "../../../utils/fetchAsBot.ts";
 export async function fetchPageIcons(
 	src: URL,
 	root: Root,
-	signal: AbortSignal,
+	signal?: AbortSignal,
 ): Promise<URL[]> {
 	const results: URL[] = [];
 	const headNode = find(root, (e) => isElement(e) && e.tagName == "head");
