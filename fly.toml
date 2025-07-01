@@ -7,6 +7,10 @@ primary_region = 'ewr'
 [deploy]
   release_command = "node --experimental-strip-types packages/db/scripts/migrate.ts"
 
+[processes]
+  app = "node --experimental-strip-types apps/api/src/index.ts"
+  worker = "node --experimental-strip-types apps/worker/src/index.ts"
+
 [env]
   PORT = "8080"
   ENVIRONMENT = "production"
@@ -32,6 +36,10 @@ primary_region = 'ewr'
     path = "/"
 
 [[vm]]
+  size = "shared-cpu-1x"
+
+[[vm]]
   memory = '512mb'
   cpu_kind = 'shared'
   cpus = 1
+  processes = ['worker']

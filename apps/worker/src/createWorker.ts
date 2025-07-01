@@ -9,7 +9,7 @@ export function createWorker<T extends TasksValues>(
 ): Worker {
 	const worker = new Worker(task, processor, {
 		connection: redis,
-		concurrency: 16,
+		concurrency: 2,
 		removeOnComplete: { count: 1000 },
 		removeOnFail: { count: 5000 },
 	});
