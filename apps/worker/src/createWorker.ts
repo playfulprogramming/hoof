@@ -1,11 +1,14 @@
-import { Worker } from "bullmq";
-import type { TasksValues } from "@playfulprogramming/common";
+import { Worker, type Processor } from "bullmq";
+import type {
+	TaskInputs,
+	TaskOutputs,
+	TasksValues,
+} from "@playfulprogramming/common";
 import { redis } from "@playfulprogramming/redis";
-import type { TaskProcessor } from "./createProcessor.ts";
 
 export function createWorker<T extends TasksValues>(
 	task: T,
-	processor: TaskProcessor<T>,
+	processor: Processor<TaskInputs[T], TaskOutputs[T]>,
 ): Worker {
 	const worker = new Worker(task, processor, {
 		connection: redis,

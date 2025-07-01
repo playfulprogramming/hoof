@@ -3,7 +3,7 @@ import type {
 	TaskOutputs,
 	TaskInputs,
 } from "@playfulprogramming/common";
-import type { Job } from "bullmq";
+import type { Job, Processor } from "bullmq";
 import { setTimeout } from "timers/promises";
 
 process.on("uncaughtException", function (err) {
@@ -20,7 +20,7 @@ type TaskContext = {
 	signal: AbortSignal;
 };
 
-export type TaskProcessor<T extends TasksValues> = (
+type TaskProcessor<T extends TasksValues> = (
 	job: Job<TaskInputs[T]>,
 	context: TaskContext,
 ) => Promise<TaskOutputs[T]>;
@@ -28,7 +28,7 @@ export type TaskProcessor<T extends TasksValues> = (
 export function createProcessor<T extends TasksValues>(
 	_task: T,
 	processor: TaskProcessor<T>,
-): TaskProcessor<T> {
+): Processor<TaskInputs[T], TaskOutputs[T]> {
 	return async (job) => {
 		const controller = new AbortController();
 		try {
