@@ -13,12 +13,12 @@ import { s3 } from "@playfulprogramming/s3";
 import { RobotDeniedError } from "../../utils/fetchAsBot.ts";
 import { createProcessor } from "../../createProcessor.ts";
 
-export default createProcessor(Tasks.URL_METADATA, async (job) => {
+export default createProcessor(Tasks.URL_METADATA, async (job, { signal }) => {
 	const BUCKET = await s3.createBucket(env.S3_BUCKET);
 
 	let error: boolean = false;
 	const inputUrl = new URL(job.data.url);
-	const root = await fetchPageHtml(inputUrl).catch((e) => {
+	const root = await fetchPageHtml(inputUrl, { signal }).catch((e) => {
 		console.error(`Unable to fetch HTML for ${inputUrl}`, e);
 		if (!(e instanceof RobotDeniedError)) {
 			error = true;
@@ -33,9 +33,10 @@ export default createProcessor(Tasks.URL_METADATA, async (job) => {
 
 	const iconPromise =
 		root &&
-		fetchPageIcons(inputUrl, root)
+		fetchPageIcons(inputUrl, root, signal)
 			.then(
-				(url) => url && processImages(url, 24, BUCKET, "remote-icon", job.id),
+				(url) =>
+					url && processImages(url, 24, BUCKET, "remote-icon", job.id, signal),
 			)
 			.catch((e) => {
 				console.error(`Unable to fetch icon for ${inputUrl}`, e);
@@ -48,7 +49,8 @@ export default createProcessor(Tasks.URL_METADATA, async (job) => {
 		getOpenGraphImages(root, inputUrl)
 			.then(
 				(url) =>
-					url && processImages(url, 896, BUCKET, "remote-banner", job.id),
+					url &&
+					processImages(url, 896, BUCKET, "remote-banner", job.id, signal),
 			)
 			.catch((e) => {
 				console.error(`Unable to fetch banner for ${inputUrl}`, e);

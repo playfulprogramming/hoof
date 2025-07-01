@@ -9,10 +9,10 @@ import {
 import { s3 } from "@playfulprogramming/s3";
 import { createProcessor } from "../../createProcessor.ts";
 
-export default createProcessor(Tasks.POST_IMAGES, async (job) => {
+export default createProcessor(Tasks.POST_IMAGES, async (job, { signal }) => {
 	const BUCKET = await s3.createBucket(env.S3_BUCKET);
 
-	const data = await fetchPostData(job.data);
+	const data = await fetchPostData(job.data, signal);
 	const bannerKey = `post-images/${data.slug}.banner.png`;
 	const linkPreviewKey = `post-images/${data.slug}.link-preview.png`;
 	await Promise.all([

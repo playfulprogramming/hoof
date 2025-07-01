@@ -18,6 +18,7 @@ async function compareLastModified(
 	request: Response,
 	bucket: string,
 	key: string,
+	signal?: AbortSignal,
 ): Promise<boolean> {
 	// If there is a last-modified header, compare it to the header from S3
 	if (request.headers.has("last-modified")) {
@@ -26,6 +27,7 @@ async function compareLastModified(
 			{
 				method: "HEAD",
 				skipRobotsCheck: true,
+				signal,
 			},
 		).catch(() => undefined);
 
@@ -51,8 +53,9 @@ async function processImage(
 	bucket: string,
 	key: string,
 	tag?: string,
+	signal?: AbortSignal,
 ): Promise<ProcessImageResult | undefined> {
-	const request = await fetchAsBot(url).catch((e) => {
+	const request = await fetchAsBot(url, { signal }).catch((e) => {
 		console.error(`Error fetching ${url}`, e);
 		if (e instanceof DOMException && e.name === "TimeoutError") {
 			throw e;
@@ -75,7 +78,7 @@ async function processImage(
 	if (isSvg) {
 		const uploadKey = `${key}-${urlHash}.svg`;
 
-		if (await compareLastModified(request, bucket, uploadKey)) {
+		if (await compareLastModified(request, bucket, uploadKey, signal)) {
 			console.log(`Skipping ${uploadKey}, as it has already been stored.`);
 			await body.cancel();
 		} else {
@@ -113,7 +116,7 @@ async function processImage(
 			? Math.round(metadata.height * (transformWidth / metadata.width))
 			: undefined;
 
-	if (await compareLastModified(request, bucket, uploadKey)) {
+	if (await compareLastModified(request, bucket, uploadKey, signal)) {
 		console.log(`Skipping ${uploadKey}, as it has already been stored.`);
 		metadataStream.destroy();
 	} else {
@@ -142,9 +145,10 @@ export async function processImages(
 	bucket: string,
 	key: string,
 	tag?: string,
+	signal?: AbortSignal,
 ): Promise<ProcessImageResult | undefined> {
 	for (const url of urls) {
-		const result = await processImage(url, width, bucket, key, tag);
+		const result = await processImage(url, width, bucket, key, tag, signal);
 		if (result) {
 			return result;
 		}

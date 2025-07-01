@@ -7,8 +7,11 @@ import { fetchAsBot } from "../../../utils/fetchAsBot.ts";
 export const isElement = (e: Root | Element | Node | undefined): e is Element =>
 	e?.type == "element";
 
-export async function fetchPageHtml(src: URL): Promise<Root> {
-	const html = await fetchAsBot(src).then((r) => r.text());
+export async function fetchPageHtml(
+	src: URL,
+	init?: RequestInit,
+): Promise<Root> {
+	const html = await fetchAsBot(src, init).then((r) => r.text());
 	return fromHtml(html);
 }
 

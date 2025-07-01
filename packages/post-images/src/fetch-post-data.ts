@@ -84,6 +84,7 @@ const TagsInfo = Type.Record(
  */
 export async function fetchPostData(
 	input: PostImageInput,
+	signal?: AbortSignal,
 ): Promise<PostImageData> {
 	const indexUrl = new URL(input.path, rawUrlPrefix);
 	if (!indexUrl.toString().startsWith(rawUrlPrefix))
@@ -91,7 +92,7 @@ export async function fetchPostData(
 			`Path '${input.path}' is not a subpath of ${rawUrlPrefix}.`,
 		);
 
-	const indexString = await fetch(indexUrl).then((r) => r.text());
+	const indexString = await fetch(indexUrl, { signal }).then((r) => r.text());
 	const { data, content } = matter(indexString);
 	const indexInfo = Value.Parse(RawPostInfo, data);
 
@@ -102,12 +103,14 @@ export async function fetchPostData(
 	const authors = await Promise.all(
 		authorIds.map(async (authorId) => {
 			const authorUrl = new URL(`content/${authorId}/index.md`, rawUrlPrefix);
-			const text = await fetch(authorUrl).then((r) => r.text());
+			const text = await fetch(authorUrl, { signal }).then((r) => r.text());
 			const { data } = matter(text);
 			const info = Value.Parse(RawAuthorInfo, data);
 
 			const imageUrl = new URL(info.profileImg, authorUrl);
-			const image = await fetch(imageUrl).then((r) => r.arrayBuffer());
+			const image = await fetch(imageUrl, { signal }).then((r) =>
+				r.arrayBuffer(),
+			);
 			const buffer = await sharp(image)
 				.resize(90, 90)
 				.jpeg({ mozjpeg: true })

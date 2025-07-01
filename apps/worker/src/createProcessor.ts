@@ -16,8 +16,13 @@ process.on("unhandledRejection", (reason, promise) => {
 
 const JOB_TIMEOUT = 60 * 1000;
 
+type TaskContext = {
+	signal: AbortSignal;
+};
+
 export type TaskProcessor<T extends TasksValues> = (
 	job: Job<TaskInputs[T]>,
+	context: TaskContext,
 ) => Promise<TaskOutputs[T]>;
 
 export function createProcessor<T extends TasksValues>(
@@ -28,7 +33,7 @@ export function createProcessor<T extends TasksValues>(
 		const controller = new AbortController();
 		try {
 			const result = await Promise.race([
-				processor(job),
+				processor(job, { signal: controller.signal }),
 				setTimeout(JOB_TIMEOUT, { signal: controller.signal }).then(
 					() => "timeout" as const,
 				),

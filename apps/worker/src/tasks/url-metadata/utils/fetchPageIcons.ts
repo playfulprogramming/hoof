@@ -5,7 +5,11 @@ import { isElement } from "./fetchPageHtml.ts";
 import { getLargestManifestIcon } from "./getLargestManifestIcon.ts";
 import { fetchAsBot } from "../../../utils/fetchAsBot.ts";
 
-export async function fetchPageIcons(src: URL, root: Root): Promise<URL[]> {
+export async function fetchPageIcons(
+	src: URL,
+	root: Root,
+	signal: AbortSignal,
+): Promise<URL[]> {
 	const results: URL[] = [];
 	const headNode = find(root, (e) => isElement(e) && e.tagName == "head");
 	if (!headNode) return results;
@@ -35,7 +39,10 @@ export async function fetchPageIcons(src: URL, root: Root): Promise<URL[]> {
 
 	if (manifestLink?.properties?.href) {
 		const manifestUrl = new URL(String(manifestLink.properties.href), src);
-		const manifest = await fetchAsBot(manifestUrl, { skipRobotsCheck: true })
+		const manifest = await fetchAsBot(manifestUrl, {
+			skipRobotsCheck: true,
+			signal,
+		})
 			.then((r) => r.json())
 			.catch(() => null);
 
