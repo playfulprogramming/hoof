@@ -6,3 +6,9 @@ export const redis = new Redis(env.REDIS_URL, {
 	password: env.REDIS_PASSWORD,
 	maxRetriesPerRequest: null,
 });
+
+export async function healthcheckRedis() {
+	if (redis.status !== "ready") {
+		throw new Error(`Healthcheck failed - Redis status is ${redis.status}`);
+	}
+}

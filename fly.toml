@@ -35,6 +35,21 @@ primary_region = 'ewr'
     timeout = "5s"
     path = "/"
 
+  [[http_service.checks]]
+    grace_period = "30s"
+    interval = "60s"
+    method = "GET"
+    timeout = "10s"
+    path = "/health/redis"
+
+  [[http_service.checks]]
+    grace_period = "30s"
+    interval = "60s"
+    method = "GET"
+    timeout = "10s"
+    path = "/health/postgres"
+
+
 [[vm]]
   size = "shared-cpu-1x"
 

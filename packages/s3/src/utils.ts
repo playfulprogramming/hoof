@@ -110,4 +110,6 @@ export async function upload(
 	);
 
 	await upload.done();
+
+	console.log(`Uploaded ${bucket}/${key}`);
 }
