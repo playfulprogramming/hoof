@@ -16,12 +16,14 @@ export default createProcessor(Tasks.POST_IMAGES, async (job, { signal }) => {
 	const bannerKey = `post-images/${data.slug}.banner.png`;
 	const linkPreviewKey = `post-images/${data.slug}.link-preview.png`;
 	await Promise.all([
-		createPostImage(banner, data).then((buf) =>
-			s3.upload(BUCKET, bannerKey, undefined, buf, "image/png"),
-		),
-		createPostImage(linkPreview, data).then((buf) =>
-			s3.upload(BUCKET, linkPreviewKey, undefined, buf, "image/png"),
-		),
+		createPostImage(banner, data).then((buf) => {
+			signal.throwIfAborted();
+			return s3.upload(BUCKET, bannerKey, undefined, buf, "image/png");
+		}),
+		createPostImage(linkPreview, data).then((buf) => {
+			signal.throwIfAborted();
+			return s3.upload(BUCKET, linkPreviewKey, undefined, buf, "image/png");
+		}),
 	]);
 
 	const result = {

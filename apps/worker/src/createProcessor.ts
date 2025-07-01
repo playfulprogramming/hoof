@@ -14,7 +14,7 @@ process.on("unhandledRejection", (reason, promise) => {
 	console.error({ promise, reason }, "Unhandled Rejection at: Promise");
 });
 
-const JOB_TIMEOUT = 60 * 1000;
+const JOB_TIMEOUT = 2 * 60 * 1000;
 
 type TaskContext = {
 	signal: AbortSignal;
