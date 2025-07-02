@@ -15,10 +15,10 @@ async function getRobots(input: URL): Promise<Robot | undefined> {
 	let robots = robotsCache.get(robotsUrl.toString());
 
 	if (!robots) {
-		const robotsResponse = await fetch(robotsUrl, {
+		const robotsResponse = await fetchAsBot(robotsUrl, {
 			headers: { "User-Agent": userAgent },
-			signal: AbortSignal.timeout(10 * 1000),
 			cache: "force-cache",
+			skipRobotsCheck: true,
 		}).catch(() => undefined);
 
 		if (!robotsResponse || !robotsResponse.ok) {
@@ -41,6 +41,7 @@ async function getRobots(input: URL): Promise<Robot | undefined> {
 
 type FetchAsBotInit = RequestInit & {
 	skipRobotsCheck?: boolean;
+	maxLength?: number;
 };
 
 export class RobotDeniedError extends Error {
@@ -48,6 +49,8 @@ export class RobotDeniedError extends Error {
 		super(message);
 	}
 }
+
+const DEFAULT_MAX_LENGTH = 1000 * 1000; // 1MB (in bytes)
 
 export async function fetchAsBot(input: URL, init?: FetchAsBotInit) {
 	if (!init?.skipRobotsCheck) {
@@ -60,6 +63,8 @@ export async function fetchAsBot(input: URL, init?: FetchAsBotInit) {
 		}
 	}
 
+	console.debug("GET", input.href);
+
 	const response = await fetch(input, {
 		...init,
 		headers: {
@@ -67,11 +72,20 @@ export async function fetchAsBot(input: URL, init?: FetchAsBotInit) {
 			"Accept-Language": "en",
 			...init?.headers,
 		},
-		signal: AbortSignal.timeout(10 * 1000),
+		signal: init?.signal ?? AbortSignal.timeout(10 * 1000),
 	});
 
-	if (!response.ok)
+	if (!response.ok) {
 		throw new Error(`Request ${input} returned ${response.status}`);
+	}
+
+	const maxLength = init?.maxLength ?? DEFAULT_MAX_LENGTH;
+	const contentLength = Number(response.headers.get("content-length"));
+	if (!isFinite(contentLength) || contentLength > maxLength) {
+		throw new Error(
+			`Response body '${input}' is larger than the max length. (${contentLength} > ${maxLength} bytes)`,
+		);
+	}
 
 	return response;
 }

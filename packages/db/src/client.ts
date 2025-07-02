@@ -3,8 +3,7 @@ import * as schema from "./schema/index.ts";
 import pg from "pg";
 import { env } from "@playfulprogramming/common";
 
-const native = pg.native!;
-const pool = new native.Pool({
+const pool = new pg.Pool({
 	connectionString: env.POSTGRES_URL,
 	idleTimeoutMillis: 60_000,
 	query_timeout: 30_000,

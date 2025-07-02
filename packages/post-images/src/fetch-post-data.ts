@@ -92,6 +92,7 @@ export async function fetchPostData(
 			`Path '${input.path}' is not a subpath of ${rawUrlPrefix}.`,
 		);
 
+	console.debug("GET", indexUrl.href);
 	const indexString = await fetch(indexUrl, { signal }).then((r) => r.text());
 	const { data, content } = matter(indexString);
 	const indexInfo = Value.Parse(RawPostInfo, data);

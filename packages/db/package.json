@@ -14,8 +14,7 @@
 	"dependencies": {
 		"@playfulprogramming/common": "workspace:*",
 		"drizzle-orm": "catalog:",
-		"pg": "^8.16.3",
-		"pg-native": "^3.5.2"
+		"pg": "^8.16.3"
 	},
 	"devDependencies": {
 		"@types/pg": "^8.11.11",
