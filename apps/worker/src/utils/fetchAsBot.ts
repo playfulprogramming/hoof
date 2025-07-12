@@ -1,5 +1,7 @@
+import { request, stream, type Dispatcher } from "undici";
 import { LRUCache } from "lru-cache";
 import robotsParserDefault, { type Robot } from "robots-parser";
+import type { Writable } from "stream";
 const robotsParser =
 	robotsParserDefault as never as typeof robotsParserDefault.default;
 
@@ -15,33 +17,39 @@ async function getRobots(input: URL): Promise<Robot | undefined> {
 	let robots = robotsCache.get(robotsUrl.toString());
 
 	if (!robots) {
-		const robotsResponse = await fetchAsBot(robotsUrl, {
+		const robotsResponse = await fetchAsBot({
+			url: robotsUrl,
+			method: "GET",
 			headers: { "User-Agent": userAgent },
-			cache: "force-cache",
 			skipRobotsCheck: true,
 		}).catch(() => undefined);
 
-		if (!robotsResponse || !robotsResponse.ok) {
+		if (!robotsResponse) {
 			return undefined;
 		}
 
 		if (
-			robotsResponse.headers.has("content-type") &&
-			!robotsResponse.headers.get("content-type")?.includes("text/plain")
+			robotsResponse.headers["content-type"]?.includes("text/plain") != true
 		) {
+			await robotsResponse.body.dump();
 			return undefined;
 		}
 
-		robots = await robotsResponse.text();
+		robots = await robotsResponse.body.text();
 		robotsCache.set(robotsUrl.toString(), robots);
 	}
 
 	return robotsParser(robotsUrl.toString(), robots);
 }
 
-type FetchAsBotInit = RequestInit & {
+type FetchAsBotInit = Omit<
+	Dispatcher.RequestOptions<null>,
+	"origin" | "path"
+> & {
+	url: string | URL;
 	skipRobotsCheck?: boolean;
 	maxLength?: number;
+	followRedirects?: number;
 };
 
 export class RobotDeniedError extends Error {
@@ -50,22 +58,28 @@ export class RobotDeniedError extends Error {
 	}
 }
 
-const DEFAULT_MAX_LENGTH = 1000 * 1000; // 1MB (in bytes)
+export async function fetchAsBot(options: FetchAsBotInit) {
+	const {
+		url,
+		skipRobotsCheck,
+		maxLength,
+		followRedirects = 10,
+		...init
+	} = options;
+	const parsedUrl = url instanceof URL ? url : new URL(url);
+	if (!skipRobotsCheck) {
+		const robots = await getRobots(parsedUrl);
 
-export async function fetchAsBot(input: URL, init?: FetchAsBotInit) {
-	if (!init?.skipRobotsCheck) {
-		const robots = await getRobots(input);
-
-		if (robots && robots.isDisallowed(input.toString(), userAgent)) {
+		if (robots && robots.isDisallowed(url.toString(), userAgent)) {
 			throw new RobotDeniedError(
-				`${userAgent} is disallowed from ${input.hostname}!`,
+				`${userAgent} is disallowed from ${parsedUrl.hostname}!`,
 			);
 		}
 	}
 
-	console.debug("GET", input.href);
+	console.debug(init.method ?? "GET", parsedUrl.href);
 
-	const response = await fetch(input, {
+	const response = await request(url, {
 		...init,
 		headers: {
 			"User-Agent": userAgent,
@@ -75,17 +89,61 @@ export async function fetchAsBot(input: URL, init?: FetchAsBotInit) {
 		signal: init?.signal ?? AbortSignal.timeout(10 * 1000),
 	});
 
-	if (!response.ok) {
-		throw new Error(`Request ${input} returned ${response.status}`);
+	if (response.statusCode == 301 || response.statusCode == 302) {
+		await response.body.dump();
+		const newLocation = response.headers["location"]?.toString();
+		console.log(`redirect (${response.statusCode})`);
+
+		if (followRedirects > 0 && newLocation && URL.canParse(newLocation)) {
+			const newUrl = new URL(newLocation);
+			return await fetchAsBot({
+				...options,
+				url: newUrl,
+				followRedirects: followRedirects - 1,
+			});
+		}
 	}
 
-	const maxLength = init?.maxLength ?? DEFAULT_MAX_LENGTH;
-	const contentLength = Number(response.headers.get("content-length"));
-	if (!isFinite(contentLength) || contentLength > maxLength) {
-		throw new Error(
-			`Response body '${input}' is larger than the max length. (${contentLength} > ${maxLength} bytes)`,
-		);
+	if (response.statusCode < 200 || response.statusCode > 299) {
+		await response.body.dump();
+		throw new Error(`Request ${url} returned ${response.statusCode}`);
 	}
 
 	return response;
+}
+
+export async function fetchAsBotStream({
+	url,
+	skipRobotsCheck,
+	maxLength,
+	writable,
+	...init
+}: FetchAsBotInit & { writable: Writable }) {
+	const parsedUrl = url instanceof URL ? url : new URL(url);
+	if (!skipRobotsCheck) {
+		const robots = await getRobots(parsedUrl);
+
+		if (robots && robots.isDisallowed(url.toString(), userAgent)) {
+			throw new RobotDeniedError(
+				`${userAgent} is disallowed from ${parsedUrl.hostname}!`,
+			);
+		}
+	}
+
+	console.debug(init.method ?? "GET", parsedUrl.href);
+
+	await stream(
+		url,
+		{
+			...init,
+			headers: {
+				"User-Agent": userAgent,
+				"Accept-Language": "en",
+				...init?.headers,
+			},
+			signal: init?.signal ?? AbortSignal.timeout(10 * 1000),
+			opaque: writable,
+		},
+		({ opaque }) => opaque,
+	);
 }

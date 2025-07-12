@@ -7,6 +7,7 @@ import { env } from "@playfulprogramming/common";
 import { s3 } from "@playfulprogramming/s3";
 import { fetchAsBot } from "../../../utils/fetchAsBot.ts";
 import { setTimeout } from "timers/promises";
+import type { Dispatcher } from "undici";
 
 interface ProcessImageResult {
 	key: string;
@@ -15,25 +16,24 @@ interface ProcessImageResult {
 }
 
 async function compareLastModified(
-	request: Response,
+	request: Dispatcher.ResponseData<null>,
 	bucket: string,
 	key: string,
 	signal?: AbortSignal,
 ): Promise<boolean> {
 	// If there is a last-modified header, compare it to the header from S3
-	if (request.headers.has("last-modified")) {
-		const existingFile = await fetchAsBot(
-			new URL(`${bucket}/${key}`, env.S3_PUBLIC_URL),
-			{
-				method: "HEAD",
-				skipRobotsCheck: true,
-				signal,
-			},
-		).catch(() => undefined);
+	const lastModified = request.headers["last-modified"]?.toString();
+	if (lastModified) {
+		const existingFile = await fetchAsBot({
+			url: new URL(`${bucket}/${key}`, env.S3_PUBLIC_URL),
+			method: "HEAD",
+			skipRobotsCheck: true,
+			signal,
+		}).catch(() => undefined);
 
-		if (existingFile && existingFile.ok) {
-			const modS3 = existingFile.headers.get("last-modified");
-			const modExternal = request.headers.get("last-modified");
+		if (existingFile && existingFile.statusCode == 200) {
+			const modS3 = existingFile.headers["last-modified"]?.toString();
+			const modExternal = lastModified;
 
 			if (modS3 && modExternal) {
 				return new Date(modS3) > new Date(modExternal);
@@ -55,13 +55,15 @@ async function processImage(
 	tag?: string,
 	signal?: AbortSignal,
 ): Promise<ProcessImageResult | undefined> {
-	const request = await fetchAsBot(url, { signal }).catch((e) => {
-		console.error(`Error fetching ${url}`, e);
-		if (e instanceof DOMException && e.name === "TimeoutError") {
-			throw e;
-		}
-		return undefined;
-	});
+	const request = await fetchAsBot({ url, method: "GET", signal }).catch(
+		(e) => {
+			console.error(`Error fetching ${url}`, e);
+			if (e instanceof DOMException && e.name === "TimeoutError") {
+				throw e;
+			}
+			return undefined;
+		},
+	);
 	const body = request?.body;
 	if (!body) {
 		console.error(`Request body for ${url} is null`);
@@ -71,8 +73,8 @@ async function processImage(
 	const urlHash = crypto.createHash("md5").update(url.href).digest("hex");
 
 	const isSvg =
-		request.headers.get("content-type")?.includes("image/svg") ||
-		(!request.headers.has("content-type") &&
+		request.headers["content-type"]?.includes("image/svg") ||
+		(!("content-type" in request.headers) &&
 			path.extname(url.pathname) === ".svg");
 
 	if (isSvg) {
@@ -80,9 +82,9 @@ async function processImage(
 
 		if (await compareLastModified(request, bucket, uploadKey, signal)) {
 			console.log(`Skipping ${uploadKey}, as it has already been stored.`);
-			await body.cancel();
+			await body.dump();
 		} else {
-			const svg = await request.text();
+			const svg = await body.text();
 			const optimizedSvg = svgo.optimize(svg, { multipass: true }).data;
 			await s3.upload(
 				bucket,
@@ -97,7 +99,7 @@ async function processImage(
 	}
 
 	const pipeline = sharp();
-	const metadataStream = stream.Readable.fromWeb(body as never).pipe(pipeline);
+	const metadataStream = body.pipe(pipeline);
 	const metadata = await Promise.race([
 		setTimeout(10 * 1000).then(() => undefined),
 		pipeline.metadata().catch(() => undefined),
@@ -105,6 +107,7 @@ async function processImage(
 
 	if (!metadata || !metadata.format) {
 		console.error(`Image format for ${url} could not be found.`);
+		await body.dump();
 		return undefined;
 	}
 
@@ -131,6 +134,8 @@ async function processImage(
 			`image/${metadata.format}`,
 		);
 	}
+
+	await body.dump();
 
 	return {
 		key: uploadKey,

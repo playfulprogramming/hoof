@@ -39,11 +39,13 @@ export async function fetchPageIcons(
 
 	if (manifestLink?.properties?.href) {
 		const manifestUrl = new URL(String(manifestLink.properties.href), src);
-		const manifest = await fetchAsBot(manifestUrl, {
+		const manifest = await fetchAsBot({
+			url: manifestUrl,
+			method: "GET",
 			skipRobotsCheck: true,
 			signal,
 		})
-			.then((r) => r.json())
+			.then((r) => r.body.json())
 			.catch(() => null);
 
 		if (manifest) {

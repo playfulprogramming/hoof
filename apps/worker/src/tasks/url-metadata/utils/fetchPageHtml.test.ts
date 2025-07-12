@@ -23,16 +23,12 @@ test("should fetch page HTML", async () => {
 	mockEndpoint({
 		path: domain.href,
 		body: html,
-		bodyType: "text",
 	});
 
 	const response = await fetchPageHtml(domain);
 	expect(removePositions(response)).toMatchInlineSnapshot(`
 		{
 		  "children": [
-		    {
-		      "type": "doctype",
-		    },
 		    {
 		      "children": [
 		        {
@@ -78,35 +74,7 @@ test("should fetch page HTML", async () => {
 		          "type": "element",
 		        },
 		        {
-		          "type": "text",
-		          "value": "
-		",
-		        },
-		        {
-		          "children": [
-		            {
-		              "type": "text",
-		              "value": "
-			",
-		            },
-		            {
-		              "children": [
-		                {
-		                  "type": "text",
-		                  "value": "Test",
-		                },
-		              ],
-		              "properties": {},
-		              "tagName": "h1",
-		              "type": "element",
-		            },
-		            {
-		              "type": "text",
-		              "value": "
-
-		",
-		            },
-		          ],
+		          "children": [],
 		          "properties": {},
 		          "tagName": "body",
 		          "type": "element",
@@ -118,7 +86,7 @@ test("should fetch page HTML", async () => {
 		    },
 		  ],
 		  "data": {
-		    "quirksMode": false,
+		    "quirksMode": true,
 		  },
 		  "type": "root",
 		}
@@ -130,7 +98,6 @@ test("should get page title", async () => {
 	mockEndpoint({
 		path: domain,
 		body: html,
-		bodyType: "text",
 	});
 	const root = await fetchPageHtml(new URL(domain));
 	const response = await getPageTitle(root!);
@@ -142,7 +109,6 @@ test("Should gather image URL from OpenGraph metadata", async () => {
 	mockEndpoint({
 		path: domain,
 		body: html,
-		bodyType: "text",
 	});
 	const root = await fetchPageHtml(new URL(domain));
 	const response = await getOpenGraphImages(root!, new URL(domain));

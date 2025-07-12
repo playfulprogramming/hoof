@@ -2,16 +2,16 @@ import type { Element, Root, Node } from "hast";
 import { fromHtml } from "hast-util-from-html";
 import { find } from "unist-util-find";
 import { visit } from "unist-util-visit";
-import { fetchAsBot } from "../../../utils/fetchAsBot.ts";
+import { fetchHtmlHead } from "../../../utils/fetchHtmlHead.ts";
 
 export const isElement = (e: Root | Element | Node | undefined): e is Element =>
 	e?.type == "element";
 
 export async function fetchPageHtml(
 	src: URL,
-	init?: RequestInit,
+	init?: { signal: AbortSignal },
 ): Promise<Root> {
-	const html = await fetchAsBot(src, init).then((r) => r.text());
+	const html = await fetchHtmlHead(src, init?.signal);
 	return fromHtml(html);
 }
 

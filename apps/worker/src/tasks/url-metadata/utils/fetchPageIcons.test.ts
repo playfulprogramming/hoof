@@ -19,8 +19,6 @@ test("Should fetch basic page icon", async () => {
 	mockEndpoint({
 		path: domain,
 		body: html,
-		method: "get",
-		bodyType: "text",
 	});
 	const srcHast = await fetchPageHtml(new URL(domain));
 	const iconHref = await fetchPageIcons(new URL(domain), srcHast!);
@@ -55,14 +53,10 @@ test("Should fetch page icon from manifest as backup", async () => {
 	mockEndpoint({
 		path: domain,
 		body: pageHtml,
-		method: "get",
-		bodyType: "text",
 	});
 	mockEndpoint({
 		path: domain + "manifest.json",
-		body: manifest,
-		method: "get",
-		bodyType: "json",
+		body: JSON.stringify(manifest),
 	});
 
 	const srcHast = await fetchPageHtml(new URL(domain));
