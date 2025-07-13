@@ -95,6 +95,10 @@ importers:
       fastify-plugin:
         specifier: ^5.0.1
         version: 5.0.1
+    devDependencies:
+      vitest:
+        specifier: ^3.1.2
+        version: 3.1.2(@types/debug@4.1.12)(@types/node@22.15.3)(jiti@2.4.2)(msw@2.8.2(@types/node@22.15.3)(typescript@5.8.3))(yaml@2.7.0)
 
   apps/worker:
     dependencies:

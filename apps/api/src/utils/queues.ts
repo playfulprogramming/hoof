@@ -26,7 +26,7 @@ function createQueues(): Queues {
 	return queues as Queues;
 }
 
-const queues = createQueues();
+export const queues = createQueues();
 
 export function createJob<T extends TasksValues>(
 	task: T,

@@ -7,7 +7,6 @@ export const EnvSchema = Type.Object({
 		Type.Literal("development"),
 		Type.Literal("production"),
 	]),
-	WORKER_EXIT_WHEN_DONE: Type.Boolean({ default: true }),
 
 	SITE_URL: Type.String(),
 
