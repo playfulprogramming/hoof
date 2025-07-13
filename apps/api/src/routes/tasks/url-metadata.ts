@@ -100,7 +100,7 @@ const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 			// Normalize URL
 			const inputUrl = new URL(request.body.url);
 			if (!["http:", "https:"].includes(inputUrl.protocol)) {
-				throw new Error(`Protocol '${inputUrl.protocol}' is not spported!`);
+				throw new Error(`Protocol '${inputUrl.protocol}' is not supported!`);
 			}
 
 			const normalizedUrl = new URL(
@@ -112,18 +112,30 @@ const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 				where: (metadata) => eq(metadata.url, normalizedUrl),
 			});
 
+			let shouldSubmitJob = false;
+
 			if (result) {
+				// if 30 days has passed after metadata was last fetched, revalidate it
+				const stale = new Date(
+					result.fetchedAt.getTime() + 30 * 24 * 60 * 60 * 1000,
+				);
+				if (result.error || new Date() > stale) {
+					shouldSubmitJob = true;
+				}
+
 				reply.code(200);
 				reply.send(mapUrlMetadata(result));
-				return;
+			} else {
+				shouldSubmitJob = true;
+				reply.code(201);
 			}
 
-			createJob(Tasks.URL_METADATA, normalizedUrl, {
-				...request.body,
-				url: normalizedUrl,
-			});
-
-			reply.code(201);
+			if (shouldSubmitJob) {
+				createJob(Tasks.URL_METADATA, normalizedUrl, {
+					...request.body,
+					url: normalizedUrl,
+				});
+			}
 		},
 	);
 };
