@@ -11,6 +11,7 @@ import { Type } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import dayjs from "dayjs";
 import sharp from "sharp";
+import { createHash } from "crypto";
 
 const stringifyCodeTree: unified.Plugin<unknown[], Parent, string> =
 	function () {
@@ -94,6 +95,7 @@ export async function fetchPostData(
 
 	console.debug("GET", indexUrl.href);
 	const indexString = await fetch(indexUrl, { signal }).then((r) => r.text());
+	const indexMd5 = createHash("md5").update(indexString).digest("hex");
 	const { data, content } = matter(indexString);
 	const indexInfo = Value.Parse(RawPostInfo, data);
 
@@ -150,5 +152,6 @@ export async function fetchPostData(
 		wordCount,
 		code,
 		publishedMeta: dayjs(indexInfo.published).format("MMMM D, YYYY"),
+		indexMd5,
 	};
 }

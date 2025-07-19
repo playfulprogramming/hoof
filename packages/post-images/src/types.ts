@@ -12,6 +12,7 @@ export interface PostImageData {
 	publishedMeta: string;
 	wordCount: number;
 	code: string;
+	indexMd5: string;
 }
 
 export type LayoutFunction = (

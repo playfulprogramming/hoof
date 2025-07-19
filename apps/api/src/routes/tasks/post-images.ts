@@ -1,15 +1,30 @@
 import type { FastifyPluginAsync } from "fastify";
 import { eq } from "drizzle-orm";
-import {
-	type PostImageInput,
-	PostImageInputSchema,
-	type PostImageOutput,
-	Tasks,
-	env,
-} from "@playfulprogramming/common";
+import { type PostImageOutput, Tasks, env } from "@playfulprogramming/common";
 import { db } from "@playfulprogramming/db";
 import { Type, type Static } from "@sinclair/typebox";
 import { createJob } from "../../utils/queues.ts";
+
+const PostImageRequestSchema = Type.Object(
+	{
+		slug: Type.String(),
+		// `path` and `author` are temporary, will be removed after https://github.com/playfulprogramming/hoof/issues/18
+		author: Type.String(),
+		path: Type.String(),
+		indexMd5: Type.String(),
+	},
+	{
+		additionalProperties: false,
+		examples: [
+			{
+				slug: "example",
+				author: "fennifith",
+				path: "content/fennifith/posts/example/index.md",
+				indexMd5: "6cd3556deb0da54bca060b4c39479839",
+			},
+		],
+	},
+);
 
 const PostImagesResponseSchema = Type.Object(
 	{
@@ -44,7 +59,7 @@ function mapPostImages(
 
 const postImagesRoutes: FastifyPluginAsync = async (fastify) => {
 	fastify.post<{
-		Body: PostImageInput;
+		Body: Static<typeof PostImageRequestSchema>;
 		Reply: Static<typeof PostImagesResponseSchema>;
 	}>(
 		"/tasks/post-images",
@@ -55,7 +70,7 @@ const postImagesRoutes: FastifyPluginAsync = async (fastify) => {
 				body: {
 					content: {
 						"application/json": {
-							schema: PostImageInputSchema,
+							schema: PostImageRequestSchema,
 						},
 					},
 				},
@@ -79,11 +94,8 @@ const postImagesRoutes: FastifyPluginAsync = async (fastify) => {
 			let shouldSubmitJob = false;
 
 			if (result) {
-				// if 30 days has passed after metadata was last fetched, revalidate it
-				const stale = new Date(
-					result.fetchedAt.getTime() + 30 * 24 * 60 * 60 * 1000,
-				);
-				if (result.error || new Date() > stale) {
+				// if the task failed or if the md5 hash has changed, recreate the post images
+				if (result.error || request.body.indexMd5 != result.indexMd5) {
 					shouldSubmitJob = true;
 				}
 

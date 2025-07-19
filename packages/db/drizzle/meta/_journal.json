@@ -8,6 +8,13 @@
       "when": 1750345928184,
       "tag": "0000_gigantic_epoch",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1752967753013,
+      "tag": "0001_broad_archangel",
+      "breakpoints": true
     }
   ]
 }

@@ -24,4 +24,6 @@ export type PostImageInput = Static<typeof PostImageInputSchema>;
 export interface PostImageOutput {
 	bannerKey: string | null;
 	linkPreviewKey: string | null;
+	indexMd5: string | null;
+	error: boolean;
 }

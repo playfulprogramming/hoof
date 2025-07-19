@@ -64,9 +64,14 @@ export default createProcessor(Tasks.POST_IMAGES, async (job, { signal }) => {
 			}),
 	]);
 
+	const indexMd5 = await dataPromise
+		.then((data) => data.indexMd5)
+		.catch(() => undefined);
+
 	const result = {
 		bannerKey: bannerKey ?? null,
 		linkPreviewKey: linkPreviewKey ?? null,
+		indexMd5: indexMd5 ?? null,
 		error,
 	};
 

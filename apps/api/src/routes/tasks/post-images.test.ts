@@ -16,6 +16,7 @@ test("post-images creates a job when none is present", async () => {
 			slug: "example",
 			author: "fennifith",
 			path: "content/fennifith/posts/example/index.md",
+			indexMd5: "test-md5",
 		},
 	});
 
@@ -26,6 +27,7 @@ test("post-images creates a job when none is present", async () => {
 			slug: "example",
 			author: "fennifith",
 			path: "content/fennifith/posts/example/index.md",
+			indexMd5: "test-md5",
 		},
 		{
 			deduplication: {
@@ -43,6 +45,7 @@ test("post-images returns existing data from the db", async () => {
 		slug: "test-slug",
 		bannerKey: "test-banner-key",
 		linkPreviewKey: "test-link-preview-key",
+		indexMd5: "test-md5",
 		fetchedAt: new Date("2025-05-05"),
 		error: false,
 	} as never);
@@ -54,6 +57,7 @@ test("post-images returns existing data from the db", async () => {
 			slug: "example",
 			author: "fennifith",
 			path: "content/fennifith/posts/example/index.md",
+			indexMd5: "test-md5",
 		},
 	});
 
