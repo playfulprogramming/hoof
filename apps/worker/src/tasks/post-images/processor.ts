@@ -8,46 +8,65 @@ import {
 } from "@playfulprogramming/post-images";
 import { s3 } from "@playfulprogramming/s3";
 import { createProcessor } from "../../createProcessor.ts";
+import type {
+	LayoutFunction,
+	PostImageData,
+} from "@playfulprogramming/post-images/src/types.ts";
+
+async function createAndUploadPostImage(
+	data: PostImageData,
+	key: string,
+	layout: LayoutFunction,
+	signal: AbortSignal,
+) {
+	const BUCKET = await s3.createBucket(env.S3_BUCKET);
+	await createPostImage(layout, data).then((buf) => {
+		signal.throwIfAborted();
+		return s3.upload(BUCKET, key, undefined, buf, "image/png");
+	});
+	return key;
+}
 
 export default createProcessor(Tasks.POST_IMAGES, async (job, { signal }) => {
-	const BUCKET = await s3.createBucket(env.S3_BUCKET);
-
-	let bannerKey: string | null = null;
-	let linkPreviewKey: string | null = null;
 	let error = false;
 
-	const data = await fetchPostData(job.data, signal).catch((e) => {
-		console.error(`Unable to fetch post data for ${job.data.slug}`, e);
-		error = true;
-		return undefined;
-	});
+	const dataPromise = fetchPostData(job.data, signal);
 
-	if (data) {
-		const bannerKeyLocal = (bannerKey = `post-images/${data.slug}.banner.png`);
-		const linkPreviewKeyLocal =
-			(linkPreviewKey = `post-images/${data.slug}.link-preview.png`);
+	const bannerKeyLocal = `post-images/${job.data.slug}.banner.png`;
+	const linkPreviewKeyLocal = `post-images/${job.data.slug}.link-preview.png`;
 
-		await Promise.all([
-			createPostImage(banner, data).then((buf) => {
-				signal.throwIfAborted();
-				return s3.upload(BUCKET, bannerKeyLocal, undefined, buf, "image/png");
+	const [bannerKey, linkPreviewKey] = await Promise.all([
+		dataPromise
+			.then((data) =>
+				createAndUploadPostImage(data, bannerKeyLocal, banner, signal),
+			)
+			.catch((e) => {
+				console.error(`Unable to generate post banner for ${job.data.slug}`, e);
+				error = true;
+				return undefined;
 			}),
-			createPostImage(linkPreview, data).then((buf) => {
-				signal.throwIfAborted();
-				return s3.upload(
-					BUCKET,
+		dataPromise
+			.then((data) =>
+				createAndUploadPostImage(
+					data,
 					linkPreviewKeyLocal,
-					undefined,
-					buf,
-					"image/png",
+					linkPreview,
+					signal,
+				),
+			)
+			.catch((e) => {
+				console.error(
+					`Unable to generate post link preview for ${job.data.slug}`,
+					e,
 				);
+				error = true;
+				return undefined;
 			}),
-		]);
-	}
+	]);
 
 	const result = {
-		bannerKey,
-		linkPreviewKey,
+		bannerKey: bannerKey ?? null,
+		linkPreviewKey: linkPreviewKey ?? null,
 		error,
 	};
 
