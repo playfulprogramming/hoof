@@ -13,8 +13,8 @@ import { createJob } from "../../utils/queues.ts";
 
 const PostImagesResponseSchema = Type.Object(
 	{
-		banner: Type.String(),
-		linkPreview: Type.String(),
+		banner: Type.Optional(Type.String()),
+		linkPreview: Type.Optional(Type.String()),
 	},
 	{
 		examples: [
@@ -33,8 +33,12 @@ function mapPostImages(
 ): Static<typeof PostImagesResponseSchema> {
 	const s3PublicUrl = `${env.S3_PUBLIC_URL}/${env.S3_BUCKET}/`;
 	return {
-		banner: new URL(result.bannerKey, s3PublicUrl).toString(),
-		linkPreview: new URL(result.linkPreviewKey, s3PublicUrl).toString(),
+		banner: result.bannerKey
+			? new URL(result.bannerKey, s3PublicUrl).toString()
+			: undefined,
+		linkPreview: result.linkPreviewKey
+			? new URL(result.linkPreviewKey, s3PublicUrl).toString()
+			: undefined,
 	};
 }
 
@@ -72,17 +76,29 @@ const postImagesRoutes: FastifyPluginAsync = async (fastify) => {
 				where: (postImages) => eq(postImages.slug, request.body.slug),
 			});
 
+			let shouldSubmitJob = false;
+
 			if (result) {
+				// if 30 days has passed after metadata was last fetched, revalidate it
+				const stale = new Date(
+					result.fetchedAt.getTime() + 30 * 24 * 60 * 60 * 1000,
+				);
+				if (result.error || new Date() > stale) {
+					shouldSubmitJob = true;
+				}
+
 				reply.code(200);
 				reply.send(mapPostImages(result));
-				return;
+			} else {
+				shouldSubmitJob = true;
+				reply.code(201);
 			}
 
-			createJob(Tasks.POST_IMAGES, request.body.slug, {
-				...request.body,
-			});
-
-			reply.code(201);
+			if (shouldSubmitJob) {
+				createJob(Tasks.POST_IMAGES, request.body.slug, {
+					...request.body,
+				});
+			}
 		},
 	);
 };

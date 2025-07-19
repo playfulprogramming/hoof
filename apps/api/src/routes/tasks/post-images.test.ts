@@ -43,6 +43,8 @@ test("post-images returns existing data from the db", async () => {
 		slug: "test-slug",
 		bannerKey: "test-banner-key",
 		linkPreviewKey: "test-link-preview-key",
+		fetchedAt: new Date("2025-05-05"),
+		error: false,
 	} as never);
 
 	const response = await app.inject({

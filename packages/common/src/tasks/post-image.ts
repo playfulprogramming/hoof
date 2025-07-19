@@ -22,6 +22,6 @@ export const PostImageInputSchema = Type.Object(
 export type PostImageInput = Static<typeof PostImageInputSchema>;
 
 export interface PostImageOutput {
-	bannerKey: string;
-	linkPreviewKey: string;
+	bannerKey: string | null;
+	linkPreviewKey: string | null;
 }
