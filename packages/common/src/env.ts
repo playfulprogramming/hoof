@@ -20,6 +20,12 @@ export const EnvSchema = Type.Object({
 
 	REDIS_URL: Type.String({ pattern: "^redis://.+$" }),
 	REDIS_PASSWORD: Type.Optional(Type.String()),
+
+	// Rate limiting configuration
+	RATE_LIMIT_MAX: Type.Optional(Type.Integer({ default: 100 })),
+	RATE_LIMIT_WINDOW: Type.Optional(Type.String({ default: "1 minute" })),
+	RATE_LIMIT_BAN_THRESHOLD: Type.Optional(Type.Integer({ default: 10 })),
+	HOOF_AUTH_TOKEN: Type.Optional(Type.String()),
 });
 
 export type EnvType = Static<typeof EnvSchema>;
