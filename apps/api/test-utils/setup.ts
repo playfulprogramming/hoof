@@ -46,6 +46,7 @@ vi.mock("@playfulprogramming/common", async (importOriginal) => {
 			POSTGRES_URL: "postgresql://postgres_url.test",
 			REDIS_URL: "redis://redis_url.test",
 			REDIS_PASSWORD: "redis_password",
+			HOOF_AUTH_TOKEN: "supersecret",
 		} satisfies EnvType,
 	};
 });
