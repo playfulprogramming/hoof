@@ -1,4 +1,5 @@
 import { env } from "@playfulprogramming/common";
+import rateLimit from "./plugins/rate-limit/index.ts";
 import sensible from "./plugins/sensible.ts";
 import swagger from "./plugins/swagger.ts";
 import { healthRoutes } from "./routes/health.ts";
@@ -10,6 +11,7 @@ const app = fastify({
 	logger: true,
 });
 
+app.register(rateLimit);
 app.register(sensible);
 app.register(swagger);
 app.register(healthRoutes);
