@@ -4,7 +4,6 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
-		"prepare": "husky",
 		"preinstall": "node -e \"if(process.env.CI == 'true') {console.log('Skipping preinstall...')} else {process.exit(1)}\" || npx -y only-allow pnpm",
 		"test": "nx run-many --targets=test:sherif,test:knip,test:eslint,test:publint,test",
 		"test:eslint": "nx affected --target=test:eslint",
