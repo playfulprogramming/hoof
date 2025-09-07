@@ -22,7 +22,7 @@
 		"lru-cache": "^11.2.1",
 		"robots-parser": "^3.0.1",
 		"sharp": "^0.34.3",
-		"svgo": "^3.3.2",
+		"svgo": "^4.0.0",
 		"undici": "^7.15.0",
 		"unist-util-find": "^3.0.0",
 		"unist-util-visit": "^5.0.0"
