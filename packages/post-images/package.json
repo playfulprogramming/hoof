@@ -19,7 +19,7 @@
 		"hast-util-to-string": "^3.0.1",
 		"remark-parse": "^11.0.0",
 		"remark-rehype": "^11.1.2",
-		"satori": "^0.13.1",
+		"satori": "^0.18.2",
 		"sharp": "^0.34.3",
 		"unified": "^11.0.5",
 		"unist-util-find-all-after": "^5.0.0",
