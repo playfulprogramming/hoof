@@ -15,7 +15,7 @@ jobs:
     name: Deploy app
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: superfly/flyctl-actions/setup-flyctl@1.5
       - name: Deploy App
         run: flyctl deploy --remote-only
@@ -26,7 +26,7 @@ jobs:
     name: Deploy redis
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: superfly/flyctl-actions/setup-flyctl@1.5
       - name: Deploy Redis
         working-directory: ./services/redis
