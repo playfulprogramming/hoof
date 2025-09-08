@@ -4,6 +4,7 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
+		"prepare": "husky",
 		"preinstall": "node -e \"if(process.env.CI == 'true') {console.log('Skipping preinstall...')} else {process.exit(1)}\" || npx -y only-allow pnpm",
 		"test": "nx run-many --targets=test:sherif,test:knip,test:eslint,test:publint,test",
 		"test:eslint": "nx affected --target=test:eslint",
@@ -33,7 +34,9 @@
 		"@types/node": "^24.3.1",
 		"eslint": "^9.35.0",
 		"globals": "^16.3.0",
+		"husky": "^9.1.7",
 		"knip": "^5.63.1",
+		"lint-staged": "^16.1.6",
 		"nx": "21.4.1",
 		"prettier": "^3.6.2",
 		"publint": "^0.3.12",
