@@ -4,49 +4,57 @@ import {
 	timestamp,
 	jsonb,
 	primaryKey,
-	foreignKey,
 	boolean,
 } from "drizzle-orm/pg-core";
 import { profiles } from "./profiles.ts";
 import { relations } from "drizzle-orm";
 
-export const posts = pgTable(
-	"posts",
+export const posts = pgTable("posts", {
+	slug: text("slug").primaryKey(),
+});
+
+export const postData = pgTable(
+	"post_data",
 	{
-		slug: text("slug").notNull(),
+		slug: text("slug")
+			.notNull()
+			.references(() => posts.slug, {
+				onDelete: "cascade",
+			}),
 		locale: text("locale").notNull(),
 		title: text("title").notNull(),
-		description: text("description"),
+		version: text("version").notNull().default(""),
+		description: text("description").notNull().default(""),
 		socialImage: text("social_image"),
 		bannerImage: text("banner_image"),
-		version: text("version"),
 		originalLink: text("original_link"),
-		noindex: boolean("noindex"),
-		editedAt: timestamp("edited_at"),
-		publishedAt: timestamp("published_at").$default(() => new Date()),
-		meta: jsonb("meta"),
+		noindex: boolean("noindex").notNull().default(false),
+		editedAt: timestamp("edited_at", { withTimezone: true }),
+		publishedAt: timestamp("published_at", { withTimezone: true }),
+		meta: jsonb("meta").notNull(),
 	},
-	(table) => [primaryKey({ columns: [table.slug, table.locale] })],
+	(table) => [
+		primaryKey({ columns: [table.slug, table.locale, table.version] }),
+	],
 );
 
 export const postAuthors = pgTable(
 	"post_authors",
 	{
-		postSlug: text("post_slug").notNull(),
-		postLocale: text("post_locale").notNull(),
-		authorSlug: text("author_slug").notNull(),
+		postSlug: text("post_slug")
+			.notNull()
+			.references(() => posts.slug, {
+				onDelete: "cascade",
+			}),
+		authorSlug: text("author_slug")
+			.notNull()
+			.references(() => profiles.slug, {
+				onDelete: "cascade",
+			}),
 	},
 	(table) => [
 		primaryKey({
-			columns: [table.postSlug, table.postLocale, table.authorSlug],
-		}),
-		foreignKey({
-			columns: [table.postSlug, table.postLocale],
-			foreignColumns: [posts.slug, posts.locale],
-		}),
-		foreignKey({
-			columns: [table.authorSlug],
-			foreignColumns: [profiles.slug],
+			columns: [table.postSlug, table.authorSlug],
 		}),
 	],
 );
@@ -55,19 +63,13 @@ export const postsRelations = relations(posts, ({ many }) => ({
 	authors: many(postAuthors),
 }));
 
-export const postAuthorsRelations = relations(
-	postAuthors,
-	({ one }) => ({
-		post: one(posts, {
-			fields: [
-				postAuthors.postSlug,
-				postAuthors.postLocale,
-			],
-			references: [posts.slug, posts.locale],
-		}),
-		author: one(profiles, {
-			fields: [postAuthors.authorSlug],
-			references: [profiles.slug],
-		}),
+export const postAuthorsRelations = relations(postAuthors, ({ one }) => ({
+	post: one(posts, {
+		fields: [postAuthors.postSlug],
+		references: [posts.slug],
 	}),
-);
+	author: one(profiles, {
+		fields: [postAuthors.authorSlug],
+		references: [profiles.slug],
+	}),
+}));

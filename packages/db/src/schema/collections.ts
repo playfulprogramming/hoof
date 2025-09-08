@@ -4,22 +4,27 @@ import {
 	timestamp,
 	jsonb,
 	primaryKey,
-	foreignKey,
 	integer,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { profiles } from "./profiles.ts";
 import { posts } from "./posts.ts";
 
-export const collections = pgTable(
-	"collections",
+export const collections = pgTable("collections", {
+	slug: text("slug").primaryKey(),
+});
+
+export const collectionData = pgTable(
+	"collection_data",
 	{
-		slug: text("slug").notNull(),
+		slug: text("slug")
+			.notNull()
+			.references(() => collections.slug, { onDelete: "cascade" }),
 		locale: text("locale").notNull(),
 		title: text("title").notNull(),
-		description: text("description"),
-		publishedAt: timestamp("published_at").$default(() => new Date()),
-		meta: jsonb("meta"),
+		description: text("description").notNull().default(""),
+		publishedAt: timestamp("published_at", { withTimezone: true }),
+		meta: jsonb("meta").notNull(),
 	},
 	(table) => [primaryKey({ columns: [table.slug, table.locale] })],
 );
@@ -27,50 +32,34 @@ export const collections = pgTable(
 export const collectionAuthors = pgTable(
 	"collection_authors",
 	{
-		collectionSlug: text("collection_slug").notNull(),
-		collectionLocale: text("collection_locale").notNull(),
-		authorSlug: text("author_slug").notNull(),
+		collectionSlug: text("collection_slug")
+			.notNull()
+			.references(() => collections.slug, { onDelete: "cascade" }),
+		authorSlug: text("author_slug")
+			.notNull()
+			.references(() => profiles.slug, { onDelete: "cascade" }),
 	},
 	(table) => [
 		primaryKey({
-			columns: [table.collectionSlug, table.collectionLocale, table.authorSlug],
-		}),
-		foreignKey({
-			columns: [table.collectionSlug, table.collectionLocale],
-			foreignColumns: [collections.slug, collections.locale],
-		}),
-		foreignKey({
-			columns: [table.authorSlug],
-			foreignColumns: [profiles.slug],
+			columns: [table.collectionSlug, table.authorSlug],
 		}),
 	],
 );
 
-export const collectionChapters = pgTable(
-	"collection_chapters",
-	{
-		id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-		locale: text("locale").notNull(),
-		collectionSlug: text("collection_slug").notNull(),
-		postSlug: text("post_slug").notNull(),
-		title: text("title").notNull(),
-		description: text("description"),
-		url: text("url").notNull(),
-		order: integer("order").notNull(),
-	},
-	(table) => [
-		foreignKey({
-			columns: [table.collectionSlug, table.locale],
-			foreignColumns: [collections.slug, collections.locale],
-			name: "fk_collection_chapters_collection",
-		}),
-		foreignKey({
-			columns: [table.postSlug, table.locale],
-			foreignColumns: [posts.slug, posts.locale],
-			name: "fk_collection_chapters_post",
-		}),
-	],
-);
+export const collectionChapters = pgTable("collection_chapters", {
+	id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+	locale: text("locale").notNull(),
+	collectionSlug: text("collection_slug")
+		.notNull()
+		.references(() => collections.slug, { onDelete: "cascade" }),
+	postSlug: text("post_slug")
+		.notNull()
+		.references(() => posts.slug, { onDelete: "cascade" }),
+	title: text("title").notNull(),
+	description: text("description").notNull().default(""),
+	url: text("url").notNull(),
+	order: integer("order").notNull(),
+});
 
 /**
  * Query via:
@@ -98,11 +87,8 @@ export const collectionAuthorsRelations = relations(
 	collectionAuthors,
 	({ one }) => ({
 		collection: one(collections, {
-			fields: [
-				collectionAuthors.collectionSlug,
-				collectionAuthors.collectionLocale,
-			],
-			references: [collections.slug, collections.locale],
+			fields: [collectionAuthors.collectionSlug],
+			references: [collections.slug],
 		}),
 		author: one(profiles, {
 			fields: [collectionAuthors.authorSlug],
@@ -115,12 +101,12 @@ export const collectionChaptersRelations = relations(
 	collectionChapters,
 	({ one }) => ({
 		collection: one(collections, {
-			fields: [collectionChapters.collectionSlug, collectionChapters.locale],
-			references: [collections.slug, collections.locale],
+			fields: [collectionChapters.collectionSlug],
+			references: [collections.slug],
 		}),
 		post: one(posts, {
-			fields: [collectionChapters.postSlug, collectionChapters.locale],
-			references: [posts.slug, posts.locale],
+			fields: [collectionChapters.postSlug],
+			references: [posts.slug],
 		}),
 	}),
 );
