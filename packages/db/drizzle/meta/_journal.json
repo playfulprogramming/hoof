@@ -15,6 +15,13 @@
       "when": 1752967753013,
       "tag": "0001_broad_archangel",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1757293114705,
+      "tag": "0002_panoramic_carmella_unuscione",
+      "breakpoints": true
     }
   ]
 }
