@@ -12,15 +12,15 @@
 	},
 	"dependencies": {
 		"@playfulprogramming/common": "workspace:*",
-		"@resvg/resvg-js": "2.5.0",
+		"@resvg/resvg-js": "2.6.2",
 		"@sinclair/typebox": "catalog:",
-		"dayjs": "^1.11.13",
+		"dayjs": "^1.11.18",
 		"gray-matter": "^4.0.3",
 		"hast-util-to-string": "^3.0.1",
 		"remark-parse": "^11.0.0",
 		"remark-rehype": "^11.1.2",
 		"satori": "^0.13.1",
-		"sharp": "^0.33.5",
+		"sharp": "^0.34.3",
 		"unified": "^11.0.5",
 		"unist-util-find-all-after": "^5.0.0",
 		"xhtm": "^1.6.3"

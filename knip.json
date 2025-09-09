@@ -1,6 +1,10 @@
 {
 	"$schema": "https://unpkg.com/knip@5/schema.json",
-	"entry": ["apps/worker/src/tasks/*/processor.ts"],
 	"ignore": ["*/*/scripts/*"],
-	"ignoreDependencies": ["@aws-sdk/types"]
+	"ignoreDependencies": ["@aws-sdk/types"],
+	"workspaces": {
+		"apps/worker": {
+			"entry": ["src/tasks/*/processor.ts"]
+		}
+	}
 }
