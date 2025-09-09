@@ -1,8 +1,8 @@
-name: unicorn-utterances-cms
+name: playful-programming-cms
 
 services:
   pgsql:
-    image: postgres:16.3-alpine3.18
+    image: postgres:16.10-alpine3.22
     env_file:
       - .env
     volumes:
@@ -17,7 +17,7 @@ services:
       - "5432:5432"
 
   redis:
-    image: redis:latest
+    image: redis:8.2.1-alpine3.22
     volumes:
       - redis_storage:/data
     ports:

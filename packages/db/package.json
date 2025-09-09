@@ -17,8 +17,8 @@
 		"pg": "^8.16.3"
 	},
 	"devDependencies": {
-		"@types/pg": "^8.11.11",
-		"dotenv": "^16.5.0",
+		"@types/pg": "^8.15.5",
+		"dotenv": "^17.2.2",
 		"drizzle-kit": "^0.31.4"
 	}
 }
