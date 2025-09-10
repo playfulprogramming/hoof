@@ -1,10 +1,9 @@
 import { readFile } from "fs/promises";
 import { html } from "../html.ts";
 import type { LayoutFunction, PostImageData } from "../types.ts";
+import { importMetaResolve } from "../import-meta-resolve.ts";
 
-const fallbackStickerPath = import.meta
-	.resolve("../assets/role_devops.svg")
-	.replace(/^file:\/\//, "");
+const fallbackStickerPath = importMetaResolve("./assets/role_devops.svg");
 const fallbackSticker = `data:image/svg+xml,${encodeURIComponent(await readFile(fallbackStickerPath, "utf-8"))}`;
 
 function code(post: PostImageData) {

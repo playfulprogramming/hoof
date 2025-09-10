@@ -2,31 +2,30 @@ import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
 import type { LayoutFunction, PostImageData } from "./types.ts";
 import { readFile } from "fs/promises";
+import { importMetaResolve } from "./import-meta-resolve.ts";
 
 const PAGE_WIDTH = 1280;
 const PAGE_HEIGHT = 640;
 
-const figtreeRegularTtf = import.meta
-	.resolve("./assets/Figtree/Figtree-Regular.ttf")
-	.replace(/^file:\/\//, "");
-const figtreeSemiBoldTtf = import.meta
-	.resolve("./assets/Figtree/Figtree-SemiBold.ttf")
-	.replace(/^file:\/\//, "");
-const figtreeBoldTtf = import.meta
-	.resolve("./assets/Figtree/Figtree-Bold.ttf")
-	.replace(/^file:\/\//, "");
-const figtreeExtraBoldTtf = import.meta
-	.resolve("./assets/Figtree/Figtree-ExtraBold.ttf")
-	.replace(/^file:\/\//, "");
-const robotoMonoRegularTtf = import.meta
-	.resolve("./assets/Roboto_Mono/RobotoMono-Regular.ttf")
-	.replace(/^file:\/\//, "");
-const robotoMonoBoldTtf = import.meta
-	.resolve("./assets/Roboto_Mono/RobotoMono-Bold.ttf")
-	.replace(/^file:\/\//, "");
-const notoEmojiTtf = import.meta
-	.resolve("./assets/Noto_Emoji/NotoEmoji-Regular.ttf")
-	.replace(/^file:\/\//, "");
+const figtreeRegularTtf = importMetaResolve(
+	"./assets/Figtree/Figtree-Regular.ttf",
+);
+const figtreeSemiBoldTtf = importMetaResolve(
+	"./assets/Figtree/Figtree-SemiBold.ttf",
+);
+const figtreeBoldTtf = importMetaResolve("./assets/Figtree/Figtree-Bold.ttf");
+const figtreeExtraBoldTtf = importMetaResolve(
+	"./assets/Figtree/Figtree-ExtraBold.ttf",
+);
+const robotoMonoRegularTtf = importMetaResolve(
+	"./assets/Roboto_Mono/RobotoMono-Regular.ttf",
+);
+const robotoMonoBoldTtf = importMetaResolve(
+	"./assets/Roboto_Mono/RobotoMono-Bold.ttf",
+);
+const notoEmojiTtf = importMetaResolve(
+	"./assets/Noto_Emoji/NotoEmoji-Regular.ttf",
+);
 
 const fonts: Parameters<typeof satori>[1]["fonts"] = [
 	{
