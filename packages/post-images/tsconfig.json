@@ -1,4 +1,7 @@
 {
 	"extends": "../../tsconfig.json",
-	"include": ["src", "eslint.config.js", "scripts/live-server.ts"]
+	"compilerOptions": {
+		"types": ["vitest/globals"]
+	},
+	"include": ["src", "eslint.config.js", "scripts/live-server.ts", "tests"]
 }

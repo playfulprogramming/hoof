@@ -7,6 +7,7 @@
 	"scripts": {
 		"test:eslint": "eslint ./src",
 		"test:build": "publint --strict",
+		"test": "vitest run",
 		"build": "tsc --noEmit",
 		"dev:post-images": "node --env-file=../../.env --watch --experimental-strip-types scripts/live-server.ts"
 	},
@@ -26,6 +27,8 @@
 		"xhtm": "^1.6.3"
 	},
 	"devDependencies": {
-		"@types/unist": "^3.0.3"
+		"@types/unist": "^3.0.3",
+		"looks-same": "^10.0.0",
+		"vitest": "^3.2.4"
 	}
 }

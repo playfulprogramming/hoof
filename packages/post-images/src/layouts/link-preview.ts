@@ -1,10 +1,9 @@
 import { readFile } from "fs/promises";
 import { html } from "../html.ts";
 import type { LayoutFunction, PostImageData } from "../types.ts";
+import { importMetaResolve } from "../import-meta-resolve.ts";
 
-const path = import.meta
-	.resolve("../assets/playfulprogramming_sticker.svg")
-	.replace(/^file:\/\//, "");
+const path = importMetaResolve("./assets/playfulprogramming_sticker.svg");
 const playfulProgrammingStickerSvg = await readFile(path, "utf-8");
 const playfulProgrammingSticker = `data:image/svg+xml,${encodeURIComponent(playfulProgrammingStickerSvg)}`;
 
