@@ -1,6 +1,11 @@
 import { MockAgent, setGlobalDispatcher } from "undici";
 
-const mockAgent = new MockAgent();
+const mockAgent = new MockAgent({
+	connections: 1,
+	bodyTimeout: 10,
+	connectTimeout: 10,
+	headersTimeout: 10,
+});
 setGlobalDispatcher(mockAgent);
 
 interface MockEndpointProps {
