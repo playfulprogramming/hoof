@@ -13,6 +13,7 @@ primary_region = 'ewr'
 
 [env]
   PORT = "8080"
+  WORKER_PORT = "8081"
   ENVIRONMENT = "production"
   SITE_URL = "https://playfulprogramming.com"
   S3_PUBLIC_URL = "https://fly.storage.tigris.dev"
@@ -48,6 +49,17 @@ primary_region = 'ewr'
     method = "GET"
     timeout = "10s"
     path = "/health/postgres"
+
+[checks]
+  [checks.worker_http]
+    type = "http"
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/"
+    port = 8081
+    processes = ['worker']
 
 
 [[vm]]

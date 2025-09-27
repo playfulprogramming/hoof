@@ -3,6 +3,7 @@ import { Value } from "@sinclair/typebox/value";
 
 export const EnvSchema = Type.Object({
 	PORT: Type.Integer({ default: 3000 }),
+	WORKER_PORT: Type.Integer({ default: 3001 }),
 	ENVIRONMENT: Type.Union([
 		Type.Literal("development"),
 		Type.Literal("production"),
