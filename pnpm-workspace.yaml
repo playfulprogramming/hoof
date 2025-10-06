@@ -9,6 +9,6 @@ onlyBuiltDependencies:
   - nx
   - sharp
 catalog:
-  "@sinclair/typebox": ^0.34.33
+  "@sinclair/typebox": ^0.34.41
   bullmq: ^5.40.2
   drizzle-orm: ^0.44.2
