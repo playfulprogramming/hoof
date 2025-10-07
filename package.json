@@ -30,7 +30,7 @@
 	},
 	"packageManager": "pnpm@10.6.1",
 	"devDependencies": {
-		"@eslint/js": "^9.35.0",
+		"@eslint/js": "^9.36.0",
 		"@types/node": "^24.3.1",
 		"eslint": "^9.35.0",
 		"globals": "^16.4.0",
