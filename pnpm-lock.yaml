@@ -7,8 +7,8 @@ settings:
 catalogs:
   default:
     '@sinclair/typebox':
-      specifier: ^0.34.33
-      version: 0.34.33
+      specifier: ^0.34.41
+      version: 0.34.41
     bullmq:
       specifier: ^5.40.2
       version: 5.40.2
@@ -85,7 +85,7 @@ importers:
         version: 1.35.6(typescript@5.9.2)
       '@sinclair/typebox':
         specifier: 'catalog:'
-        version: 0.34.33
+        version: 0.34.41
       bullmq:
         specifier: 'catalog:'
         version: 5.40.2
@@ -159,7 +159,7 @@ importers:
     dependencies:
       '@sinclair/typebox':
         specifier: 'catalog:'
-        version: 0.34.33
+        version: 0.34.41
 
   packages/db:
     dependencies:
@@ -193,7 +193,7 @@ importers:
         version: 2.6.2
       '@sinclair/typebox':
         specifier: 'catalog:'
-        version: 0.34.33
+        version: 0.34.41
       dayjs:
         specifier: ^1.11.18
         version: 1.11.18
@@ -1609,6 +1609,9 @@ packages:
 
   '@sinclair/typebox@0.34.33':
     resolution: {integrity: sha512-5HAV9exOMcXRUxo+9iYB5n09XxzCXnfy4VTNW4xnDv+FgjzAGY989C28BIdljKqmF+ZltUwujE3aossvcVtq6g==}
+
+  '@sinclair/typebox@0.34.41':
+    resolution: {integrity: sha512-6gS8pZzSXdyRHTIqoqSVknxolr1kzfy4/CeDnrzsVz8TTIWUbOBr6gnzOmTYJ3eXQNh4IYHIGi5aIL7sOZ2G/g==}
 
   '@smithy/abort-controller@4.2.0':
     resolution: {integrity: sha512-PLUYa+SUKOEZtXFURBu/CNxlsxfaFGxSBPcStL13KpVeVWIfdezWyDqkz7iDLmwnxojXD0s5KzuB5HGHvt4Aeg==}
@@ -5482,6 +5485,8 @@ snapshots:
       string.prototype.codepointat: 0.2.1
 
   '@sinclair/typebox@0.34.33': {}
+
+  '@sinclair/typebox@0.34.41': {}
 
   '@smithy/abort-controller@4.2.0':
     dependencies:
