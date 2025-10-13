@@ -14,7 +14,7 @@
 	"dependencies": {
 		"@fastify/rate-limit": "^10.3.0",
 		"@fastify/sensible": "^6.0.0",
-		"@fastify/swagger": "^9.5.1",
+		"@fastify/swagger": "^9.5.2",
 		"@playfulprogramming/common": "workspace:*",
 		"@playfulprogramming/db": "workspace:*",
 		"@playfulprogramming/redis": "workspace:*",
