@@ -11,7 +11,7 @@
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.890.0",
-		"@aws-sdk/lib-storage": "^3.890.0",
+		"@aws-sdk/lib-storage": "^3.895.0",
 		"@playfulprogramming/common": "workspace:*"
 	},
 	"devDependencies": {
