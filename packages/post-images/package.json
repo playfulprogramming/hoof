@@ -29,6 +29,6 @@
 	"devDependencies": {
 		"@types/unist": "^3.0.3",
 		"looks-same": "^10.0.0",
-		"vitest": "^3.2.4"
+		"vitest": "catalog:"
 	}
 }

@@ -12,3 +12,5 @@ catalog:
   "@sinclair/typebox": ^0.34.41
   bullmq: ^5.40.2
   drizzle-orm: ^0.44.2
+  undici: ^7.15.0
+  vitest: ^3.2.4
