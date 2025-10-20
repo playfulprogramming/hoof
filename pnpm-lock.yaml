@@ -13,8 +13,8 @@ catalogs:
       specifier: ^5.40.2
       version: 5.40.2
     drizzle-orm:
-      specifier: ^0.44.2
-      version: 0.44.2
+      specifier: ^0.44.6
+      version: 0.44.6
 
 importers:
 
@@ -91,7 +91,7 @@ importers:
         version: 5.40.2
       drizzle-orm:
         specifier: 'catalog:'
-        version: 0.44.2(@types/pg@8.15.5)(pg@8.16.3(pg-native@3.5.2))
+        version: 0.44.6(@types/pg@8.15.5)(pg@8.16.3(pg-native@3.5.2))
       fastify:
         specifier: ^5.6.0
         version: 5.6.0
@@ -168,7 +168,7 @@ importers:
         version: link:../common
       drizzle-orm:
         specifier: 'catalog:'
-        version: 0.44.2(@types/pg@8.15.5)(pg@8.16.3(pg-native@3.5.2))
+        version: 0.44.6(@types/pg@8.15.5)(pg@8.16.3(pg-native@3.5.2))
       pg:
         specifier: ^8.16.3
         version: 8.16.3(pg-native@3.5.2)
@@ -2444,8 +2444,8 @@ packages:
     resolution: {integrity: sha512-tCPWVZWZqWVx2XUsVpJRnH9Mx0ClVOf5YUHerZ5so1OKSlqww4zy1R5ksEdGRcO3tM3zj0PYN6V48TbQCL1RfA==}
     hasBin: true
 
-  drizzle-orm@0.44.2:
-    resolution: {integrity: sha512-zGAqBzWWkVSFjZpwPOrmCrgO++1kZ5H/rZ4qTGeGOe18iXGVJWf3WPfHOVwFIbmi8kHjfJstC6rJomzGx8g/dQ==}
+  drizzle-orm@0.44.6:
+    resolution: {integrity: sha512-uy6uarrrEOc9K1u5/uhBFJbdF5VJ5xQ/Yzbecw3eAYOunv5FDeYkR2m8iitocdHBOHbvorviKOW5GVw0U1j4LQ==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=4'
@@ -6573,7 +6573,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.2(@types/pg@8.15.5)(pg@8.16.3(pg-native@3.5.2)):
+  drizzle-orm@0.44.6(@types/pg@8.15.5)(pg@8.16.3(pg-native@3.5.2)):
     optionalDependencies:
       '@types/pg': 8.15.5
       pg: 8.16.3(pg-native@3.5.2)
