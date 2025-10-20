@@ -23,7 +23,7 @@
 		"robots-parser": "^3.0.1",
 		"sharp": "^0.34.3",
 		"svgo": "^4.0.0",
-		"undici": "^7.15.0",
+		"undici": "^7.16.0",
 		"unist-util-find": "^3.0.0",
 		"unist-util-visit": "^5.0.0"
 	},
