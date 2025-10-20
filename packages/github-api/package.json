@@ -7,7 +7,6 @@
 	"scripts": {
 		"test:eslint": "eslint ./src",
 		"test:build": "publint --strict",
-		"test": "vitest run",
 		"build:openapi": "openapi-typescript 'https://raw.githubusercontent.com/github/rest-api-description/refs/heads/main/descriptions/api.github.com/dereferenced/api.github.com.2022-11-28.deref.json' -o src/generated/schema.d.ts",
 		"build": "tsc --noEmit"
 	},

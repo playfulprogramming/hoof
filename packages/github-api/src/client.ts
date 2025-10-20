@@ -3,7 +3,7 @@ import type { paths } from "./generated/schema.d.ts";
 import * as undici from "undici";
 import { env } from "@playfulprogramming/common";
 
-export async function fetchWrapper(input: Request): Promise<Response> {
+async function fetchWrapper(input: Request): Promise<Response> {
 	return undici.fetch(
 		new undici.default.Request(input.url, input),
 	) as unknown as Promise<Response>;
