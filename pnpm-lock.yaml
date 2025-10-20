@@ -129,9 +129,15 @@ importers:
       '@playfulprogramming/s3':
         specifier: workspace:*
         version: link:../../packages/s3
+      '@sinclair/typebox':
+        specifier: 'catalog:'
+        version: 0.34.41
       bullmq:
         specifier: 'catalog:'
         version: 5.40.2
+      gray-matter:
+        specifier: ^4.0.3
+        version: 4.0.3
       hast-util-from-html:
         specifier: ^2.0.3
         version: 2.0.3

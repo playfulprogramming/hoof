@@ -4,6 +4,7 @@ export interface GetTreeParams {
 	treeSha: string;
 	repoOwner: string;
 	repoName: string;
+	signal?: AbortSignal;
 }
 
 export async function getTree(params: GetTreeParams) {
@@ -20,6 +21,7 @@ export async function getTree(params: GetTreeParams) {
 			headers: {
 				Accept: "application/vnd.github+json",
 			},
+			signal: params.signal,
 		},
 	);
 

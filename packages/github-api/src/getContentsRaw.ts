@@ -1,10 +1,11 @@
 import { client } from "./client.ts";
 import type { GetContentsParams } from "./getContents.ts";
 
-export async function getContentsRaw(
+function getContentsRawBase<T extends "text" | "stream">(
 	params: GetContentsParams,
-): Promise<string> {
-	const response = await client.GET("/repos/{owner}/{repo}/contents/{path}", {
+	parseAs: T,
+) {
+	return client.GET("/repos/{owner}/{repo}/contents/{path}", {
 		params: {
 			query: {
 				ref: params.ref,
@@ -18,14 +19,35 @@ export async function getContentsRaw(
 		headers: {
 			Accept: "application/vnd.github.raw+json",
 		},
-		parseAs: "text",
+		parseAs,
+		signal: params.signal,
 	});
+}
 
+export async function getContentsRaw(
+	params: GetContentsParams,
+): Promise<string> {
+	const response = await getContentsRawBase(params, "text");
 	const data = response.data;
 
 	if (typeof data === "undefined" || response.error) {
 		throw new Error(
-			`GitHub API (getContentsRaw) returned ${response.response.status} ${response.error}`,
+			`GitHub API (${response.response.url}) returned ${response.response.status} ${response.error}`,
+		);
+	}
+
+	return data;
+}
+
+export async function getContentsRawStream(
+	params: GetContentsParams,
+): Promise<ReadableStream<Uint8Array>> {
+	const response = await getContentsRawBase(params, "stream");
+	const data = response.data;
+
+	if (typeof data === "undefined" || data === null || response.error) {
+		throw new Error(
+			`GitHub API (getContentsRawStream) returned ${response.response.status} ${response.error}`,
 		);
 	}
 

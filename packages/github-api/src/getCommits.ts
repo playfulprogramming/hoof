@@ -7,6 +7,7 @@ export interface GetCommitsParams {
 	sha: string;
 	repoOwner: string;
 	repoName: string;
+	signal?: AbortSignal;
 }
 
 export async function getCommits(params: GetCommitsParams) {
@@ -26,6 +27,7 @@ export async function getCommits(params: GetCommitsParams) {
 			headers: {
 				Accept: "application/vnd.github+json",
 			},
+			signal: params.signal,
 		},
 	);
 

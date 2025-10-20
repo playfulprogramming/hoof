@@ -5,6 +5,7 @@ export interface GetContentsParams {
 	ref: string;
 	repoOwner: string;
 	repoName: string;
+	signal?: AbortSignal;
 }
 
 export async function getContents(params: GetContentsParams) {
@@ -24,6 +25,7 @@ export async function getContents(params: GetContentsParams) {
 			headers: {
 				Accept: "application/vnd.github.object+json",
 			},
+			signal: params.signal,
 		},
 	);
 
