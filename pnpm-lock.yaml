@@ -135,6 +135,9 @@ importers:
       bullmq:
         specifier: 'catalog:'
         version: 5.40.2
+      drizzle-orm:
+        specifier: 'catalog:'
+        version: 0.44.6(@types/pg@8.15.5)(pg@8.16.3(pg-native@3.5.2))
       gray-matter:
         specifier: ^4.0.3
         version: 4.0.3

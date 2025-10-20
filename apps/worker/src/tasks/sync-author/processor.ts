@@ -8,6 +8,7 @@ import { AuthorMetaSchema } from "./types.ts";
 import { Value } from "@sinclair/typebox/value";
 import sharp from "sharp";
 import { Readable } from "node:stream";
+import { eq } from "drizzle-orm";
 
 const PROFILE_IMAGE_SIZE_MAX = 2048;
 
@@ -36,7 +37,7 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 		"http://localhost",
 	);
 
-	const authorMetaRaw = await github.getContentsRaw({
+	const authorMetaResponse = await github.getContentsRaw({
 		ref: job.data.ref,
 		path: authorMetaUrl.pathname,
 		repoOwner: env.GITHUB_REPO_OWNER,
@@ -44,19 +45,38 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 		signal,
 	});
 
-	const { data } = matter(authorMetaRaw);
+	if (authorMetaResponse.data === undefined) {
+		if (authorMetaResponse.response.status == 404) {
+			console.log(
+				`Metadata for ${authorId} (${authorMetaUrl.pathname}) returned 404 - removing profile entry.`,
+			);
+			await db.delete(profiles).where(eq(profiles.slug, authorId));
+			return;
+		}
+
+		throw new Error(`Unable to fetch author data for ${authorId}`);
+	}
+
+	const { data } = matter(authorMetaResponse.data);
 	const authorData = Value.Parse(AuthorMetaSchema, data);
 
 	let profileImgKey: string | null = null;
 	if (authorData.profileImg) {
 		const profileImgUrl = new URL(authorData.profileImg, authorMetaUrl);
-		const profileImgStream = await github.getContentsRawStream({
+		const { data: profileImgStream } = await github.getContentsRawStream({
 			ref: job.data.ref,
 			path: profileImgUrl.pathname,
 			repoOwner: env.GITHUB_REPO_OWNER,
 			repoName: env.GITHUB_REPO_NAME,
 			signal,
 		});
+
+		if (profileImgStream === null || typeof profileImgStream === "undefined") {
+			throw new Error(
+				`Unable to fetch profile image for ${authorId} (${profileImgUrl.pathname})`,
+			);
+		}
+
 		profileImgKey = `profiles/${authorId}.jpeg`;
 		await processProfileImg(profileImgStream, profileImgKey);
 	}

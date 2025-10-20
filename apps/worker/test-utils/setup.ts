@@ -22,6 +22,7 @@ vi.mock("@playfulprogramming/db", () => {
 		},
 		db: {
 			insert: vi.fn(),
+			delete: vi.fn(),
 		},
 	};
 });

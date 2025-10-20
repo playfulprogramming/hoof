@@ -20,6 +20,7 @@
 		"@playfulprogramming/s3": "workspace:*",
 		"@sinclair/typebox": "catalog:",
 		"bullmq": "catalog:",
+		"drizzle-orm": "catalog:",
 		"gray-matter": "^4.0.3",
 		"hast-util-from-html": "^2.0.3",
 		"lru-cache": "^11.2.1",

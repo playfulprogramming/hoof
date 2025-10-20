@@ -24,32 +24,10 @@ function getContentsRawBase<T extends "text" | "stream">(
 	});
 }
 
-export async function getContentsRaw(
-	params: GetContentsParams,
-): Promise<string> {
-	const response = await getContentsRawBase(params, "text");
-	const data = response.data;
-
-	if (typeof data === "undefined" || response.error) {
-		throw new Error(
-			`GitHub API (${response.response.url}) returned ${response.response.status} ${response.error}`,
-		);
-	}
-
-	return data;
+export function getContentsRaw(params: GetContentsParams) {
+	return getContentsRawBase(params, "text");
 }
 
-export async function getContentsRawStream(
-	params: GetContentsParams,
-): Promise<ReadableStream<Uint8Array>> {
-	const response = await getContentsRawBase(params, "stream");
-	const data = response.data;
-
-	if (typeof data === "undefined" || data === null || response.error) {
-		throw new Error(
-			`GitHub API (getContentsRawStream) returned ${response.response.status} ${response.error}`,
-		);
-	}
-
-	return data;
+export async function getContentsRawStream(params: GetContentsParams) {
+	return getContentsRawBase(params, "stream");
 }
