@@ -19,7 +19,7 @@
 		"@playfulprogramming/s3": "workspace:*",
 		"bullmq": "catalog:",
 		"hast-util-from-html": "^2.0.3",
-		"lru-cache": "^11.2.1",
+		"lru-cache": "^11.2.2",
 		"robots-parser": "^3.0.1",
 		"sharp": "^0.34.3",
 		"svgo": "^4.0.0",

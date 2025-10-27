@@ -127,8 +127,8 @@ importers:
         specifier: ^2.0.3
         version: 2.0.3
       lru-cache:
-        specifier: ^11.2.1
-        version: 11.2.1
+        specifier: ^11.2.2
+        version: 11.2.2
       robots-parser:
         specifier: ^3.0.1
         version: 3.0.1
@@ -3127,8 +3127,8 @@ packages:
   loupe@3.2.1:
     resolution: {integrity: sha512-CdzqowRJCeLU72bHvWqwRBBlLcMEtIvGrlvef74kMnV2AolS9Y8xUv1I0U/MNAWMhBlKIoyuEgoJ0t/bbwHbLQ==}
 
-  lru-cache@11.2.1:
-    resolution: {integrity: sha512-r8LA6i4LP4EeWOhqBaZZjDWwehd1xUJPCJd9Sv300H0ZmcUER4+JPh7bqqZeqs1o5pgtgvXm+d9UGrB5zZGDiQ==}
+  lru-cache@11.2.2:
+    resolution: {integrity: sha512-F9ODfyqML2coTIsQpSkRHnLSZMtkU8Q+mSfcaIyKwy58u+8k5nvAYeiNhsyMARvzNcXJ9QfWVrcPsC9e9rAxtg==}
     engines: {node: 20 || >=22}
 
   luxon@3.7.2:
@@ -7264,7 +7264,7 @@ snapshots:
 
   loupe@3.2.1: {}
 
-  lru-cache@11.2.1: {}
+  lru-cache@11.2.2: {}
 
   luxon@3.7.2: {}
 
