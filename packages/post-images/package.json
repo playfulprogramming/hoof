@@ -21,7 +21,7 @@
 		"remark-parse": "^11.0.0",
 		"remark-rehype": "^11.1.2",
 		"satori": "^0.13.1",
-		"sharp": "^0.34.3",
+		"sharp": "^0.34.4",
 		"unified": "^11.0.5",
 		"unist-util-find-all-after": "^5.0.0",
 		"xhtm": "^1.6.3"
