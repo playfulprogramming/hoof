@@ -21,7 +21,7 @@
 		"hast-util-from-html": "^2.0.3",
 		"lru-cache": "^11.2.2",
 		"robots-parser": "^3.0.1",
-		"sharp": "^0.34.3",
+		"sharp": "^0.34.4",
 		"svgo": "^4.0.0",
 		"undici": "^7.16.0",
 		"unist-util-find": "^3.0.0",
