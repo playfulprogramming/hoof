@@ -14,21 +14,25 @@
 	"dependencies": {
 		"@playfulprogramming/common": "workspace:*",
 		"@playfulprogramming/db": "workspace:*",
+		"@playfulprogramming/github-api": "workspace:*",
 		"@playfulprogramming/post-images": "workspace:*",
 		"@playfulprogramming/redis": "workspace:*",
 		"@playfulprogramming/s3": "workspace:*",
+		"@sinclair/typebox": "catalog:",
 		"bullmq": "catalog:",
+		"drizzle-orm": "catalog:",
+		"gray-matter": "^4.0.3",
 		"hast-util-from-html": "^2.0.3",
 		"lru-cache": "^11.2.2",
 		"robots-parser": "^3.0.1",
 		"sharp": "^0.34.4",
 		"svgo": "^4.0.0",
-		"undici": "^7.16.0",
+		"undici": "catalog:",
 		"unist-util-find": "^3.0.0",
 		"unist-util-visit": "^5.0.0"
 	},
 	"devDependencies": {
 		"@types/hast": "^3.0.4",
-		"vitest": "^3.2.4"
+		"vitest": "catalog:"
 	}
 }

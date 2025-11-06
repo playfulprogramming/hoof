@@ -32,10 +32,12 @@ vi.mock("@playfulprogramming/db", () => {
 });
 
 vi.mock("@playfulprogramming/common", async (importOriginal) => {
+	const original = (await importOriginal()) as object;
 	return {
-		...(await importOriginal()),
+		...original,
 		env: {
 			PORT: 3000,
+			WORKER_PORT: 3001,
 			ENVIRONMENT: "production",
 			SITE_URL: "https://site_url.test",
 			S3_PUBLIC_URL: "https://s3_public_url.test",
@@ -47,6 +49,9 @@ vi.mock("@playfulprogramming/common", async (importOriginal) => {
 			REDIS_URL: "redis://redis_url.test",
 			REDIS_PASSWORD: "redis_password",
 			HOOF_AUTH_TOKEN: "supersecret",
+			GITHUB_REPO_OWNER: "playfulprogramming",
+			GITHUB_REPO_NAME: "playfulprogramming",
+			GITHUB_TOKEN: "github_token",
 		} satisfies EnvType,
 	};
 });
