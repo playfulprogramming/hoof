@@ -9,7 +9,7 @@ export interface GetContentsParams {
 }
 
 export async function getContents(params: GetContentsParams) {
-	const response = await clientWithType("application/vnd.github.object").GET(
+	return await clientWithType("application/vnd.github.object").GET(
 		"/repos/{owner}/{repo}/contents/{path}",
 		{
 			params: {
@@ -28,14 +28,4 @@ export async function getContents(params: GetContentsParams) {
 			signal: params.signal,
 		},
 	);
-
-	const data = response.data;
-
-	if (typeof data === "undefined" || response.error) {
-		throw new Error(
-			`GitHub API (getContents) returned ${response.response.status} ${response.error}`,
-		);
-	}
-
-	return data;
 }
