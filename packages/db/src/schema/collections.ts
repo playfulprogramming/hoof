@@ -14,6 +14,7 @@ export const collections = pgTable("collections", {
 	slug: text("slug").primaryKey(),
 });
 
+// TODO: This is missing a ton of fields that are in the Collections task type, what do?
 export const collectionData = pgTable(
 	"collection_data",
 	{
@@ -25,6 +26,8 @@ export const collectionData = pgTable(
 		description: text("description").notNull().default(""),
 		publishedAt: timestamp("published_at", { withTimezone: true }),
 		meta: jsonb("meta").notNull(),
+		coverImage: text("cover_image"),
+		socialImage: text("social_image"),
 	},
 	(table) => [primaryKey({ columns: [table.slug, table.locale] })],
 );
@@ -46,6 +49,7 @@ export const collectionAuthors = pgTable(
 	],
 );
 
+// TODO: Do we need this in the DB or can it just be in the meta JSON?
 export const collectionChapters = pgTable("collection_chapters", {
 	id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
 	locale: text("locale").notNull(),

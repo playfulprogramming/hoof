@@ -6,11 +6,36 @@ import { eq } from "drizzle-orm";
 import matter from "gray-matter";
 import { CollectionMetaSchema } from "./types.ts";
 import { Value } from "@sinclair/typebox/value";
+import sharp from "sharp";
+import { Readable } from "node:stream";
+import { s3 } from "@playfulprogramming/s3";
 
 function extractLocale(name: string) {
 	const match = name.match(/\.([a-z]+)\.md$/);
 	return match ? match[1] : "en";
 }
+
+
+const IMAGE_SIZE_MAX = 2048;
+
+async function processImg(
+	stream: ReadableStream<Uint8Array>,
+	uploadKey: string,
+) {
+	const pipeline = sharp()
+		.resize({
+			width: IMAGE_SIZE_MAX,
+			height: IMAGE_SIZE_MAX,
+			fit: "inside",
+		})
+		.jpeg({ mozjpeg: true });
+
+	Readable.fromWeb(stream as never).pipe(pipeline);
+
+	const bucket = await s3.createBucket(env.S3_BUCKET);
+	await s3.upload(bucket, uploadKey, undefined, pipeline, "image/jpeg");
+}
+
 
 export default createProcessor(Tasks.SYNC_COLLECTION, async (job, { signal }) => {
 	const authorId = job.data.author;
@@ -62,6 +87,7 @@ export default createProcessor(Tasks.SYNC_COLLECTION, async (job, { signal }) =>
 		[] as Array<{ entry: Entry, locale: string }>
 	)
 
+	// TODO: Should Promise.all()?
 	// Check if coverImg or socialImg have changed since last edit, if so upload to S3
 	for (let { entry, locale } of collectionEntries) {
 		const contentUrl = new URL(
@@ -82,7 +108,68 @@ export default createProcessor(Tasks.SYNC_COLLECTION, async (job, { signal }) =>
 		}
 
 		const { data } = matter(contentResponse.data);
-		const collectionData = Value.Parse(CollectionMetaSchema, data);
+		const collectionParsedData = Value.Parse(CollectionMetaSchema, data);
 
+		let coverImgKey: string | null = null;
+		let socialImgKey: string | null = null;
+		if (collectionParsedData.coverImg) {
+			const coverImgUrl = new URL(collectionParsedData.coverImg, collectionMetaUrl);
+			const { data: coverImgStream } = await github.getContentsRawStream({
+				ref: job.data.ref,
+				path: coverImgUrl.pathname,
+				repoOwner: env.GITHUB_REPO_OWNER,
+				repoName: env.GITHUB_REPO_NAME,
+				signal,
+			});
+
+			if (coverImgStream === null || typeof coverImgStream === "undefined") {
+				throw new Error(
+					`Unable to fetch cover image for ${collectionId} (${coverImgUrl.pathname})`,
+				);
+			}
+
+			coverImgKey = `collections/${collectionId}/${locale}/cover.jpg`;
+			await processImg(coverImgStream, coverImgKey);
+		}
+
+		if (collectionParsedData.socialImg) {
+			const socialImgUrl = new URL(collectionParsedData.socialImg, collectionMetaUrl);
+			const { data: socialImgStream } = await github.getContentsRawStream({
+				ref: job.data.ref,
+				path: socialImgUrl.pathname,
+				repoOwner: env.GITHUB_REPO_OWNER,
+				repoName: env.GITHUB_REPO_NAME,
+				signal,
+			});
+
+			if (socialImgStream === null || typeof socialImgStream === "undefined") {
+				throw new Error(
+					`Unable to fetch social image for ${collectionId} (${socialImgUrl.pathname})`,
+				);
+			}
+
+			socialImgKey = `collections/${collectionId}/${locale}/social.jpg`;
+			await processImg(socialImgStream, socialImgKey);
+		}
+
+		const result = {
+			slug: collectionId,
+			locale: locale,
+			title: collectionParsedData.title,
+			description: collectionParsedData.description,
+			coverImage: coverImgKey,
+			socialImage: socialImgKey,
+			meta: {
+				buttons: collectionParsedData.buttons,
+				tags: collectionParsedData.tags,
+				chapterList: collectionParsedData.chapterList,
+			}
+		};
+
+		await db.insert(collectionData)
+			.values(result)
+			.onConflictDoUpdate({ target: [collectionData.slug, collectionData.locale], set: result });
+
+		// TODO: How to handle authors?
 	}
 });
