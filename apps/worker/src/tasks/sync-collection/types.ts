@@ -1,6 +1,6 @@
 import { Type } from "@sinclair/typebox";
 
-const ButtonTextUrlSchema = Type.Object(
+const CollectionButtonSchema = Type.Object(
 	{
 		text: Type.String(),
 		url: Type.String(),
@@ -16,7 +16,7 @@ const ButtonTextUrlSchema = Type.Object(
 	},
 );
 
-const ButtonPostUrlSchema = Type.Object(
+const CollectionCurrentPost = Type.Object(
 	{
 		post: Type.String(),
 	},
@@ -30,14 +30,41 @@ const ButtonPostUrlSchema = Type.Object(
 	},
 );
 
+const CollectionFuturePost = Type.Object(
+	{
+		order: Type.Number(),
+		title: Type.String(),
+		description: Type.String({ default: "" }),
+	},
+	{
+		additionalProperties: false,
+		examples: [
+			{
+				order: 1,
+				title: "Chapter One",
+				description: "An introduction to chapter one.",
+			},
+		],
+	},
+);
+
 export const CollectionMetaSchema = Type.Object(
 	{
 		title: Type.String(),
 		description: Type.String({ default: "" }),
-		coverImg: Type.Optional(Type.String()),
+		authors: Type.Optional(Type.Array(Type.String())),
+		coverImg: Type.String(),
+		socialImg: Type.Optional(Type.String()),
+		type: Type.Optional(Type.Literal("book")),
+		pageLayout: Type.Optional(Type.Literal("none")),
+		customChaptersText: Type.Optional(Type.String()),
+		tags: Type.Optional(Type.Array(Type.String())),
 		published: Type.String(),
-		tags: Type.Array(Type.String(), { default: [] }),
-		buttons: Type.Array(Type.Union([ButtonTextUrlSchema, ButtonPostUrlSchema]), { default: [] }),
+		noindex: Type.Optional(Type.Boolean({ default: false })),
+		version: Type.Optional(Type.String()),
+		upToDateSlug: Type.Optional(Type.String()),
+		buttons: Type.Optional(Type.Array(CollectionButtonSchema)),
+		chapterList: Type.Optional(Type.Array(Type.Union([CollectionCurrentPost, CollectionFuturePost]))),
 	},
 	{
 		additionalProperties: false,
