@@ -1,7 +1,7 @@
 import processor from "./processor.ts";
 import type { TaskInputs } from "@playfulprogramming/common";
 import type { Job } from "bullmq";
-import { collectionAuthors, collectionData, db, profiles } from "@playfulprogramming/db";
+import { collectionAuthors, collectionData, db } from "@playfulprogramming/db";
 import { s3 } from "@playfulprogramming/s3";
 import * as github from "@playfulprogramming/github-api";
 import { Readable } from "node:stream";

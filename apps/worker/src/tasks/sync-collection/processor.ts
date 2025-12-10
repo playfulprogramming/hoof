@@ -2,7 +2,7 @@ import { Tasks, env } from "@playfulprogramming/common";
 import { collectionAuthors, collectionData, db, profiles } from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
 import { createProcessor } from "../../createProcessor.ts";
-import { and, eq, inArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import matter from "gray-matter";
 import { CollectionMetaSchema } from "./types.ts";
 import { Value } from "@sinclair/typebox/value";
@@ -88,7 +88,7 @@ export default createProcessor(Tasks.SYNC_COLLECTION, async (job, { signal }) =>
 	)
 
 	// Check if coverImg or socialImg have changed since last edit, if so upload to S3
-	for (let { entry, locale } of collectionEntries) {
+	for (const { entry, locale } of collectionEntries) {
 		const contentUrl = new URL(
 			entry.path,
 			"http://localhost",
