@@ -37,7 +37,7 @@ test("Creates an example collection successfully", async () => {
 
 	vi.mocked(github.getContents).mockImplementation(((params: { path: string }) => {
 		if (
-			params.path === "/content/example-author/collections/example-collection"
+			params.path === "/content/example-author/collections/example-collection/"
 		) {
 			return Promise.resolve({
 				data: {
@@ -77,7 +77,7 @@ published: "2023-01-01T00:00:00Z"
 	vi.mocked(github.getContentsRawStream).mockImplementation((params) => {
 		if (
 			params.path ===
-			"/content/example-author/collections/cover.png"
+			"/content/example-author/collections/example-collection/cover.png"
 		) {
 			const buffer = Buffer.from(
 				mockImage,
@@ -143,7 +143,7 @@ test("Deletes a collection record if it no longer exists", async () => {
 
 	vi.mocked(github.getContents).mockImplementation(((params: { path: string }) => {
 		if (
-			params.path === "/content/example-author/collections/example-collection"
+			params.path === "/content/example-author/collections/example-collection/"
 		) {
 			return Promise.resolve({
 				data: undefined,
@@ -194,7 +194,7 @@ test("Fails if author profile does not exist", async () => {
 
 	vi.mocked(github.getContents).mockImplementation(((params: { path: string }) => {
 		if (
-			params.path === "/content/example-author/collections/example-collection"
+			params.path === "/content/example-author/collections/example-collection/"
 		) {
 			return Promise.resolve({
 				data: {
@@ -234,7 +234,7 @@ published: "2023-01-01T00:00:00Z"
 	vi.mocked(github.getContentsRawStream).mockImplementation((params) => {
 		if (
 			params.path ===
-			"/content/example-author/collections/cover.png"
+			"/content/example-author/collections/example-collection/cover.png"
 		) {
 			const buffer = Buffer.from(
 				mockImage,
@@ -295,7 +295,7 @@ test("Handles collection with multiple authors", async () => {
 
 	vi.mocked(github.getContents).mockImplementation(((params: { path: string }) => {
 		if (
-			params.path === "/content/example-author/collections/example-collection"
+			params.path === "/content/example-author/collections/example-collection/"
 		) {
 			return Promise.resolve({
 				data: {
@@ -337,7 +337,7 @@ published: "2023-01-01T00:00:00Z"
 	vi.mocked(github.getContentsRawStream).mockImplementation((params) => {
 		if (
 			params.path ===
-			"/content/example-author/collections/cover.png"
+			"/content/example-author/collections/example-collection/cover.png"
 		) {
 			const buffer = Buffer.from(
 				mockImage,

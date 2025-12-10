@@ -42,7 +42,7 @@ export default createProcessor(Tasks.SYNC_COLLECTION, async (job, { signal }) =>
 	const collectionId = job.data.collection;
 
 	const collectionMetaUrl = new URL(
-		`content/${encodeURIComponent(authorId)}/collections/${encodeURIComponent(collectionId)}`,
+		`content/${encodeURIComponent(authorId)}/collections/${encodeURIComponent(collectionId)}/`,
 		"http://localhost",
 	);
 
