@@ -64,7 +64,9 @@ export const CollectionMetaSchema = Type.Object(
 		version: Type.Optional(Type.String()),
 		upToDateSlug: Type.Optional(Type.String()),
 		buttons: Type.Optional(Type.Array(CollectionButtonSchema)),
-		chapterList: Type.Optional(Type.Array(Type.Union([CollectionCurrentPost, CollectionFuturePost]))),
+		chapterList: Type.Optional(
+			Type.Array(Type.Union([CollectionCurrentPost, CollectionFuturePost])),
+		),
 	},
 	{
 		additionalProperties: false,

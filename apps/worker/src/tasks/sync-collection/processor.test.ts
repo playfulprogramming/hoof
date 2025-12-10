@@ -35,7 +35,9 @@ test("Creates an example collection successfully", async () => {
 		}),
 	} as never);
 
-	vi.mocked(github.getContents).mockImplementation(((params: { path: string }) => {
+	vi.mocked(github.getContents).mockImplementation(((params: {
+		path: string;
+	}) => {
 		if (
 			params.path === "/content/example-author/collections/example-collection/"
 		) {
@@ -79,10 +81,7 @@ published: "2023-01-01T00:00:00Z"
 			params.path ===
 			"/content/example-author/collections/example-collection/cover.png"
 		) {
-			const buffer = Buffer.from(
-				mockImage,
-				"base64",
-			);
+			const buffer = Buffer.from(mockImage, "base64");
 			return Promise.resolve({
 				data: Readable.toWeb(Readable.from(buffer)) as never,
 				response: {} as never,
@@ -141,7 +140,9 @@ test("Deletes a collection record if it no longer exists", async () => {
 		where: deleteWhere,
 	} as never);
 
-	vi.mocked(github.getContents).mockImplementation(((params: { path: string }) => {
+	vi.mocked(github.getContents).mockImplementation(((params: {
+		path: string;
+	}) => {
 		if (
 			params.path === "/content/example-author/collections/example-collection/"
 		) {
@@ -192,7 +193,9 @@ test("Fails if author profile does not exist", async () => {
 		}),
 	} as never);
 
-	vi.mocked(github.getContents).mockImplementation(((params: { path: string }) => {
+	vi.mocked(github.getContents).mockImplementation(((params: {
+		path: string;
+	}) => {
 		if (
 			params.path === "/content/example-author/collections/example-collection/"
 		) {
@@ -236,10 +239,7 @@ published: "2023-01-01T00:00:00Z"
 			params.path ===
 			"/content/example-author/collections/example-collection/cover.png"
 		) {
-			const buffer = Buffer.from(
-				mockImage,
-				"base64",
-			);
+			const buffer = Buffer.from(mockImage, "base64");
 			return Promise.resolve({
 				data: Readable.toWeb(Readable.from(buffer)) as never,
 				response: {} as never,
@@ -286,14 +286,13 @@ test("Handles collection with multiple authors", async () => {
 		from: vi.fn().mockReturnValue({
 			where: vi
 				.fn()
-				.mockResolvedValue([
-					{ slug: "example-author" },
-					{ slug: "co-author" },
-				]),
+				.mockResolvedValue([{ slug: "example-author" }, { slug: "co-author" }]),
 		}),
 	} as never);
 
-	vi.mocked(github.getContents).mockImplementation(((params: { path: string }) => {
+	vi.mocked(github.getContents).mockImplementation(((params: {
+		path: string;
+	}) => {
 		if (
 			params.path === "/content/example-author/collections/example-collection/"
 		) {
@@ -339,10 +338,7 @@ published: "2023-01-01T00:00:00Z"
 			params.path ===
 			"/content/example-author/collections/example-collection/cover.png"
 		) {
-			const buffer = Buffer.from(
-				mockImage,
-				"base64",
-			);
+			const buffer = Buffer.from(mockImage, "base64");
 			return Promise.resolve({
 				data: Readable.toWeb(Readable.from(buffer)) as never,
 				response: {} as never,
