@@ -1,8 +1,8 @@
 import { Tasks, env } from "@playfulprogramming/common";
-import { collectionData, db } from "@playfulprogramming/db";
+import { collectionAuthors, collectionData, db, profiles } from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
 import { createProcessor } from "../../createProcessor.ts";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import matter from "gray-matter";
 import { CollectionMetaSchema } from "./types.ts";
 import { Value } from "@sinclair/typebox/value";
@@ -87,7 +87,6 @@ export default createProcessor(Tasks.SYNC_COLLECTION, async (job, { signal }) =>
 		[] as Array<{ entry: Entry, locale: string }>
 	)
 
-	// TODO: Should Promise.all()?
 	// Check if coverImg or socialImg have changed since last edit, if so upload to S3
 	for (let { entry, locale } of collectionEntries) {
 		const contentUrl = new URL(
@@ -170,6 +169,37 @@ export default createProcessor(Tasks.SYNC_COLLECTION, async (job, { signal }) =>
 			.values(result)
 			.onConflictDoUpdate({ target: [collectionData.slug, collectionData.locale], set: result });
 
-		// TODO: How to handle authors?
+		// Handle authors
+		const authorSlugs = collectionParsedData.authors ? [...new Set([...collectionParsedData.authors, authorId])] : [authorId];
+
+		// Verify all authors exist in the database
+		const existingAuthors = await db
+			.select({ slug: profiles.slug })
+			.from(profiles)
+			.where(inArray(profiles.slug, authorSlugs));
+
+		const existingSlugs = new Set(existingAuthors.map((a) => a.slug));
+		const missingAuthors = authorSlugs.filter((slug) => !existingSlugs.has(slug));
+
+		if (missingAuthors.length > 0) {
+			throw new Error(
+				`Author profiles not found for collection ${collectionId}: ${missingAuthors.join(", ")}`,
+			);
+		}
+
+		// Delete existing author associations for this collection
+		await db
+			.delete(collectionAuthors)
+			.where(eq(collectionAuthors.collectionSlug, collectionId));
+
+		// Insert new author associations
+		if (authorSlugs.length > 0) {
+			await db.insert(collectionAuthors).values(
+				authorSlugs.map((authorSlug) => ({
+					collectionSlug: collectionId,
+					authorSlug,
+				})),
+			);
+		}
 	}
 });
