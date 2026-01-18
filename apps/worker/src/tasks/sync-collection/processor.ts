@@ -14,11 +14,7 @@ import { Value } from "@sinclair/typebox/value";
 import sharp from "sharp";
 import { Readable } from "node:stream";
 import { s3 } from "@playfulprogramming/s3";
-
-function extractLocale(name: string) {
-	const match = name.match(/\.([a-z]+)\.md$/);
-	return match ? match[1] : "en";
-}
+import { extractLocale } from "../../utils/extractLocale.ts";
 
 const IMAGE_SIZE_MAX = 2048;
 
@@ -60,7 +56,7 @@ export default createProcessor(
 		});
 
 		if (collectionMetaResponse.data === undefined) {
-			if (collectionMetaResponse.response.status == 404) {
+			if (collectionMetaResponse.response.status === 404) {
 				console.log(
 					`Metadata for ${collectionId} (${collectionMetaUrl.pathname}) returned 404 - removing collection entry.`,
 				);

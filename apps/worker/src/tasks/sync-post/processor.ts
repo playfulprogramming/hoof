@@ -14,22 +14,11 @@ import { eq, inArray, and } from "drizzle-orm";
 import matter from "gray-matter";
 import { Value } from "@sinclair/typebox/value";
 import { PostMetaSchema } from "./types.ts";
-
-/**
- * Extracts locale from filename.
- * "index.md" → "en"
- * "index.es.md" → "es"
- */
-function extractLocale(filename: string): string {
-	const match = filename.match(/index\.([a-z]{2})\.md$/);
-	return match ? match[1] : "en";
-}
+import { extractLocale } from "../../utils/extractLocale.ts";
 
 export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	const { author, post, collection, ref } = job.data;
 
-	// Build path based on whether post is standalone or in a collection
-	// Using URL constructor to safely encode special characters in path segments
 	const basePath = collection
 		? new URL(
 				`content/${encodeURIComponent(author)}/collections/${encodeURIComponent(collection)}/posts/${encodeURIComponent(post)}/`,
@@ -42,8 +31,6 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 
 	console.log(`Syncing post: ${basePath}`);
 
-	// Step 1: Fetch post folder from GitHub
-	// This returns a list of files in the folder (like `ls` command)
 	const folderResponse = await github.getContents({
 		ref,
 		path: basePath,
@@ -52,28 +39,22 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		signal,
 	});
 
-	// Step 2: Handle 404 (post was deleted from GitHub)
 	if (folderResponse.data === undefined) {
 		if (folderResponse.response.status === 404) {
 			console.log(
 				`Post ${post} (${basePath}) returned 404 - removing from database.`,
 			);
 
-			// Delete post data (postAuthors cascade-deletes via foreign key)
 			await db.delete(postData).where(eq(postData.slug, post));
-
-			// Delete from collection chapters if it was part of a collection
 			await db
 				.delete(collectionChapters)
 				.where(eq(collectionChapters.postSlug, post));
 
-			// Note: S3 files are left orphaned (following sync-collection convention)
 			return;
 		}
 		throw new Error(`Failed to fetch post folder: ${basePath}`);
 	}
 
-	// Validate we got a folder listing
 	if (
 		!folderResponse.data.entries ||
 		!Array.isArray(folderResponse.data.entries)
@@ -81,7 +62,6 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		throw new Error(`Unable to fetch post data for ${post}`);
 	}
 
-	// Step 3: Find all locale files (index.md, index.es.md, etc.)
 	const localeFiles = folderResponse.data.entries.filter(
 		(entry) => entry.name.startsWith("index") && entry.name.endsWith(".md"),
 	);
@@ -94,17 +74,13 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		`Found ${localeFiles.length} locale(s): ${localeFiles.map((f) => extractLocale(f.name)).join(", ")}`,
 	);
 
-	// Create/get S3 bucket once before processing files
 	const bucket = await s3.createBucket(env.S3_BUCKET);
 
-	// Create base posts record (required for foreign key in postData)
 	await db.insert(posts).values({ slug: post }).onConflictDoNothing();
 
-	// Step 4: Process each locale file
 	for (const file of localeFiles) {
 		const locale = extractLocale(file.name);
 
-		// 4a) Fetch raw markdown content
 		const contentUrl = new URL(file.path, "http://localhost");
 		const contentResponse = await github.getContentsRaw({
 			ref,
@@ -121,29 +97,20 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		}
 
 		const rawMarkdown = contentResponse.data;
-
-		// 4b) Parse frontmatter with gray-matter
-		// gray-matter splits: { data: {title, published, ...}, content: "# Hello..." }
 		const { data: frontmatter } = matter(rawMarkdown);
-
-		// 4c) Validate frontmatter against our schema
-		// Throws if required fields missing or wrong types
 		const parsed = Value.Parse(PostMetaSchema, frontmatter);
 
-		// 4d) Upload full markdown to S3
-		// S3 key format: posts/{slug}/{locale}/content.md
 		const s3Key = `posts/${post}/${locale}/content.md`;
 		await s3.upload(
 			bucket,
 			s3Key,
-			undefined, // no cache control
+			undefined,
 			Buffer.from(rawMarkdown),
 			"text/markdown",
 		);
 
 		console.log(`Uploaded ${s3Key} to S3`);
 
-		// 4e) Save metadata to postData table
 		const postDataRecord = {
 			slug: post,
 			locale,
@@ -157,7 +124,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			editedAt: parsed.edited ? new Date(parsed.edited) : null,
 			publishedAt: new Date(parsed.published),
 			meta: {
-				tags: parsed.tags,
+				tags: parsed.tags ?? [],
 				...(parsed.license && { license: parsed.license }),
 				...(parsed.upToDateSlug && { upToDateSlug: parsed.upToDateSlug }),
 			},
@@ -173,13 +140,10 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 
 		console.log(`Saved post metadata for ${post} (${locale})`);
 
-		// 4f) Handle authors (postAuthors table)
-		// Combine frontmatter authors with folder owner, deduplicated
 		const authorSlugs = parsed.authors
 			? [...new Set([...parsed.authors, author])]
 			: [author];
 
-		// Verify all authors exist in the database
 		const existingAuthors = await db
 			.select({ slug: profiles.slug })
 			.from(profiles)
@@ -196,10 +160,8 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			);
 		}
 
-		// Delete existing author associations for this post
 		await db.delete(postAuthors).where(eq(postAuthors.postSlug, post));
 
-		// Insert new author associations
 		if (authorSlugs.length > 0) {
 			await db.insert(postAuthors).values(
 				authorSlugs.map((authorSlug) => ({
@@ -209,12 +171,9 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			);
 		}
 
-		// 4g) If in collection, update collectionChapters table
 		if (collection) {
-			// Build the URL for this post (used by frontend for navigation)
 			const postUrl = `/${author}/posts/${post}`;
 
-			// Delete existing chapter entry for this post/locale
 			await db
 				.delete(collectionChapters)
 				.where(
@@ -224,7 +183,6 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 					),
 				);
 
-			// Insert new chapter entry
 			await db.insert(collectionChapters).values({
 				locale,
 				collectionSlug: collection,
