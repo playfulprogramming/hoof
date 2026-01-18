@@ -10,7 +10,7 @@ import {
 import * as github from "@playfulprogramming/github-api";
 import { s3 } from "@playfulprogramming/s3";
 import { createProcessor } from "../../createProcessor.ts";
-import { eq, inArray, and } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import matter from "gray-matter";
 import { Value } from "@sinclair/typebox/value";
 import { PostMetaSchema } from "./types.ts";
@@ -78,6 +78,8 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 
 	await db.insert(posts).values({ slug: post }).onConflictDoNothing();
 
+	const allAuthorSlugs = new Set<string>([author]);
+
 	for (const file of localeFiles) {
 		const locale = extractLocale(file.name);
 
@@ -99,6 +101,10 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		const rawMarkdown = contentResponse.data;
 		const { data: frontmatter } = matter(rawMarkdown);
 		const parsed = Value.Parse(PostMetaSchema, frontmatter);
+
+		if (parsed.authors) {
+			parsed.authors.forEach((a) => allAuthorSlugs.add(a));
+		}
 
 		const s3Key = `posts/${post}/${locale}/content.md`;
 		await s3.upload(
@@ -140,50 +146,10 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 
 		console.log(`Saved post metadata for ${post} (${locale})`);
 
-		const authorSlugs = parsed.authors
-			? [...new Set([...parsed.authors, author])]
-			: [author];
-
-		const existingAuthors = await db
-			.select({ slug: profiles.slug })
-			.from(profiles)
-			.where(inArray(profiles.slug, authorSlugs));
-
-		const existingSlugs = new Set(existingAuthors.map((a) => a.slug));
-		const missingAuthors = authorSlugs.filter(
-			(slug) => !existingSlugs.has(slug),
-		);
-
-		if (missingAuthors.length > 0) {
-			throw new Error(
-				`Author profiles not found for post ${post}: ${missingAuthors.join(", ")}`,
-			);
-		}
-
-		await db.delete(postAuthors).where(eq(postAuthors.postSlug, post));
-
-		if (authorSlugs.length > 0) {
-			await db.insert(postAuthors).values(
-				authorSlugs.map((authorSlug) => ({
-					postSlug: post,
-					authorSlug,
-				})),
-			);
-		}
-
 		if (collection) {
 			const postUrl = `/${author}/posts/${post}`;
 
-			await db
-				.delete(collectionChapters)
-				.where(
-					and(
-						eq(collectionChapters.postSlug, post),
-						eq(collectionChapters.locale, locale),
-					),
-				);
-
-			await db.insert(collectionChapters).values({
+			const chapterRecord = {
 				locale,
 				collectionSlug: collection,
 				postSlug: post,
@@ -191,11 +157,44 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 				description: parsed.description,
 				url: postUrl,
 				order: parsed.order ?? 0,
-			});
+			};
+
+			await db
+				.insert(collectionChapters)
+				.values(chapterRecord)
+				.onConflictDoUpdate({
+					target: [collectionChapters.postSlug, collectionChapters.locale],
+					set: chapterRecord,
+				});
 
 			console.log(
 				`Linked post ${post} to collection ${collection} (${locale})`,
 			);
 		}
 	}
+
+	const authorSlugs = [...allAuthorSlugs];
+
+	const existingAuthors = await db
+		.select({ slug: profiles.slug })
+		.from(profiles)
+		.where(inArray(profiles.slug, authorSlugs));
+
+	const existingSlugs = new Set(existingAuthors.map((a) => a.slug));
+	const missingAuthors = authorSlugs.filter((slug) => !existingSlugs.has(slug));
+
+	if (missingAuthors.length > 0) {
+		throw new Error(
+			`Author profiles not found for post ${post}: ${missingAuthors.join(", ")}`,
+		);
+	}
+
+	await db.delete(postAuthors).where(eq(postAuthors.postSlug, post));
+
+	await db.insert(postAuthors).values(
+		authorSlugs.map((authorSlug) => ({
+			postSlug: post,
+			authorSlug,
+		})),
+	);
 });

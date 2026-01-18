@@ -287,7 +287,9 @@ test("Links post to collection when collection is provided", async () => {
 		onConflictDoUpdate: vi.fn(),
 	});
 	const insertPostAuthorsValues = vi.fn();
-	const insertCollectionChaptersValues = vi.fn();
+	const insertCollectionChaptersValues = vi.fn().mockReturnValue({
+		onConflictDoUpdate: vi.fn(),
+	});
 
 	vi.mocked(db.insert).mockImplementation((table) => {
 		if (table === posts) {
@@ -600,15 +602,15 @@ authors:
 		},
 	} as unknown as Job<TaskInputs["sync-post"]>);
 
-	// Assert: Both authors should be inserted (co-author from frontmatter + example-author as folder owner)
+	// Assert: Both authors should be inserted (folder owner first, then co-author from frontmatter)
 	expect(insertPostAuthorsValues).toBeCalledWith([
 		{
 			postSlug: "collab-post",
-			authorSlug: "co-author",
+			authorSlug: "example-author",
 		},
 		{
 			postSlug: "collab-post",
-			authorSlug: "example-author",
+			authorSlug: "co-author",
 		},
 	]);
 });
