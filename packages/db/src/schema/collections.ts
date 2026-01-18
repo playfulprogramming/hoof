@@ -25,6 +25,8 @@ export const collectionData = pgTable(
 		description: text("description").notNull().default(""),
 		publishedAt: timestamp("published_at", { withTimezone: true }),
 		meta: jsonb("meta").notNull(),
+		coverImage: text("cover_image"),
+		socialImage: text("social_image"),
 	},
 	(table) => [primaryKey({ columns: [table.slug, table.locale] })],
 );
