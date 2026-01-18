@@ -19,7 +19,7 @@ async function createAndUploadPostImage(
 	layout: LayoutFunction,
 	signal: AbortSignal,
 ) {
-	const BUCKET = await s3.createBucket(env.S3_BUCKET);
+	const BUCKET = await s3.ensureBucket(env.S3_BUCKET);
 	await createPostImage(layout, data).then((buf) => {
 		signal.throwIfAborted();
 		return s3.upload(BUCKET, key, undefined, buf, "image/png");

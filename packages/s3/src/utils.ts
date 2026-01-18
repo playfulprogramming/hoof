@@ -12,7 +12,7 @@ import type * as stream from "stream";
 import { env } from "@playfulprogramming/common";
 import { client } from "./client.ts";
 
-export async function createBucket(name: string) {
+export async function ensureBucket(name: string) {
 	if (env.ENVIRONMENT === "production") return name;
 
 	try {

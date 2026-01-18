@@ -32,7 +32,7 @@ async function processImg(
 
 	Readable.fromWeb(stream as never).pipe(pipeline);
 
-	const bucket = await s3.createBucket(env.S3_BUCKET);
+	const bucket = await s3.ensureBucket(env.S3_BUCKET);
 	await s3.upload(bucket, uploadKey, undefined, pipeline, "image/jpeg");
 }
 

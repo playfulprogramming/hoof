@@ -74,7 +74,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		`Found ${localeFiles.length} locale(s): ${localeFiles.map((f) => extractLocale(f.name)).join(", ")}`,
 	);
 
-	const bucket = await s3.createBucket(env.S3_BUCKET);
+	const bucket = await s3.ensureBucket(env.S3_BUCKET);
 
 	await db.insert(posts).values({ slug: post }).onConflictDoNothing();
 

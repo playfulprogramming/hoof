@@ -34,7 +34,7 @@ vi.mock("@playfulprogramming/common", () => {
 vi.mock("@playfulprogramming/s3", () => {
 	return {
 		s3: {
-			createBucket: vi.fn(() => "example-bucket"),
+			ensureBucket: vi.fn(() => "example-bucket"),
 			upload: vi.fn(),
 		},
 	};
