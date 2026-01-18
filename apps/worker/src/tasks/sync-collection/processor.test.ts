@@ -1,7 +1,12 @@
 import processor from "./processor.ts";
 import type { TaskInputs } from "@playfulprogramming/common";
 import type { Job } from "bullmq";
-import { collectionAuthors, collectionData, db } from "@playfulprogramming/db";
+import {
+	collections,
+	collectionAuthors,
+	collectionData,
+	db,
+} from "@playfulprogramming/db";
 import { s3 } from "@playfulprogramming/s3";
 import * as github from "@playfulprogramming/github-api";
 import { Readable } from "node:stream";
@@ -11,12 +16,18 @@ const mockImage = `iVBORw0KGgoAAAANSUhEUgAAAPIAAADOCAYAAAAE0F9yAAAACXBIWXMAABYZA
 
 test("Creates an example collection successfully", async () => {
 	const insertCollectionValues = vi.fn().mockReturnValue({
+		onConflictDoNothing: vi.fn(),
+	});
+	const insertCollectionDataValues = vi.fn().mockReturnValue({
 		onConflictDoUpdate: vi.fn(),
 	});
 	const insertAuthorValues = vi.fn();
 	vi.mocked(db.insert).mockImplementation((table) => {
-		if (table === collectionData) {
+		if (table === collections) {
 			return { values: insertCollectionValues } as never;
+		}
+		if (table === collectionData) {
+			return { values: insertCollectionDataValues } as never;
 		}
 		if (table === collectionAuthors) {
 			return { values: insertAuthorValues } as never;
@@ -108,7 +119,8 @@ published: "2023-01-01T00:00:00Z"
 	);
 
 	// The collection was inserted into the database
-	expect(insertCollectionValues).toBeCalledWith({
+	expect(insertCollectionValues).toBeCalledWith({ slug: "example-collection" });
+	expect(insertCollectionDataValues).toBeCalledWith({
 		slug: "example-collection",
 		locale: "en",
 		title: "Example Collection",
@@ -173,24 +185,29 @@ test("Deletes a collection record if it no longer exists", async () => {
 
 test("Fails if author profile does not exist", async () => {
 	const insertCollectionValues = vi.fn().mockReturnValue({
+		onConflictDoNothing: vi.fn(),
+	});
+	const insertCollectionDataValues = vi.fn().mockReturnValue({
 		onConflictDoUpdate: vi.fn(),
 	});
+	const insertCollectionAuthorsValues = vi.fn().mockImplementation(() => {
+		throw new Error("Failed relation constraint");
+	});
 	vi.mocked(db.insert).mockImplementation((table) => {
-		if (table === collectionData) {
+		if (table === collections) {
 			return { values: insertCollectionValues } as never;
+		}
+		if (table === collectionData) {
+			return { values: insertCollectionDataValues } as never;
+		}
+		if (table === collectionAuthors) {
+			return { values: insertCollectionAuthorsValues } as never;
 		}
 		throw new Error(`Unexpected table: ${table}`);
 	});
 
 	vi.mocked(db.delete).mockReturnValue({
 		where: vi.fn(),
-	} as never);
-
-	// Return empty array - author does not exist
-	vi.mocked(db.select).mockReturnValue({
-		from: vi.fn().mockReturnValue({
-			where: vi.fn().mockResolvedValue([]),
-		}),
 	} as never);
 
 	vi.mocked(github.getContents).mockImplementation(((params: {
@@ -256,19 +273,23 @@ published: "2023-01-01T00:00:00Z"
 				ref: "main",
 			},
 		} as unknown as Job<TaskInputs["sync-collection"]>),
-	).rejects.toThrow(
-		"Author profiles not found for collection example-collection: example-author",
-	);
+	).rejects.toThrow("Failed relation constraint");
 });
 
 test("Handles collection with multiple authors", async () => {
 	const insertCollectionValues = vi.fn().mockReturnValue({
+		onConflictDoNothing: vi.fn(),
+	});
+	const insertCollectionDataValues = vi.fn().mockReturnValue({
 		onConflictDoUpdate: vi.fn(),
 	});
 	const insertAuthorValues = vi.fn();
 	vi.mocked(db.insert).mockImplementation((table) => {
-		if (table === collectionData) {
+		if (table === collections) {
 			return { values: insertCollectionValues } as never;
+		}
+		if (table === collectionData) {
+			return { values: insertCollectionDataValues } as never;
 		}
 		if (table === collectionAuthors) {
 			return { values: insertAuthorValues } as never;
