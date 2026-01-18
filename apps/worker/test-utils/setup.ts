@@ -45,6 +45,9 @@ vi.mock("@playfulprogramming/db", () => {
 		profiles: {
 			slug: {},
 		},
+		posts: {
+			slug: {},
+		},
 		collectionData: {
 			slug: {},
 			locale: {},
@@ -52,6 +55,19 @@ vi.mock("@playfulprogramming/db", () => {
 		collectionAuthors: {
 			collectionSlug: {},
 			authorSlug: {},
+		},
+		postData: {
+			slug: {},
+			locale: {},
+			version: {},
+		},
+		postAuthors: {
+			postSlug: {},
+			authorSlug: {},
+		},
+		collectionChapters: {
+			postSlug: {},
+			locale: {},
 		},
 		db: {
 			insert: vi.fn(),

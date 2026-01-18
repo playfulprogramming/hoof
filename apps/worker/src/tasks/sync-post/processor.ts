@@ -1,6 +1,7 @@
 import { Tasks, env } from "@playfulprogramming/common";
 import {
 	db,
+	posts,
 	postData,
 	postAuthors,
 	profiles,
@@ -96,6 +97,9 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	// Create/get S3 bucket once before processing files
 	const bucket = await s3.createBucket(env.S3_BUCKET);
 
+	// Create base posts record (required for foreign key in postData)
+	await db.insert(posts).values({ slug: post }).onConflictDoNothing();
+
 	// Step 4: Process each locale file
 	for (const file of localeFiles) {
 		const locale = extractLocale(file.name);
@@ -154,6 +158,8 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			publishedAt: new Date(parsed.published),
 			meta: {
 				tags: parsed.tags,
+				...(parsed.license && { license: parsed.license }),
+				...(parsed.upToDateSlug && { upToDateSlug: parsed.upToDateSlug }),
 			},
 		};
 

@@ -39,6 +39,20 @@ export const PostMetaSchema = Type.Object(
 
 		// For collection posts - determines chapter order
 		order: Type.Optional(Type.Number()),
+
+		// For versioned posts - slug of the up-to-date version
+		upToDateSlug: Type.Optional(Type.String()),
+
+		// Content license - Creative Commons options
+		// If omitted, falls under repository's MPL 2.0 license
+		license: Type.Optional(
+			Type.Union([
+				Type.Literal("cc-by-4"),
+				Type.Literal("cc-by-nc-sa-4"),
+				Type.Literal("cc-by-nc-nd-4"),
+				Type.Literal("publicdomain-zero-1"),
+			]),
+		),
 	},
 	{
 		// Fail if frontmatter has unknown fields (catches typos)
