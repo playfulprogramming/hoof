@@ -40,12 +40,6 @@ test("Creates an example collection successfully", async () => {
 		where: deleteWhere,
 	} as never);
 
-	vi.mocked(db.select).mockReturnValue({
-		from: vi.fn().mockReturnValue({
-			where: vi.fn().mockResolvedValue([{ slug: "example-author" }]),
-		}),
-	} as never);
-
 	vi.mocked(github.getContents).mockImplementation(((params: {
 		path: string;
 	}) => {
@@ -300,15 +294,6 @@ test("Handles collection with multiple authors", async () => {
 	const deleteWhere = vi.fn();
 	vi.mocked(db.delete).mockReturnValue({
 		where: deleteWhere,
-	} as never);
-
-	// Both authors exist
-	vi.mocked(db.select).mockReturnValue({
-		from: vi.fn().mockReturnValue({
-			where: vi
-				.fn()
-				.mockResolvedValue([{ slug: "example-author" }, { slug: "co-author" }]),
-		}),
 	} as never);
 
 	vi.mocked(github.getContents).mockImplementation(((params: {

@@ -12,14 +12,7 @@ import { s3 } from "@playfulprogramming/s3";
 import * as github from "@playfulprogramming/github-api";
 import { eq } from "drizzle-orm";
 
-/**
- * Test 1: Basic post sync (standalone, single locale)
- *
- * Scenario: A post exists at content/example-author/posts/example-post/index.md
- * Expected: Upload markdown to S3, save metadata to DB, link author
- */
 test("Syncs a standalone post successfully", async () => {
-	// Mock db.insert to track what gets inserted
 	const insertPostsValues = vi.fn().mockReturnValue({
 		onConflictDoNothing: vi.fn(),
 	});
@@ -41,17 +34,9 @@ test("Syncs a standalone post successfully", async () => {
 		throw new Error(`Unexpected table: ${table}`);
 	});
 
-	// Mock db.delete for author cleanup
 	const deleteWhere = vi.fn();
 	vi.mocked(db.delete).mockReturnValue({
 		where: deleteWhere,
-	} as never);
-
-	// Mock db.select to return the author exists
-	vi.mocked(db.select).mockReturnValue({
-		from: vi.fn().mockReturnValue({
-			where: vi.fn().mockResolvedValue([{ slug: "example-author" }]),
-		}),
 	} as never);
 
 	// Mock GitHub: return folder listing with index.md
@@ -144,12 +129,6 @@ This is the post content.
 	]);
 });
 
-/**
- * Test 2: Post deletion (404 case)
- *
- * Scenario: A post no longer exists in GitHub
- * Expected: Remove from postData and collectionChapters
- */
 test("Deletes a post record if it no longer exists", async () => {
 	const deleteWhere = vi.fn();
 	vi.mocked(db.delete).mockReturnValue({
@@ -181,104 +160,11 @@ test("Deletes a post record if it no longer exists", async () => {
 		},
 	} as unknown as Job<TaskInputs["sync-post"]>);
 
-	// Assert: Post was deleted from database
-	expect(deleteWhere).toBeCalledWith(eq(postData.slug, "example-post"));
-
-	// Assert: Collection chapters were also deleted
-	expect(deleteWhere).toBeCalledWith(
-		eq(collectionChapters.postSlug, "example-post"),
-	);
+	// Assert: Post was deleted from posts table (cascade handles related tables)
+	expect(db.delete).toBeCalledWith(posts);
+	expect(deleteWhere).toBeCalledWith(eq(posts.slug, "example-post"));
 });
 
-/**
- * Test 3: Post with missing author profile
- *
- * Scenario: Post references an author that doesn't exist in profiles
- * Expected: Throw error
- */
-test("Fails if author profile does not exist", async () => {
-	const insertPostsValues = vi.fn().mockReturnValue({
-		onConflictDoNothing: vi.fn(),
-	});
-	const insertPostDataValues = vi.fn().mockReturnValue({
-		onConflictDoUpdate: vi.fn(),
-	});
-
-	vi.mocked(db.insert).mockImplementation((table) => {
-		if (table === posts) {
-			return { values: insertPostsValues } as never;
-		}
-		if (table === postData) {
-			return { values: insertPostDataValues } as never;
-		}
-		throw new Error(`Unexpected table: ${table}`);
-	});
-
-	vi.mocked(db.delete).mockReturnValue({
-		where: vi.fn(),
-	} as never);
-
-	// Return empty array - author does not exist
-	vi.mocked(db.select).mockReturnValue({
-		from: vi.fn().mockReturnValue({
-			where: vi.fn().mockResolvedValue([]),
-		}),
-	} as never);
-
-	vi.mocked(github.getContents).mockImplementation(((params: {
-		path: string;
-	}) => {
-		if (params.path === "/content/example-author/posts/example-post/") {
-			return Promise.resolve({
-				data: {
-					entries: [
-						{
-							name: "index.md",
-							path: "content/example-author/posts/example-post/index.md",
-						},
-					],
-				},
-				error: undefined,
-				response: {} as never,
-			});
-		}
-		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
-	}) as never);
-
-	vi.mocked(github.getContentsRaw).mockImplementation((params) => {
-		if (params.path === "/content/example-author/posts/example-post/index.md") {
-			return Promise.resolve({
-				data: `---
-title: "Example Post"
-published: "2024-01-15T00:00:00Z"
----
-`,
-				response: {} as never,
-			});
-		}
-		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
-	});
-
-	// Assert: Should throw error about missing author
-	await expect(
-		processor({
-			data: {
-				author: "example-author",
-				post: "example-post",
-				ref: "main",
-			},
-		} as unknown as Job<TaskInputs["sync-post"]>),
-	).rejects.toThrow(
-		"Author profiles not found for post example-post: example-author",
-	);
-});
-
-/**
- * Test 4: Post in a collection
- *
- * Scenario: A post is part of a collection
- * Expected: Also insert into collectionChapters
- */
 test("Links post to collection when collection is provided", async () => {
 	const insertPostsValues = vi.fn().mockReturnValue({
 		onConflictDoNothing: vi.fn(),
@@ -310,12 +196,6 @@ test("Links post to collection when collection is provided", async () => {
 	const deleteWhere = vi.fn();
 	vi.mocked(db.delete).mockReturnValue({
 		where: deleteWhere,
-	} as never);
-
-	vi.mocked(db.select).mockReturnValue({
-		from: vi.fn().mockReturnValue({
-			where: vi.fn().mockResolvedValue([{ slug: "example-author" }]),
-		}),
 	} as never);
 
 	// Note: collection path format
@@ -383,12 +263,6 @@ order: 1
 	});
 });
 
-/**
- * Test 5: Post with multiple locales
- *
- * Scenario: A post has both index.md and index.es.md
- * Expected: Both locales are processed and saved to S3/DB
- */
 test("Syncs post with multiple locales", async () => {
 	const insertPostsValues = vi.fn().mockReturnValue({
 		onConflictDoNothing: vi.fn(),
@@ -414,12 +288,6 @@ test("Syncs post with multiple locales", async () => {
 	const deleteWhere = vi.fn();
 	vi.mocked(db.delete).mockReturnValue({
 		where: deleteWhere,
-	} as never);
-
-	vi.mocked(db.select).mockReturnValue({
-		from: vi.fn().mockReturnValue({
-			where: vi.fn().mockResolvedValue([{ slug: "example-author" }]),
-		}),
 	} as never);
 
 	// Return folder listing with both index.md and index.es.md
@@ -516,12 +384,6 @@ published: "2024-01-15T00:00:00Z"
 	);
 });
 
-/**
- * Test 6: Post with multiple authors
- *
- * Scenario: A post has authors specified in frontmatter
- * Expected: Both frontmatter authors and folder owner are linked
- */
 test("Handles post with multiple authors", async () => {
 	const insertPostsValues = vi.fn().mockReturnValue({
 		onConflictDoNothing: vi.fn(),
@@ -547,15 +409,6 @@ test("Handles post with multiple authors", async () => {
 	const deleteWhere = vi.fn();
 	vi.mocked(db.delete).mockReturnValue({
 		where: deleteWhere,
-	} as never);
-
-	// Both authors exist
-	vi.mocked(db.select).mockReturnValue({
-		from: vi.fn().mockReturnValue({
-			where: vi
-				.fn()
-				.mockResolvedValue([{ slug: "example-author" }, { slug: "co-author" }]),
-		}),
 	} as never);
 
 	vi.mocked(github.getContents).mockImplementation(((params: {

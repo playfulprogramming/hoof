@@ -4,13 +4,12 @@ import {
 	posts,
 	postData,
 	postAuthors,
-	profiles,
 	collectionChapters,
 } from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
 import { s3 } from "@playfulprogramming/s3";
 import { createProcessor } from "../../createProcessor.ts";
-import { eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import matter from "gray-matter";
 import { Value } from "@sinclair/typebox/value";
 import { PostMetaSchema } from "./types.ts";
@@ -45,10 +44,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 				`Post ${post} (${basePath}) returned 404 - removing from database.`,
 			);
 
-			await db.delete(postData).where(eq(postData.slug, post));
-			await db
-				.delete(collectionChapters)
-				.where(eq(collectionChapters.postSlug, post));
+			await db.delete(posts).where(eq(posts.slug, post));
 
 			return;
 		}
@@ -74,127 +70,133 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		`Found ${localeFiles.length} locale(s): ${localeFiles.map((f) => extractLocale(f.name)).join(", ")}`,
 	);
 
-	const bucket = await s3.ensureBucket(env.S3_BUCKET);
-
-	await db.insert(posts).values({ slug: post }).onConflictDoNothing();
-
+	// =========================================================================
+	// Phase 1: Collect all data from GitHub
+	// =========================================================================
 	const allAuthorSlugs = new Set<string>([author]);
 
-	for (const file of localeFiles) {
-		const locale = extractLocale(file.name);
+	const localeData = await Promise.all(
+		localeFiles.map(async (file) => {
+			const locale = extractLocale(file.name);
 
-		const contentUrl = new URL(file.path, "http://localhost");
-		const contentResponse = await github.getContentsRaw({
-			ref,
-			path: contentUrl.pathname,
-			repoOwner: env.GITHUB_REPO_OWNER,
-			repoName: env.GITHUB_REPO_NAME,
-			signal,
-		});
-
-		if (contentResponse.data === undefined) {
-			throw new Error(
-				`Unable to fetch post content for ${post} locale ${locale}`,
-			);
-		}
-
-		const rawMarkdown = contentResponse.data;
-		const { data: frontmatter } = matter(rawMarkdown);
-		const parsed = Value.Parse(PostMetaSchema, frontmatter);
-
-		if (parsed.authors) {
-			parsed.authors.forEach((a) => allAuthorSlugs.add(a));
-		}
-
-		const s3Key = `posts/${post}/${locale}/content.md`;
-		await s3.upload(
-			bucket,
-			s3Key,
-			undefined,
-			Buffer.from(rawMarkdown),
-			"text/markdown",
-		);
-
-		console.log(`Uploaded ${s3Key} to S3`);
-
-		const postDataRecord = {
-			slug: post,
-			locale,
-			title: parsed.title,
-			version: parsed.version,
-			description: parsed.description,
-			socialImage: parsed.socialImg ?? null,
-			bannerImage: parsed.bannerImg ?? null,
-			originalLink: parsed.originalLink ?? null,
-			noindex: parsed.noindex,
-			editedAt: parsed.edited ? new Date(parsed.edited) : null,
-			publishedAt: new Date(parsed.published),
-			meta: {
-				tags: parsed.tags ?? [],
-				...(parsed.license && { license: parsed.license }),
-				...(parsed.upToDateSlug && { upToDateSlug: parsed.upToDateSlug }),
-			},
-		};
-
-		await db
-			.insert(postData)
-			.values(postDataRecord)
-			.onConflictDoUpdate({
-				target: [postData.slug, postData.locale, postData.version],
-				set: postDataRecord,
+			const contentUrl = new URL(file.path, "http://localhost");
+			const contentResponse = await github.getContentsRaw({
+				ref,
+				path: contentUrl.pathname,
+				repoOwner: env.GITHUB_REPO_OWNER,
+				repoName: env.GITHUB_REPO_NAME,
+				signal,
 			});
 
-		console.log(`Saved post metadata for ${post} (${locale})`);
+			if (contentResponse.data === undefined) {
+				throw new Error(
+					`Unable to fetch post content for ${post} locale ${locale}`,
+				);
+			}
 
-		if (collection) {
-			const postUrl = `/${author}/posts/${post}`;
+			const rawMarkdown = contentResponse.data;
+			const { data: frontmatter } = matter(rawMarkdown);
+			const parsed = Value.Parse(PostMetaSchema, frontmatter);
 
-			const chapterRecord = {
-				locale,
-				collectionSlug: collection,
-				postSlug: post,
-				title: parsed.title,
-				description: parsed.description,
-				url: postUrl,
-				order: parsed.order ?? 0,
-			};
+			if (parsed.authors) {
+				parsed.authors.forEach((a) => allAuthorSlugs.add(a));
+			}
 
-			await db
-				.insert(collectionChapters)
-				.values(chapterRecord)
-				.onConflictDoUpdate({
-					target: [collectionChapters.postSlug, collectionChapters.locale],
-					set: chapterRecord,
-				});
-
-			console.log(
-				`Linked post ${post} to collection ${collection} (${locale})`,
-			);
-		}
-	}
+			return { locale, rawMarkdown, parsed };
+		}),
+	);
 
 	const authorSlugs = [...allAuthorSlugs];
 
-	const existingAuthors = await db
-		.select({ slug: profiles.slug })
-		.from(profiles)
-		.where(inArray(profiles.slug, authorSlugs));
+	// =========================================================================
+	// Phase 2: Upload all markdown to S3
+	// =========================================================================
+	const bucket = await s3.ensureBucket(env.S3_BUCKET);
 
-	const existingSlugs = new Set(existingAuthors.map((a) => a.slug));
-	const missingAuthors = authorSlugs.filter((slug) => !existingSlugs.has(slug));
-
-	if (missingAuthors.length > 0) {
-		throw new Error(
-			`Author profiles not found for post ${post}: ${missingAuthors.join(", ")}`,
-		);
-	}
-
-	await db.delete(postAuthors).where(eq(postAuthors.postSlug, post));
-
-	await db.insert(postAuthors).values(
-		authorSlugs.map((authorSlug) => ({
-			postSlug: post,
-			authorSlug,
-		})),
+	await Promise.all(
+		localeData.map(async ({ locale, rawMarkdown }) => {
+			const s3Key = `posts/${post}/${locale}/content.md`;
+			await s3.upload(
+				bucket,
+				s3Key,
+				undefined,
+				Buffer.from(rawMarkdown),
+				"text/markdown",
+			);
+			console.log(`Uploaded ${s3Key} to S3`);
+		}),
 	);
+
+	// =========================================================================
+	// Phase 3: Perform all database operations in a single transaction
+	// =========================================================================
+	await db.transaction(async (tx) => {
+		await tx.insert(posts).values({ slug: post }).onConflictDoNothing();
+
+		for (const { locale, parsed } of localeData) {
+			const postDataRecord = {
+				slug: post,
+				locale,
+				title: parsed.title,
+				version: parsed.version,
+				description: parsed.description,
+				socialImage: parsed.socialImg ?? null,
+				bannerImage: parsed.bannerImg ?? null,
+				originalLink: parsed.originalLink ?? null,
+				noindex: parsed.noindex,
+				editedAt: parsed.edited ? new Date(parsed.edited) : null,
+				publishedAt: new Date(parsed.published),
+				meta: {
+					tags: parsed.tags ?? [],
+					...(parsed.license && { license: parsed.license }),
+					...(parsed.upToDateSlug && { upToDateSlug: parsed.upToDateSlug }),
+				},
+			};
+
+			await tx
+				.insert(postData)
+				.values(postDataRecord)
+				.onConflictDoUpdate({
+					target: [postData.slug, postData.locale, postData.version],
+					set: postDataRecord,
+				});
+
+			console.log(`Saved post metadata for ${post} (${locale})`);
+
+			if (collection) {
+				const postUrl = `/${author}/posts/${post}`;
+
+				const chapterRecord = {
+					locale,
+					collectionSlug: collection,
+					postSlug: post,
+					title: parsed.title,
+					description: parsed.description,
+					url: postUrl,
+					order: parsed.order ?? 0,
+				};
+
+				await tx
+					.insert(collectionChapters)
+					.values(chapterRecord)
+					.onConflictDoUpdate({
+						target: [collectionChapters.postSlug, collectionChapters.locale],
+						set: chapterRecord,
+					});
+
+				console.log(
+					`Linked post ${post} to collection ${collection} (${locale})`,
+				);
+			}
+		}
+
+		await tx.delete(postAuthors).where(eq(postAuthors.postSlug, post));
+
+		await tx.insert(postAuthors).values(
+			authorSlugs.map((authorSlug) => ({
+				postSlug: post,
+				authorSlug,
+			})),
+		);
+	});
 });
