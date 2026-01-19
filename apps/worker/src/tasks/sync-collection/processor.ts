@@ -2,12 +2,12 @@ import { Tasks, env } from "@playfulprogramming/common";
 import {
 	collectionAuthors,
 	collectionData,
+	collections,
 	db,
-	profiles,
 } from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
 import { createProcessor } from "../../createProcessor.ts";
-import { eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import matter from "gray-matter";
 import { CollectionMetaSchema } from "./types.ts";
 import { Value } from "@sinclair/typebox/value";
@@ -181,50 +181,40 @@ export default createProcessor(
 				},
 			};
 
-			await db
-				.insert(collectionData)
-				.values(result)
-				.onConflictDoUpdate({
-					target: [collectionData.slug, collectionData.locale],
-					set: result,
-				});
-
 			// Handle authors
 			const authorSlugs = collectionParsedData.authors
 				? [...new Set([...collectionParsedData.authors, authorId])]
 				: [authorId];
 
-			// Verify all authors exist in the database
-			const existingAuthors = await db
-				.select({ slug: profiles.slug })
-				.from(profiles)
-				.where(inArray(profiles.slug, authorSlugs));
+			await db.transaction(async (tx) => {
+				await tx
+					.insert(collections)
+					.values({ slug: collectionId })
+					.onConflictDoNothing();
 
-			const existingSlugs = new Set(existingAuthors.map((a) => a.slug));
-			const missingAuthors = authorSlugs.filter(
-				(slug) => !existingSlugs.has(slug),
-			);
+				await tx
+					.insert(collectionData)
+					.values(result)
+					.onConflictDoUpdate({
+						target: [collectionData.slug, collectionData.locale],
+						set: result,
+					});
 
-			if (missingAuthors.length > 0) {
-				throw new Error(
-					`Author profiles not found for collection ${collectionId}: ${missingAuthors.join(", ")}`,
-				);
-			}
+				// Delete existing author associations for this collection
+				await tx
+					.delete(collectionAuthors)
+					.where(eq(collectionAuthors.collectionSlug, collectionId));
 
-			// Delete existing author associations for this collection
-			await db
-				.delete(collectionAuthors)
-				.where(eq(collectionAuthors.collectionSlug, collectionId));
-
-			// Insert new author associations
-			if (authorSlugs.length > 0) {
-				await db.insert(collectionAuthors).values(
-					authorSlugs.map((authorSlug) => ({
-						collectionSlug: collectionId,
-						authorSlug,
-					})),
-				);
-			}
+				// Insert new author associations
+				if (authorSlugs.length > 0) {
+					await tx.insert(collectionAuthors).values(
+						authorSlugs.map((authorSlug) => ({
+							collectionSlug: collectionId,
+							authorSlug,
+						})),
+					);
+				}
+			});
 		}
 	},
 );

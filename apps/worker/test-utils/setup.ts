@@ -41,11 +41,21 @@ vi.mock("@playfulprogramming/s3", () => {
 });
 
 vi.mock("@playfulprogramming/db", () => {
+	const db = {
+		insert: vi.fn(),
+		delete: vi.fn(),
+		select: vi.fn(),
+		transaction: vi.fn((cb: (tx: unknown) => unknown) => cb(db)),
+	};
+
 	return {
 		profiles: {
 			slug: {},
 		},
 		posts: {
+			slug: {},
+		},
+		collections: {
 			slug: {},
 		},
 		collectionData: {
@@ -69,11 +79,7 @@ vi.mock("@playfulprogramming/db", () => {
 			postSlug: {},
 			locale: {},
 		},
-		db: {
-			insert: vi.fn(),
-			delete: vi.fn(),
-			select: vi.fn(),
-		},
+		db,
 	};
 });
 
