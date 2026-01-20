@@ -1,0 +1,13 @@
+{
+	"image": "mcr.microsoft.com/devcontainers/base:bookworm",
+	"forwardPorts": [3000, 5432, 9000],
+	"workspaceMount": "source=${localWorkspaceFolder},target=/var/app,type=bind,consistency=cached",
+	"workspaceFolder": "/var/app",
+	"features": {
+		"ghcr.io/devcontainers/features/node:1": {
+			"version": "22.15.0"
+		},
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {}
+	},
+	"postStartCommand": "docker compose up -d"
+}
