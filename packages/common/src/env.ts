@@ -23,9 +23,9 @@ export const EnvSchema = Type.Object({
 	REDIS_PASSWORD: Type.Optional(Type.String()),
 
 	// Rate limiting configuration
-	RATE_LIMIT_MAX: Type.Optional(Type.Integer({ default: 100 })),
-	RATE_LIMIT_WINDOW: Type.Optional(Type.String({ default: "1 minute" })),
-	RATE_LIMIT_BAN_THRESHOLD: Type.Optional(Type.Integer({ default: 10 })),
+	RATE_LIMIT_MAX: Type.Integer({ default: 10_000 }),
+	RATE_LIMIT_WINDOW: Type.String({ default: "10 minutes" }),
+	RATE_LIMIT_BAN_THRESHOLD: Type.Integer({ default: 10 }),
 	HOOF_AUTH_TOKEN: Type.Optional(Type.String()),
 
 	GITHUB_REPO_OWNER: Type.String({ default: "playfulprogramming" }),

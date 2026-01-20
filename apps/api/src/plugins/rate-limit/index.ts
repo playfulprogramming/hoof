@@ -26,9 +26,9 @@ export const shouldBypassRateLimit = (
 export default fp(
 	(fastify) => {
 		fastify.register(rateLimit, {
-			max: Number(env.RATE_LIMIT_MAX) || 10_000,
-			timeWindow: env.RATE_LIMIT_WINDOW || "10 minutes",
-			ban: Number(env.RATE_LIMIT_BAN_THRESHOLD) || 10,
+			max: env.RATE_LIMIT_MAX,
+			timeWindow: env.RATE_LIMIT_WINDOW,
+			ban: env.RATE_LIMIT_BAN_THRESHOLD,
 			allowList: (request, _key) =>
 				shouldBypassRateLimit(request, env.HOOF_AUTH_TOKEN),
 		});
