@@ -14,7 +14,7 @@ import { RobotDeniedError } from "../../utils/fetchAsBot.ts";
 import { createProcessor } from "../../createProcessor.ts";
 
 export default createProcessor(Tasks.URL_METADATA, async (job, { signal }) => {
-	const BUCKET = await s3.createBucket(env.S3_BUCKET);
+	const BUCKET = await s3.ensureBucket(env.S3_BUCKET);
 
 	let error: boolean = false;
 	const inputUrl = new URL(job.data.url);

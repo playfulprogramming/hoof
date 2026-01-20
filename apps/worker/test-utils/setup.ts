@@ -34,7 +34,7 @@ vi.mock("@playfulprogramming/common", () => {
 vi.mock("@playfulprogramming/s3", () => {
 	return {
 		s3: {
-			createBucket: vi.fn(() => "example-bucket"),
+			ensureBucket: vi.fn(() => "example-bucket"),
 			upload: vi.fn(),
 		},
 	};
@@ -52,6 +52,9 @@ vi.mock("@playfulprogramming/db", () => {
 		profiles: {
 			slug: {},
 		},
+		posts: {
+			slug: {},
+		},
 		collections: {
 			slug: {},
 		},
@@ -62,6 +65,19 @@ vi.mock("@playfulprogramming/db", () => {
 		collectionAuthors: {
 			collectionSlug: {},
 			authorSlug: {},
+		},
+		postData: {
+			slug: {},
+			locale: {},
+			version: {},
+		},
+		postAuthors: {
+			postSlug: {},
+			authorSlug: {},
+		},
+		collectionChapters: {
+			postSlug: {},
+			locale: {},
 		},
 		db,
 	};
