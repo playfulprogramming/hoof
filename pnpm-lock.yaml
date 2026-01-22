@@ -16,8 +16,8 @@ catalogs:
       specifier: ^0.44.6
       version: 0.44.6
     undici:
-      specifier: ^7.16.0
-      version: 7.16.0
+      specifier: ^7.18.2
+      version: 7.18.2
     vitest:
       specifier: ^3.2.4
       version: 3.2.4
@@ -158,7 +158,7 @@ importers:
         version: 4.0.0
       undici:
         specifier: 'catalog:'
-        version: 7.16.0
+        version: 7.18.2
       unist-util-find:
         specifier: ^3.0.0
         version: 3.0.0
@@ -211,7 +211,7 @@ importers:
         version: 0.15.0
       undici:
         specifier: 'catalog:'
-        version: 7.16.0
+        version: 7.18.2
     devDependencies:
       openapi-typescript:
         specifier: ^7.10.1
@@ -4040,8 +4040,8 @@ packages:
   undici-types@7.10.0:
     resolution: {integrity: sha512-t5Fy/nfn+14LuOc2KNYg75vZqClpAiqscVvMygNnlsHBFpSXdJaYtXMcdNLpl/Qvc3P2cB3s6lOV51nqsFq4ag==}
 
-  undici@7.16.0:
-    resolution: {integrity: sha512-QEg3HPMll0o3t2ourKwOeUAZ159Kn9mx5pnzHRQO8+Wixmh88YdZRiIwat0iNzNNXn0yoEtXJqFpyW7eM8BV7g==}
+  undici@7.18.2:
+    resolution: {integrity: sha512-y+8YjDFzWdQlSE9N5nzKMT3g4a5UBX1HKowfdXh0uvAnTaqqwqB92Jt4UXBAeKekDs5IaDKyJFR4X1gYVCgXcw==}
     engines: {node: '>=20.18.1'}
 
   unicode-trie@2.0.0:
@@ -8353,7 +8353,7 @@ snapshots:
 
   undici-types@7.10.0: {}
 
-  undici@7.16.0: {}
+  undici@7.18.2: {}
 
   unicode-trie@2.0.0:
     dependencies:
