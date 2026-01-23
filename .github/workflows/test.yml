@@ -21,7 +21,7 @@ jobs:
         run: pnpm install --ignore-scripts
 
       - name: Run build
-        run: pnpm run build
+        run: pnpm run build:all
 
       - name: Run tests
         run: |
