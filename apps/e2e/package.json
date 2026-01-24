@@ -2,10 +2,17 @@
 	"name": "e2e",
 	"version": "0.0.1",
 	"private": true,
-	"type": "commonjs",
-	"main": "./src/index.js",
-	"types": "./src/index.d.ts",
+	"type": "module",
+	"main": "./src/index.ts",
+	"scripts": {
+		"test": "vitest run"
+	},
 	"dependencies": {
+		"@playfulprogramming/common": "workspace:*",
+		"@playfulprogramming/db": "workspace:*",
 		"tslib": "^2.3.0"
+	},
+	"devDependencies": {
+		"vitest": "catalog:"
 	}
 }
