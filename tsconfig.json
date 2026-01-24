@@ -11,9 +11,6 @@
 		"erasableSyntaxOnly": true,
 		"allowImportingTsExtensions": true,
 		"esModuleInterop": true,
-		"paths": {
-			"e2e": ["apps/e2e/src/index.ts"]
-		}
 	},
 	"include": ["eslint.config.js"]
 }
