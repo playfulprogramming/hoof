@@ -156,6 +156,9 @@ importers:
 
   apps/e2e:
     dependencies:
+      '@playfulprogramming/api':
+        specifier: workspace:*
+        version: link:../api
       '@playfulprogramming/common':
         specifier: workspace:*
         version: link:../../packages/common
@@ -165,9 +168,6 @@ importers:
       openapi-fetch:
         specifier: ^0.15.0
         version: 0.15.0
-      tslib:
-        specifier: ^2.3.0
-        version: 2.8.1
     devDependencies:
       openapi-typescript:
         specifier: ^7.10.1

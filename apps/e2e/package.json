@@ -3,17 +3,15 @@
 	"version": "0.0.1",
 	"private": true,
 	"type": "module",
-	"main": "./src/index.ts",
 	"scripts": {
 		"typegen": "node --experimental-strip-types scripts/typegen.ts",
-		"pretest": "pnpm typegen",
 		"test": "vitest run"
 	},
 	"dependencies": {
 		"@playfulprogramming/common": "workspace:*",
 		"@playfulprogramming/db": "workspace:*",
-		"openapi-fetch": "^0.15.0",
-		"tslib": "^2.3.0"
+		"@playfulprogramming/api": "workspace:*",
+		"openapi-fetch": "^0.15.0"
 	},
 	"devDependencies": {
 		"openapi-typescript": "^7.10.1",

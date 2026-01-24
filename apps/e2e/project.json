@@ -27,7 +27,11 @@
 			"options": {
 				"command": "node --experimental-strip-types scripts/typegen.ts",
 				"cwd": "apps/e2e"
-			}
+			},
+			"outputs": [
+				"{projectRoot}/src/generated/api-schema.d.ts"
+			],
+			"cache": true
 		},
 		"test": {
 			"executor": "@nx/vite:test",

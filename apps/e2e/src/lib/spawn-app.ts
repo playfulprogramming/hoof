@@ -1,4 +1,4 @@
-import { createApp } from "../../../api/src/index.ts";
+import { createApp } from "@playfulprogramming/api";
 import createClient, { type Client } from "openapi-fetch";
 import type { paths } from "../generated/api-schema.d.ts";
 
