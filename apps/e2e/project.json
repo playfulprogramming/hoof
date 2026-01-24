@@ -1,0 +1,29 @@
+{
+	"name": "e2e",
+	"$schema": "../../node_modules/nx/schemas/project-schema.json",
+	"sourceRoot": "apps/e2e/src",
+	"projectType": "library",
+	"tags": [],
+	"targets": {
+		"build": {
+			"executor": "@nx/js:tsc",
+			"outputs": ["{options.outputPath}"],
+			"options": {
+				"outputPath": "dist/apps/e2e",
+				"main": "apps/e2e/src/index.ts",
+				"tsConfig": "apps/e2e/tsconfig.lib.json",
+				"assets": ["apps/e2e/*.md"]
+			}
+		},
+		"lint": {
+			"executor": "@nx/eslint:lint"
+		},
+		"test": {
+			"executor": "@nx/vite:test",
+			"outputs": ["{options.reportsDirectory}"],
+			"options": {
+				"reportsDirectory": "../../coverage/apps/e2e"
+			}
+		}
+	}
+}
