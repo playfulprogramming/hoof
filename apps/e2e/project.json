@@ -7,23 +7,39 @@
 	"targets": {
 		"build": {
 			"executor": "@nx/js:tsc",
-			"outputs": ["{options.outputPath}"],
+			"outputs": [
+				"{options.outputPath}"
+			],
 			"options": {
 				"outputPath": "dist/apps/e2e",
 				"main": "apps/e2e/src/index.ts",
 				"tsConfig": "apps/e2e/tsconfig.lib.json",
-				"assets": ["apps/e2e/*.md"]
+				"assets": [
+					"apps/e2e/*.md"
+				]
 			}
 		},
 		"lint": {
 			"executor": "@nx/eslint:lint"
 		},
+		"typegen": {
+			"executor": "nx:run-commands",
+			"options": {
+				"command": "node --experimental-strip-types scripts/typegen.ts",
+				"cwd": "apps/e2e"
+			}
+		},
 		"test": {
 			"executor": "@nx/vite:test",
-			"outputs": ["{options.reportsDirectory}"],
+			"outputs": [
+				"{options.reportsDirectory}"
+			],
 			"options": {
 				"reportsDirectory": "../../coverage/apps/e2e"
-			}
+			},
+			"dependsOn": [
+				"typegen"
+			]
 		}
 	}
 }
