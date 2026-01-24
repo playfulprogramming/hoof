@@ -1,6 +1,6 @@
-import { createApp } from "@playfulprogramming/api";
 import createClient, { type Client } from "openapi-fetch";
 import type { paths } from "../generated/api-schema.d.ts";
+import { createApp } from "@playfulprogramming/api/src/createApp.ts";
 
 export type TestApp = {
 	baseUrl: string;
