@@ -4,6 +4,7 @@ import type { paths } from "../generated/api-schema.d.ts";
 
 export type TestApp = {
 	baseUrl: string;
+	port: number;
 } & AsyncDisposable;
 
 export type TestAppWithClient = TestApp & {
@@ -16,17 +17,15 @@ export async function spawnApp(): Promise<TestApp> {
 	await app.listen({ port: 0, host: "127.0.0.1" });
 
 	const address = app.server.address();
-	if (!address || typeof address === "string") {
-		throw new Error("Failed to get server address");
-	}
+	const port = typeof address === "string" ? address : address?.port;
+	if (!port) throw new Error("Failed to get server port");
 
-	const baseUrl = `http://127.0.0.1:${address.port}`;
-	console.log(`Spawned test app at ${baseUrl}`);
+	const baseUrl = `http://127.0.0.1:${port}`;
 	return {
 		baseUrl,
+		port: Number(port),
 		[Symbol.asyncDispose]: async () => {
 			await app.close();
-			console.log(`Closed test app at ${baseUrl}`);
 		},
 	};
 }
@@ -39,11 +38,10 @@ export async function spawnAppWithClient(): Promise<TestAppWithClient> {
 	});
 
 	return {
-		baseUrl: app.baseUrl,
+		...app,
 		client,
 		[Symbol.asyncDispose]: async () => {
 			await app[Symbol.asyncDispose]();
-			console.log(`Closed test app with client at ${app.baseUrl}`);
 		},
 	};
 }
