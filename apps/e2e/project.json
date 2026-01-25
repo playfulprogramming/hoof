@@ -31,7 +31,10 @@
 			"outputs": [
 				"{projectRoot}/src/generated/api-schema.d.ts"
 			],
-			"cache": true
+			"cache": true,
+			"inputs": [
+				"{workspaceRoot}/apps/api/**/*"
+			]
 		},
 		"test": {
 			"executor": "@nx/vite:test",
