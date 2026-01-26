@@ -4,7 +4,6 @@ import {
 	timestamp,
 	jsonb,
 	primaryKey,
-	integer,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { profiles } from "./profiles.ts";
@@ -48,21 +47,6 @@ export const collectionAuthors = pgTable(
 	],
 );
 
-export const collectionChapters = pgTable("collection_chapters", {
-	id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-	locale: text("locale").notNull(),
-	collectionSlug: text("collection_slug")
-		.notNull()
-		.references(() => collections.slug, { onDelete: "cascade" }),
-	postSlug: text("post_slug")
-		.notNull()
-		.references(() => posts.slug, { onDelete: "cascade" }),
-	title: text("title").notNull(),
-	description: text("description").notNull().default(""),
-	url: text("url").notNull(),
-	order: integer("order").notNull(),
-});
-
 /**
  * Query via:
  * @example
@@ -82,7 +66,7 @@ export const collectionChapters = pgTable("collection_chapters", {
  */
 export const collectionsRelations = relations(collections, ({ many }) => ({
 	authors: many(collectionAuthors),
-	chapters: many(collectionChapters),
+	posts: many(posts),
 }));
 
 export const collectionAuthorsRelations = relations(
@@ -95,20 +79,6 @@ export const collectionAuthorsRelations = relations(
 		author: one(profiles, {
 			fields: [collectionAuthors.authorSlug],
 			references: [profiles.slug],
-		}),
-	}),
-);
-
-export const collectionChaptersRelations = relations(
-	collectionChapters,
-	({ one }) => ({
-		collection: one(collections, {
-			fields: [collectionChapters.collectionSlug],
-			references: [collections.slug],
-		}),
-		post: one(posts, {
-			fields: [collectionChapters.postSlug],
-			references: [posts.slug],
 		}),
 	}),
 );

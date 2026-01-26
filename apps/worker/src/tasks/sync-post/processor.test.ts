@@ -1,13 +1,7 @@
 import processor from "./processor.ts";
 import type { TaskInputs } from "@playfulprogramming/common";
 import type { Job } from "bullmq";
-import {
-	posts,
-	postData,
-	postAuthors,
-	collectionChapters,
-	db,
-} from "@playfulprogramming/db";
+import { posts, postData, postAuthors, db } from "@playfulprogramming/db";
 import { s3 } from "@playfulprogramming/s3";
 import * as github from "@playfulprogramming/github-api";
 import { eq } from "drizzle-orm";
@@ -173,9 +167,6 @@ test("Links post to collection when collection is provided", async () => {
 		onConflictDoUpdate: vi.fn(),
 	});
 	const insertPostAuthorsValues = vi.fn();
-	const insertCollectionChaptersValues = vi.fn().mockReturnValue({
-		onConflictDoUpdate: vi.fn(),
-	});
 
 	vi.mocked(db.insert).mockImplementation((table) => {
 		if (table === posts) {
@@ -186,9 +177,6 @@ test("Links post to collection when collection is provided", async () => {
 		}
 		if (table === postAuthors) {
 			return { values: insertPostAuthorsValues } as never;
-		}
-		if (table === collectionChapters) {
-			return { values: insertCollectionChaptersValues } as never;
 		}
 		throw new Error(`Unexpected table: ${table}`);
 	});
@@ -251,15 +239,11 @@ order: 1
 		},
 	} as unknown as Job<TaskInputs["sync-post"]>);
 
-	// Assert: Collection chapter was inserted
-	expect(insertCollectionChaptersValues).toBeCalledWith({
-		locale: "en",
+	// Assert: Collection chapter was referenced
+	expect(insertPostsValues).toBeCalledWith({
+		slug: "example-post",
 		collectionSlug: "example-collection",
-		postSlug: "example-post",
-		title: "Chapter One",
-		description: "The first chapter",
-		url: "/example-author/posts/example-post",
-		order: 1,
+		collectionOrder: 1,
 	});
 });
 

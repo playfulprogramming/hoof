@@ -5,12 +5,18 @@ import {
 	jsonb,
 	primaryKey,
 	boolean,
+	integer,
 } from "drizzle-orm/pg-core";
 import { profiles } from "./profiles.ts";
 import { relations } from "drizzle-orm";
+import { collections } from "./collections.ts";
 
 export const posts = pgTable("posts", {
 	slug: text("slug").primaryKey(),
+	collectionSlug: text("collection_slug").references(() => collections.slug, {
+		onDelete: "set null",
+	}),
+	collectionOrder: integer("collection_order").notNull().default(0),
 });
 
 export const postData = pgTable(
@@ -59,8 +65,10 @@ export const postAuthors = pgTable(
 	],
 );
 
-export const postsRelations = relations(posts, ({ many }) => ({
+export const postsRelations = relations(posts, ({ many, one }) => ({
+	data: many(postData),
 	authors: many(postAuthors),
+	collection: one(collections),
 }));
 
 export const postAuthorsRelations = relations(postAuthors, ({ one }) => ({

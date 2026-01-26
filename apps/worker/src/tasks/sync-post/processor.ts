@@ -1,11 +1,5 @@
 import { Tasks, env } from "@playfulprogramming/common";
-import {
-	db,
-	posts,
-	postData,
-	postAuthors,
-	collectionChapters,
-} from "@playfulprogramming/db";
+import { db, posts, postData, postAuthors } from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
 import { s3 } from "@playfulprogramming/s3";
 import { createProcessor } from "../../createProcessor.ts";
@@ -131,7 +125,14 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	// Phase 3: Perform all database operations in a single transaction
 	// =========================================================================
 	await db.transaction(async (tx) => {
-		await tx.insert(posts).values({ slug: post }).onConflictDoNothing();
+		await tx
+			.insert(posts)
+			.values({
+				slug: post,
+				collectionSlug: collection,
+				collectionOrder: localeData[0]?.parsed?.order,
+			})
+			.onConflictDoNothing();
 
 		for (const { locale, parsed } of localeData) {
 			const postDataRecord = {
@@ -162,32 +163,6 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 				});
 
 			console.log(`Saved post metadata for ${post} (${locale})`);
-
-			if (collection) {
-				const postUrl = `/${author}/posts/${post}`;
-
-				const chapterRecord = {
-					locale,
-					collectionSlug: collection,
-					postSlug: post,
-					title: parsed.title,
-					description: parsed.description,
-					url: postUrl,
-					order: parsed.order ?? 0,
-				};
-
-				await tx
-					.insert(collectionChapters)
-					.values(chapterRecord)
-					.onConflictDoUpdate({
-						target: [collectionChapters.postSlug, collectionChapters.locale],
-						set: chapterRecord,
-					});
-
-				console.log(
-					`Linked post ${post} to collection ${collection} (${locale})`,
-				);
-			}
 		}
 
 		await tx.delete(postAuthors).where(eq(postAuthors.postSlug, post));
