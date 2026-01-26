@@ -2,13 +2,36 @@
 
 This repository contains backend services for the [Playful Programming](https://playfulprogramming.com/) website and (future) content management system.
 
-## Prerequisites
+## High Level Architecture
+
+The REST API is the external interface for Hoof, which handles tasks via enqueuing to Redis. Tasks are pulled from Redis via the worker. The worker spawns worker threads done to avoid overburdening with CPU and memory intensive tasks
+
+```mermaid
+flowchart LR
+  API[REST API]
+  REDIS[Redis]
+  WORKER[Worker]
+  PROC[Processors]
+  DB[(Postgres)]
+  S3[(S3)]
+
+  API -->|enqueue job| REDIS
+  WORKER -->|fetch job| REDIS
+  WORKER --> PROC
+  PROC -->|write| DB
+  API -->|read| DB
+  PROC -->|upload| S3
+```
+
+## Development
+
+### Prerequisites
 
 - Node.js 22
 - Docker
 - pnpm 10.6.1
 
-## Quick Start
+### Quick Start
 
 Install the project dependencies:
 
@@ -36,7 +59,7 @@ pnpm dev
 
 Once it's running, you should see the API documentation hosted at `http://localhost:3000/docs/`. This can also be used to test the endpoints!
 
-### Testing in Docker
+#### Testing in Docker
 
 To test the server in its docker container, instead of running `pnpm dev`, you can build & start the docker image with:
 
