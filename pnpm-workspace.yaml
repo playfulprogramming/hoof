@@ -13,5 +13,5 @@ catalog:
   bullmq: ^5.40.2
   drizzle-orm: ^0.44.6
   undici: ^7.18.2
-  vitest: ^3.2.4
+  vitest: ^4.0.16
   ioredis: ^5.8.2
