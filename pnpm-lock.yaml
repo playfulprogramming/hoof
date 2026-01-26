@@ -78,8 +78,8 @@ importers:
         specifier: ^6.0.0
         version: 6.0.3
       '@fastify/swagger':
-        specifier: ^9.5.2
-        version: 9.5.2
+        specifier: ^9.6.1
+        version: 9.6.1
       '@playfulprogramming/common':
         specifier: workspace:*
         version: link:../../packages/common
@@ -110,7 +110,7 @@ importers:
     devDependencies:
       vitest:
         specifier: 'catalog:'
-        version: 4.0.18(@types/node@24.3.1)(jiti@2.6.1)(msw@2.8.2(@types/node@24.3.1)(typescript@5.9.2))(yaml@2.8.1)
+        version: 4.0.18(@types/node@24.3.1)(jiti@2.6.1)(msw@2.8.2(@types/node@24.3.1)(typescript@5.9.2))(yaml@2.8.2)
 
   apps/worker:
     dependencies:
@@ -174,7 +174,7 @@ importers:
         version: 3.0.4
       vitest:
         specifier: 'catalog:'
-        version: 4.0.18(@types/node@24.3.1)(jiti@2.6.1)(msw@2.8.2(@types/node@24.3.1)(typescript@5.9.2))(yaml@2.8.1)
+        version: 4.0.18(@types/node@24.3.1)(jiti@2.6.1)(msw@2.8.2(@types/node@24.3.1)(typescript@5.9.2))(yaml@2.8.2)
 
   packages/common:
     dependencies:
@@ -221,7 +221,7 @@ importers:
         version: 7.10.1(typescript@5.9.2)
       vitest:
         specifier: 'catalog:'
-        version: 4.0.18(@types/node@24.3.1)(jiti@2.6.1)(msw@2.8.2(@types/node@24.3.1)(typescript@5.9.2))(yaml@2.8.1)
+        version: 4.0.18(@types/node@24.3.1)(jiti@2.6.1)(msw@2.8.2(@types/node@24.3.1)(typescript@5.9.2))(yaml@2.8.2)
 
   packages/post-images:
     dependencies:
@@ -273,7 +273,7 @@ importers:
         version: 10.0.1
       vitest:
         specifier: 'catalog:'
-        version: 4.0.18(@types/node@24.3.1)(jiti@2.6.1)(msw@2.8.2(@types/node@24.3.1)(typescript@5.9.2))(yaml@2.8.1)
+        version: 4.0.18(@types/node@24.3.1)(jiti@2.6.1)(msw@2.8.2(@types/node@24.3.1)(typescript@5.9.2))(yaml@2.8.2)
 
   packages/redis:
     dependencies:
@@ -871,8 +871,8 @@ packages:
   '@fastify/sensible@6.0.3':
     resolution: {integrity: sha512-Iyn8698hp/e5+v8SNBBruTa7UfrMEP52R16dc9jMpqSyEcPsvWFQo+R6WwHCUnJiLIsuci2ZoEZ7ilrSSCPIVg==}
 
-  '@fastify/swagger@9.5.2':
-    resolution: {integrity: sha512-8e8w/LItg/cF6IR/hYKtnt+E0QImees5o3YWJsTLxaIk+tzNUEc6Z2Ursi4oOHWwUlKjUCnV6yh5z5ZdxvlsWA==}
+  '@fastify/swagger@9.6.1':
+    resolution: {integrity: sha512-fKlpJqFMWoi4H3EdUkDaMteEYRCfQMEkK0HJJ0eaf4aRlKd8cbq0pVkOfXDXmtvMTXYcnx3E+l023eFDBsA1HA==}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -4008,6 +4008,11 @@ packages:
     engines: {node: '>= 14.6'}
     hasBin: true
 
+  yaml@2.8.2:
+    resolution: {integrity: sha512-mplynKqc1C2hTVYxd0PU2xQAc22TI1vShAYGksCCfxbn/dFwnHTNi1bvYsBTkhdUNtGIf5xNOg938rrSSYvS9A==}
+    engines: {node: '>= 14.6'}
+    hasBin: true
+
   yargs-parser@21.1.1:
     resolution: {integrity: sha512-tVpsJW7DdjecAiFpbIB1e3qxIQsE6NoPc5/eTdrbbIC4h0LVsWhnoa3g+m2HclBIujHzsxZ4VJVA+GUuc2/LBw==}
     engines: {node: '>=12'}
@@ -4818,13 +4823,13 @@ snapshots:
       type-is: 1.6.18
       vary: 1.1.2
 
-  '@fastify/swagger@9.5.2':
+  '@fastify/swagger@9.6.1':
     dependencies:
       fastify-plugin: 5.0.1
       json-schema-resolver: 3.0.0
       openapi-types: 12.1.3
       rfdc: 1.4.1
-      yaml: 2.8.1
+      yaml: 2.8.2
     transitivePeerDependencies:
       - supports-color
 
@@ -5855,14 +5860,14 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.0.3
 
-  '@vitest/mocker@4.0.18(msw@2.8.2(@types/node@24.3.1)(typescript@5.9.2))(vite@7.1.4(@types/node@24.3.1)(jiti@2.6.1)(yaml@2.8.1))':
+  '@vitest/mocker@4.0.18(msw@2.8.2(@types/node@24.3.1)(typescript@5.9.2))(vite@7.1.4(@types/node@24.3.1)(jiti@2.6.1)(yaml@2.8.2))':
     dependencies:
       '@vitest/spy': 4.0.18
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
       msw: 2.8.2(@types/node@24.3.1)(typescript@5.9.2)
-      vite: 7.1.4(@types/node@24.3.1)(jiti@2.6.1)(yaml@2.8.1)
+      vite: 7.1.4(@types/node@24.3.1)(jiti@2.6.1)(yaml@2.8.2)
 
   '@vitest/pretty-format@4.0.18':
     dependencies:
@@ -8007,7 +8012,7 @@ snapshots:
       '@types/unist': 3.0.3
       vfile-message: 4.0.2
 
-  vite@7.1.4(@types/node@24.3.1)(jiti@2.6.1)(yaml@2.8.1):
+  vite@7.1.4(@types/node@24.3.1)(jiti@2.6.1)(yaml@2.8.2):
     dependencies:
       esbuild: 0.25.11
       fdir: 6.5.0(picomatch@4.0.3)
@@ -8019,12 +8024,12 @@ snapshots:
       '@types/node': 24.3.1
       fsevents: 2.3.3
       jiti: 2.6.1
-      yaml: 2.8.1
+      yaml: 2.8.2
 
-  vitest@4.0.18(@types/node@24.3.1)(jiti@2.6.1)(msw@2.8.2(@types/node@24.3.1)(typescript@5.9.2))(yaml@2.8.1):
+  vitest@4.0.18(@types/node@24.3.1)(jiti@2.6.1)(msw@2.8.2(@types/node@24.3.1)(typescript@5.9.2))(yaml@2.8.2):
     dependencies:
       '@vitest/expect': 4.0.18
-      '@vitest/mocker': 4.0.18(msw@2.8.2(@types/node@24.3.1)(typescript@5.9.2))(vite@7.1.4(@types/node@24.3.1)(jiti@2.6.1)(yaml@2.8.1))
+      '@vitest/mocker': 4.0.18(msw@2.8.2(@types/node@24.3.1)(typescript@5.9.2))(vite@7.1.4(@types/node@24.3.1)(jiti@2.6.1)(yaml@2.8.2))
       '@vitest/pretty-format': 4.0.18
       '@vitest/runner': 4.0.18
       '@vitest/snapshot': 4.0.18
@@ -8041,7 +8046,7 @@ snapshots:
       tinyexec: 1.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vite: 7.1.4(@types/node@24.3.1)(jiti@2.6.1)(yaml@2.8.1)
+      vite: 7.1.4(@types/node@24.3.1)(jiti@2.6.1)(yaml@2.8.2)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 24.3.1
@@ -8109,6 +8114,8 @@ snapshots:
   yaml@2.8.0: {}
 
   yaml@2.8.1: {}
+
+  yaml@2.8.2: {}
 
   yargs-parser@21.1.1: {}
 
