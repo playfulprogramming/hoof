@@ -11,7 +11,7 @@ onlyBuiltDependencies:
 catalog:
   "@sinclair/typebox": ^0.34.41
   bullmq: ^5.40.2
-  drizzle-orm: ^0.44.6
+  drizzle-orm: ^1.0.0-beta.15-859cf75
   undici: ^7.18.2
   vitest: ^4.0.16
   ioredis: ^5.8.2
