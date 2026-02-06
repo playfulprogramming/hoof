@@ -2,6 +2,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "./schema/index.ts";
 import pg from "pg";
 import { env } from "@playfulprogramming/common";
+import { relations } from "./relations.ts";
 
 const pool = new pg.Pool({
 	connectionString: env.POSTGRES_URL,
@@ -9,7 +10,7 @@ const pool = new pg.Pool({
 	query_timeout: 30_000,
 });
 
-export const db = drizzle({ client: pool, schema });
+export const db = drizzle({ client: pool, schema, relations });
 
 export async function healthcheckPostgres() {
 	// Test the connection
