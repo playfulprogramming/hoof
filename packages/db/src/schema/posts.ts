@@ -8,7 +8,6 @@ import {
 	integer,
 } from "drizzle-orm/pg-core";
 import { profiles } from "./profiles.ts";
-import { relations } from "drizzle-orm";
 import { collections } from "./collections.ts";
 
 export const posts = pgTable("posts", {
@@ -64,20 +63,3 @@ export const postAuthors = pgTable(
 		}),
 	],
 );
-
-export const postsRelations = relations(posts, ({ many, one }) => ({
-	data: many(postData),
-	authors: many(postAuthors),
-	collection: one(collections),
-}));
-
-export const postAuthorsRelations = relations(postAuthors, ({ one }) => ({
-	post: one(posts, {
-		fields: [postAuthors.postSlug],
-		references: [posts.slug],
-	}),
-	author: one(profiles, {
-		fields: [postAuthors.authorSlug],
-		references: [profiles.slug],
-	}),
-}));

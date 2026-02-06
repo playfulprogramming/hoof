@@ -9,7 +9,7 @@ const pool = new pg.Pool({
 	query_timeout: 30_000,
 });
 
-export const db = drizzle(pool, { schema });
+export const db = drizzle({ client: pool, schema });
 
 export async function healthcheckPostgres() {
 	// Test the connection
