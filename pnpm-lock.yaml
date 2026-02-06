@@ -187,9 +187,12 @@ importers:
       '@playfulprogramming/common':
         specifier: workspace:*
         version: link:../common
+      '@sinclair/typebox':
+        specifier: 'catalog:'
+        version: 0.34.41
       drizzle-orm:
         specifier: 'catalog:'
-        version: 1.0.0-beta.15-859cf75(@sinclair/typebox@0.34.48)(@types/mssql@9.1.9(@azure/core-client@1.10.1))(@types/pg@8.15.5)(mssql@11.0.1(@azure/core-client@1.10.1))(pg@8.16.3(pg-native@3.5.2))(zod@4.3.6)
+        version: 1.0.0-beta.15-859cf75(@sinclair/typebox@0.34.41)(@types/mssql@9.1.9(@azure/core-client@1.10.1))(@types/pg@8.15.5)(mssql@11.0.1(@azure/core-client@1.10.1))(pg@8.16.3(pg-native@3.5.2))(zod@4.3.6)
       pg:
         specifier: ^8.16.3
         version: 8.16.3(pg-native@3.5.2)
@@ -6469,16 +6472,6 @@ snapshots:
       mssql: 11.0.1(@azure/core-client@1.10.1)
     optionalDependencies:
       '@sinclair/typebox': 0.34.41
-      '@types/pg': 8.15.5
-      pg: 8.16.3(pg-native@3.5.2)
-      zod: 4.3.6
-
-  drizzle-orm@1.0.0-beta.15-859cf75(@sinclair/typebox@0.34.48)(@types/mssql@9.1.9(@azure/core-client@1.10.1))(@types/pg@8.15.5)(mssql@11.0.1(@azure/core-client@1.10.1))(pg@8.16.3(pg-native@3.5.2))(zod@4.3.6):
-    dependencies:
-      '@types/mssql': 9.1.9(@azure/core-client@1.10.1)
-      mssql: 11.0.1(@azure/core-client@1.10.1)
-    optionalDependencies:
-      '@sinclair/typebox': 0.34.48
       '@types/pg': 8.15.5
       pg: 8.16.3(pg-native@3.5.2)
       zod: 4.3.6
