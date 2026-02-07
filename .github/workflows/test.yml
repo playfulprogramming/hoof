@@ -9,7 +9,7 @@ on:
       - checks_requested
 
 jobs:
-  test:
+  unit-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -33,7 +33,34 @@ jobs:
         run: |
           cp .env.example .env
           source .env
-          pnpm run test
+          pnpm run test:unit
 
       - name: Check formatting
         run: pnpm run prettier
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --ignore-scripts
+
+      - name: Set up environment
+        run: |
+          cp .env.example .env
+
+      - name: Start Docker services
+        run: docker compose up -d --wait
+
+      - name: Run E2E tests
+        run: pnpm run test:e2e
