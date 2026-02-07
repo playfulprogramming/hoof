@@ -1,5 +1,4 @@
 import type { FastifyPluginAsync } from "fastify";
-import { eq } from "drizzle-orm";
 import {
 	type UrlMetadataInput,
 	type UrlMetadataOutput,
@@ -109,7 +108,7 @@ const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 			).toString();
 
 			const result = await db.query.urlMetadata.findFirst({
-				where: (metadata) => eq(metadata.url, normalizedUrl),
+				where: { url: normalizedUrl },
 			});
 
 			let shouldSubmitJob = false;

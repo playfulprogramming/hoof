@@ -1,5 +1,4 @@
 import type { FastifyPluginAsync } from "fastify";
-import { eq } from "drizzle-orm";
 import { type PostImageOutput, Tasks, env } from "@playfulprogramming/common";
 import { db } from "@playfulprogramming/db";
 import { Type, type Static } from "@sinclair/typebox";
@@ -88,7 +87,7 @@ const postImagesRoutes: FastifyPluginAsync = async (fastify) => {
 		},
 		async (request, reply) => {
 			const result = await db.query.postImages.findFirst({
-				where: (postImages) => eq(postImages.slug, request.body.slug),
+				where: { slug: request.body.slug },
 			});
 
 			let shouldSubmitJob = false;
