@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7-labs
-FROM node:22-alpine3.22 AS base
+FROM node:24-alpine3.22 AS base
 
 # Install postgres client dependencies
 RUN apk --update add make g++ python3 libpq libpq-dev parallel
