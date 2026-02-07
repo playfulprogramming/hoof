@@ -108,6 +108,9 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1
     devDependencies:
+      '@playfulprogramming/test-fixtures':
+        specifier: workspace:*
+        version: link:../../packages/test-fixtures
       vitest:
         specifier: 'catalog:'
         version: 4.0.18(@types/node@24.3.1)(jiti@2.6.1)(msw@2.8.2(@types/node@24.3.1)(typescript@5.9.2))(yaml@2.8.1)
@@ -169,6 +172,9 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
     devDependencies:
+      '@playfulprogramming/test-fixtures':
+        specifier: workspace:*
+        version: link:../../packages/test-fixtures
       '@types/hast':
         specifier: ^3.0.4
         version: 3.0.4
@@ -299,6 +305,12 @@ importers:
       '@aws-sdk/types':
         specifier: ^3.893.0
         version: 3.893.0
+
+  packages/test-fixtures:
+    dependencies:
+      vitest:
+        specifier: 'catalog:'
+        version: 4.0.18(@types/node@24.3.1)(jiti@2.6.1)(msw@2.8.2(@types/node@24.3.1)(typescript@5.9.2))(yaml@2.8.1)
 
 packages:
 

@@ -32,6 +32,7 @@
 		"unist-util-visit": "^5.0.0"
 	},
 	"devDependencies": {
+		"@playfulprogramming/test-fixtures": "workspace:*",
 		"@types/hast": "^3.0.4",
 		"vitest": "catalog:"
 	}
