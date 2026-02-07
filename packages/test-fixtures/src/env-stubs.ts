@@ -1,0 +1,21 @@
+import { vi } from "vitest";
+
+vi.stubEnv("PORT", "3000");
+vi.stubEnv("WORKER_PORT", "3001");
+vi.stubEnv("ENVIRONMENT", "production");
+vi.stubEnv("SITE_URL", "https://site_url.test");
+vi.stubEnv("S3_PUBLIC_URL", "https://s3_public_url.test");
+vi.stubEnv("S3_ENDPOINT", "https://s3_endpoint.test");
+vi.stubEnv("S3_KEY_ID", "s3_key_id");
+vi.stubEnv("S3_KEY_SECRET", "s3_key_secret");
+vi.stubEnv("S3_BUCKET", "s3_bucket");
+vi.stubEnv("POSTGRES_URL", "postgresql://postgres_url.test");
+vi.stubEnv("REDIS_URL", "redis://redis_url.test");
+vi.stubEnv("REDIS_PASSWORD", "redis_password");
+vi.stubEnv("HOOF_AUTH_TOKEN", "supersecret");
+vi.stubEnv("GITHUB_REPO_OWNER", "playfulprogramming");
+vi.stubEnv("GITHUB_REPO_NAME", "playfulprogramming");
+vi.stubEnv("GITHUB_TOKEN", "github_token");
+vi.stubEnv("RATE_LIMIT_MAX", "10000");
+vi.stubEnv("RATE_LIMIT_WINDOW", "10 minutes");
+vi.stubEnv("RATE_LIMIT_BAN_THRESHOLD", "10");
