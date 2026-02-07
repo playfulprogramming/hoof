@@ -15,3 +15,8 @@ catalog:
   undici: ^7.18.2
   vitest: ^4.0.16
   ioredis: ^5.8.2
+  openapi-fetch: ^0.15.0
+  openapi-typescript: ^7.10.1
+  sharp: ^0.34.4
+  gray-matter: ^4.0.3
+  "@types/hast": ^3.0.4

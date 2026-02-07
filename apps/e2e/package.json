@@ -9,10 +9,10 @@
 	},
 	"dependencies": {
 		"@playfulprogramming/api": "workspace:*",
-		"openapi-fetch": "^0.15.0"
+		"openapi-fetch": "catalog:"
 	},
 	"devDependencies": {
-		"openapi-typescript": "^7.10.1",
+		"openapi-typescript": "catalog:",
 		"vitest": "catalog:"
 	}
 }
