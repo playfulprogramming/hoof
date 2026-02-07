@@ -10,7 +10,7 @@
 		"skipLibCheck": true,
 		"erasableSyntaxOnly": true,
 		"allowImportingTsExtensions": true,
-		"esModuleInterop": true,
+		"esModuleInterop": true
 	},
 	"include": ["eslint.config.js"]
 }
