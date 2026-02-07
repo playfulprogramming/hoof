@@ -47,5 +47,8 @@ export default async function generateTypes() {
 if (process.argv[1] === __filename) {
 	generateTypes()
 		.then(() => process.exit(0))
-		.catch(() => process.exit(1));
+		.catch((err) => {
+			console.error("generateTypes failed:", err);
+			process.exit(1);
+		});
 }
