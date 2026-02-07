@@ -4,7 +4,6 @@
 		"module": "NodeNext",
 		"forceConsistentCasingInFileNames": true,
 		"strict": true,
-		"importHelpers": true,
 		"noImplicitOverride": true,
 		"noImplicitReturns": true,
 		"noFallthroughCasesInSwitch": true,
@@ -16,14 +15,5 @@
 		"allowJs": true,
 		"resolveJsonModule": true
 	},
-	"files": [],
-	"include": [],
-	"references": [
-		{
-			"path": "./tsconfig.lib.json"
-		},
-		{
-			"path": "./tsconfig.spec.json"
-		}
-	]
+	"include": ["src/**/*", "scripts/**/*"]
 }
