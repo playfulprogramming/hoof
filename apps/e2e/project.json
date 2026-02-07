@@ -18,25 +18,17 @@
 				"command": "node --experimental-strip-types scripts/typegen.ts",
 				"cwd": "apps/e2e"
 			},
-			"outputs": [
-				"{projectRoot}/src/generated/api-schema.d.ts"
-			],
+			"outputs": ["{projectRoot}/src/generated/api-schema.d.ts"],
 			"cache": true,
-			"inputs": [
-				"{workspaceRoot}/apps/api/**/*"
-			]
+			"inputs": ["{workspaceRoot}/apps/api/**/*"]
 		},
 		"test": {
 			"executor": "@nx/vitest:test",
-			"outputs": [
-				"{options.reportsDirectory}"
-			],
+			"outputs": ["{options.reportsDirectory}"],
 			"options": {
 				"reportsDirectory": "../../coverage/apps/e2e"
 			},
-			"dependsOn": [
-				"typegen"
-			]
+			"dependsOn": ["typegen"]
 		}
 	}
 }
