@@ -1,4 +1,4 @@
-import { type Static, Type } from "@sinclair/typebox";
+import { type Static, StaticDecode, Type } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 
 export const EnvSchema = Type.Object({
@@ -35,4 +35,5 @@ export const EnvSchema = Type.Object({
 
 export type EnvType = Static<typeof EnvSchema>;
 
-export const env = Value.Parse(EnvSchema, process.env);
+// Mocked in the tests, avoid having `null` in production
+export const env: StaticDecode<typeof EnvSchema> = process.env.NODE_ENV === "test" ? null as never : Value.Parse(EnvSchema, process.env);

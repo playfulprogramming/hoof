@@ -52,6 +52,9 @@ vi.mock("@playfulprogramming/common", async (importOriginal) => {
 			GITHUB_REPO_OWNER: "playfulprogramming",
 			GITHUB_REPO_NAME: "playfulprogramming",
 			GITHUB_TOKEN: "github_token",
+			RATE_LIMIT_MAX: 10000,
+			RATE_LIMIT_WINDOW: "10 minutes",
+			RATE_LIMIT_BAN_THRESHOLD: 10,
 		} satisfies EnvType,
 	};
 });
