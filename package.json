@@ -6,7 +6,9 @@
 	"scripts": {
 		"prepare": "husky",
 		"preinstall": "node -e \"if(process.env.CI == 'true') {console.log('Skipping preinstall...')} else {process.exit(1)}\" || npx -y only-allow pnpm",
-		"test": "nx run-many --targets=test:sherif,test:knip,test:eslint,test:publint,test",
+		"test": "pnpm test:unit && pnpm test:e2e",
+		"test:unit": "nx run-many --targets=test:sherif,test:knip,test:eslint,test:publint,test --exclude=e2e",
+		"test:e2e": "nx run e2e:test",
 		"test:eslint": "nx affected --target=test:eslint",
 		"test:publint": "publint --strict",
 		"test:sherif": "sherif",
