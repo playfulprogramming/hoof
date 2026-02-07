@@ -1,5 +1,5 @@
 import { vi, afterEach } from "vitest";
-import type { EnvType } from "@playfulprogramming/common";
+import "@playfulprogramming/test-fixtures";
 
 afterEach(() => {
 	vi.clearAllMocks();
@@ -28,33 +28,5 @@ vi.mock("@playfulprogramming/db", () => {
 				},
 			},
 		},
-	};
-});
-
-vi.mock("@playfulprogramming/common", async (importOriginal) => {
-	const original = (await importOriginal()) as object;
-	return {
-		...original,
-		env: {
-			PORT: 3000,
-			WORKER_PORT: 3001,
-			ENVIRONMENT: "production",
-			SITE_URL: "https://site_url.test",
-			S3_PUBLIC_URL: "https://s3_public_url.test",
-			S3_ENDPOINT: "https://s3_endpoint.test",
-			S3_KEY_ID: "s3_key_id",
-			S3_KEY_SECRET: "s3_key_secret",
-			S3_BUCKET: "s3_bucket",
-			POSTGRES_URL: "postgresql://postgres_url.test",
-			REDIS_URL: "redis://redis_url.test",
-			REDIS_PASSWORD: "redis_password",
-			HOOF_AUTH_TOKEN: "supersecret",
-			GITHUB_REPO_OWNER: "playfulprogramming",
-			GITHUB_REPO_NAME: "playfulprogramming",
-			GITHUB_TOKEN: "github_token",
-			RATE_LIMIT_MAX: 10000,
-			RATE_LIMIT_WINDOW: "10 minutes",
-			RATE_LIMIT_BAN_THRESHOLD: 10,
-		} satisfies EnvType,
 	};
 });
