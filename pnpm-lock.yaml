@@ -332,9 +332,6 @@ importers:
         specifier: ^1.6.3
         version: 1.6.3
     devDependencies:
-      '@types/hast':
-        specifier: 'catalog:'
-        version: 3.0.4
       '@types/unist':
         specifier: ^3.0.3
         version: 3.0.3

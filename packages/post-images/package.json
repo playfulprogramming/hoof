@@ -27,7 +27,6 @@
 		"xhtm": "^1.6.3"
 	},
 	"devDependencies": {
-		"@types/hast": "catalog:",
 		"@types/unist": "^3.0.3",
 		"looks-same": "^10.0.1",
 		"vitest": "catalog:"
