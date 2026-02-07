@@ -21,7 +21,6 @@
 		"@scalar/fastify-api-reference": "^1.38.1",
 		"@sinclair/typebox": "catalog:",
 		"bullmq": "catalog:",
-		"drizzle-orm": "catalog:",
 		"fastify": "^5.6.0",
 		"fastify-plugin": "^5.0.1"
 	},
