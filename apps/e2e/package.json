@@ -8,8 +8,6 @@
 		"test": "vitest run"
 	},
 	"dependencies": {
-		"@playfulprogramming/common": "workspace:*",
-		"@playfulprogramming/db": "workspace:*",
 		"@playfulprogramming/api": "workspace:*",
 		"openapi-fetch": "^0.15.0"
 	},

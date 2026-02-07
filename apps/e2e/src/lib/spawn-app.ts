@@ -2,12 +2,12 @@ import createClient, { type Client } from "openapi-fetch";
 import type { paths } from "../generated/api-schema.d.ts";
 import { createApp } from "@playfulprogramming/api/src/createApp.ts";
 
-export type TestApp = {
+type TestApp = {
 	baseUrl: string;
 	port: number;
 } & AsyncDisposable;
 
-export type TestAppWithClient = TestApp & {
+type TestAppWithClient = TestApp & {
 	client: Client<paths>;
 } & AsyncDisposable;
 
