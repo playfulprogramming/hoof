@@ -5,9 +5,7 @@ import {
 	jsonb,
 	primaryKey,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
 import { profiles } from "./profiles.ts";
-import { posts } from "./posts.ts";
 
 export const collections = pgTable("collections", {
 	slug: text("slug").primaryKey(),
@@ -64,21 +62,3 @@ export const collectionAuthors = pgTable(
  *   },
  * });
  */
-export const collectionsRelations = relations(collections, ({ many }) => ({
-	authors: many(collectionAuthors),
-	posts: many(posts),
-}));
-
-export const collectionAuthorsRelations = relations(
-	collectionAuthors,
-	({ one }) => ({
-		collection: one(collections, {
-			fields: [collectionAuthors.collectionSlug],
-			references: [collections.slug],
-		}),
-		author: one(profiles, {
-			fields: [collectionAuthors.authorSlug],
-			references: [profiles.slug],
-		}),
-	}),
-);
