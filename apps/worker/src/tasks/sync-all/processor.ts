@@ -124,6 +124,14 @@ export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
 					children: [collectionJobDef],
 				});
 			}
+
+			if (!collectionPostsTree?.tree?.length) {
+				await flowProducer.add(collectionJobDef);
+			}
+		}
+
+		if (!postsTree?.tree?.length && !collectionsTree?.tree?.length) {
+			await flowProducer.add(authorJobDef);
 		}
 	}
 
