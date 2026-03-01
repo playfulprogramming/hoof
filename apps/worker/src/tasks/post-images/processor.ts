@@ -1,4 +1,5 @@
-import { Tasks, env } from "@playfulprogramming/common";
+import { env } from "@playfulprogramming/common";
+import { Tasks } from "@playfulprogramming/bullmq";
 import { db, postImages } from "@playfulprogramming/db";
 import {
 	fetchPostData,

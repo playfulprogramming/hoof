@@ -7,6 +7,16 @@ afterEach(() => {
 	vi.setSystemTime(new Date("2025-05-05"));
 });
 
+vi.mock("@playfulprogramming/bullmq", async () => {
+	const tasks = await import("@playfulprogramming/bullmq/src/tasks/index.ts");
+	return {
+		...tasks,
+		flowProducer: { add: vi.fn() },
+		createQueue: vi.fn(),
+		createJob: vi.fn(),
+	};
+});
+
 vi.mock("@playfulprogramming/s3", () => {
 	return {
 		s3: {

@@ -1,5 +1,5 @@
 import processor from "./processor.ts";
-import type { TaskInputs } from "@playfulprogramming/common";
+import type { TaskInputs } from "@playfulprogramming/bullmq";
 import type { Job } from "bullmq";
 import {
 	collections,

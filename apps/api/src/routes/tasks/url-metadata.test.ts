@@ -1,7 +1,7 @@
 import fastify from "fastify";
 import urlMetadataRoutes from "./url-metadata.ts";
 import { db } from "@playfulprogramming/db";
-import { queues } from "../../utils/queues.ts";
+import { createJob } from "@playfulprogramming/bullmq";
 
 test("url-metadata returns 400 when a URL is not valid", async () => {
 	const app = fastify();
@@ -35,15 +35,11 @@ test("url-metadata creates a job when none is present", async () => {
 	});
 
 	expect(response.statusCode).to.equal(201);
-	expect(queues["url-metadata"].add).toBeCalledWith(
+	expect(createJob).toBeCalledWith(
+		"url-metadata",
 		"https://playfulprogramming.com/",
 		{
 			url: "https://playfulprogramming.com/",
-		},
-		{
-			deduplication: {
-				id: "https://playfulprogramming.com/",
-			},
 		},
 	);
 });
@@ -90,7 +86,7 @@ test("url-metadata returns existing data from the db", async () => {
 		  "title": "Playful Programming",
 		}
 	`);
-	expect(queues["url-metadata"].add).toBeCalledTimes(0);
+	expect(createJob).toBeCalledTimes(0);
 });
 
 test("url-metadata re-runs the task if the database recorded an error", async () => {
@@ -127,7 +123,7 @@ test("url-metadata re-runs the task if the database recorded an error", async ()
 		  "title": "Playful Programming",
 		}
 	`);
-	expect(queues["url-metadata"].add).toBeCalledTimes(1);
+	expect(createJob).toBeCalledTimes(1);
 });
 
 test("url-metadata re-runs the task if the fetchedAt date was 30+ days ago", async () => {
@@ -172,5 +168,5 @@ test("url-metadata re-runs the task if the fetchedAt date was 30+ days ago", asy
 		  "title": "Playful Programming",
 		}
 	`);
-	expect(queues["url-metadata"].add).toBeCalledTimes(1);
+	expect(createJob).toBeCalledTimes(1);
 });

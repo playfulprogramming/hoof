@@ -2,7 +2,7 @@ import type {
 	TasksValues,
 	TaskOutputs,
 	TaskInputs,
-} from "@playfulprogramming/common";
+} from "@playfulprogramming/bullmq";
 import type { Job, Processor } from "bullmq";
 import { setTimeout } from "timers/promises";
 

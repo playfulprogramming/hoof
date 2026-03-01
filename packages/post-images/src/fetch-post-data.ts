@@ -4,7 +4,7 @@ import remarkParse from "remark-parse";
 import remarkToRehype from "remark-rehype";
 import { findAllAfter } from "unist-util-find-all-after";
 import { toString } from "hast-util-to-string";
-import { type PostImageInput } from "@playfulprogramming/common";
+import { type PostImageInput } from "@playfulprogramming/bullmq";
 import type { PostImageData } from "./types.ts";
 import matter from "gray-matter";
 import { Type } from "@sinclair/typebox";

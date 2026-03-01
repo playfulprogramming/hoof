@@ -1,4 +1,5 @@
-import { Tasks, env } from "@playfulprogramming/common";
+import { env } from "@playfulprogramming/common";
+import { Tasks } from "@playfulprogramming/bullmq";
 import {
 	collectionAuthors,
 	collectionData,
