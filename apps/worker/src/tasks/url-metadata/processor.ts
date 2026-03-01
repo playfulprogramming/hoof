@@ -7,7 +7,8 @@ import {
 } from "./utils/fetchPageHtml.ts";
 import { fetchPageIcons } from "./utils/fetchPageIcons.ts";
 import { processImages } from "./utils/processImage.ts";
-import { Tasks, env } from "@playfulprogramming/common";
+import { env } from "@playfulprogramming/common";
+import { Tasks } from "@playfulprogramming/bullmq";
 import { db, urlMetadata } from "@playfulprogramming/db";
 import { s3 } from "@playfulprogramming/s3";
 import { RobotDeniedError } from "../../utils/fetchAsBot.ts";

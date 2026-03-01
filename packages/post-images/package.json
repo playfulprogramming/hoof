@@ -12,7 +12,7 @@
 		"dev:post-images": "node --env-file=../../.env --watch --experimental-strip-types scripts/live-server.ts"
 	},
 	"dependencies": {
-		"@playfulprogramming/common": "workspace:*",
+		"@playfulprogramming/bullmq": "workspace:*",
 		"@resvg/resvg-js": "2.6.2",
 		"@sinclair/typebox": "catalog:",
 		"dayjs": "^1.11.18",

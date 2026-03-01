@@ -1,8 +1,12 @@
 import type { FastifyPluginAsync } from "fastify";
-import { type PostImageOutput, Tasks, env } from "@playfulprogramming/common";
+import { env } from "@playfulprogramming/common";
 import { db } from "@playfulprogramming/db";
 import { Type, type Static } from "@sinclair/typebox";
-import { createJob } from "../../utils/queues.ts";
+import {
+	type PostImageOutput,
+	Tasks,
+	createJob,
+} from "@playfulprogramming/bullmq";
 
 const PostImageRequestSchema = Type.Object(
 	{

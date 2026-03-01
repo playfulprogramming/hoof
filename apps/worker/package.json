@@ -12,6 +12,7 @@
 		"build": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@playfulprogramming/bullmq": "workspace:*",
 		"@playfulprogramming/common": "workspace:*",
 		"@playfulprogramming/db": "workspace:*",
 		"@playfulprogramming/github-api": "workspace:*",

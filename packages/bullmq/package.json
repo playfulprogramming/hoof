@@ -1,0 +1,17 @@
+{
+	"name": "@playfulprogramming/bullmq",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"main": "src/index.ts",
+	"scripts": {
+		"test:eslint": "eslint ./src",
+		"test:build": "publint --strict",
+		"build": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@playfulprogramming/redis": "workspace:*",
+		"@sinclair/typebox": "catalog:",
+		"bullmq": "catalog:"
+	}
+}

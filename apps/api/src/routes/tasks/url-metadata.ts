@@ -1,14 +1,14 @@
 import type { FastifyPluginAsync } from "fastify";
+import { env } from "@playfulprogramming/common";
+import { db } from "@playfulprogramming/db";
+import { Type, type Static } from "@sinclair/typebox";
 import {
 	type UrlMetadataInput,
 	type UrlMetadataOutput,
 	Tasks,
 	UrlMetadataInputSchema,
-	env,
-} from "@playfulprogramming/common";
-import { db } from "@playfulprogramming/db";
-import { Type, type Static } from "@sinclair/typebox";
-import { createJob } from "../../utils/queues.ts";
+	createJob,
+} from "@playfulprogramming/bullmq";
 
 const ImageSchema = Type.Object({
 	src: Type.String(),
