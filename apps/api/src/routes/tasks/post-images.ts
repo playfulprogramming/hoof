@@ -110,7 +110,7 @@ const postImagesRoutes: FastifyPluginAsync = async (fastify) => {
 			}
 
 			if (shouldSubmitJob) {
-				createJob(Tasks.POST_IMAGES, request.body.slug, {
+				await createJob(Tasks.POST_IMAGES, request.body.slug, {
 					...request.body,
 				});
 			}

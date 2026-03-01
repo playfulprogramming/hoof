@@ -13,7 +13,7 @@ const syncAllRoute: FastifyPluginAsync = async (fastify) => {
 			},
 		},
 		async (_request, reply) => {
-			createJob(Tasks.SYNC_ALL, "sync-all", { ref: "main" });
+			await createJob(Tasks.SYNC_ALL, "sync-all", { ref: "main" });
 			reply.code(200);
 		},
 	);

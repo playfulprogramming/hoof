@@ -31,14 +31,14 @@ export function createQueue<T extends TasksValues>(
 	return newQueue;
 }
 
-export function createJob<T extends TasksValues>(
+export async function createJob<T extends TasksValues>(
 	task: T,
 	id: string,
 	data: TaskInputs[T],
 ) {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const queue = createQueue(task) as Queue<any>;
-	queue.add(id, data, {
+	await queue.add(id, data, {
 		deduplication: {
 			id: id,
 		},

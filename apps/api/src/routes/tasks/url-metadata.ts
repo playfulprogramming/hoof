@@ -130,7 +130,7 @@ const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 			}
 
 			if (shouldSubmitJob) {
-				createJob(Tasks.URL_METADATA, normalizedUrl, {
+				await createJob(Tasks.URL_METADATA, normalizedUrl, {
 					...request.body,
 					url: normalizedUrl,
 				});
