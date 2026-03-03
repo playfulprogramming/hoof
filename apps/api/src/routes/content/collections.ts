@@ -12,13 +12,13 @@ const CollectionsParamsSchema = Type.Object({
 const Author = Type.Object({
 	id: Type.String(),
 	name: Type.String(),
-	profileImage: Type.Optional(Type.String()),
+	profileImage: Type.Union([Type.String(), Type.Null()]),
 });
 
 const CollectionsResponseSchema = Type.Array(
 	Type.Object(
 		{
-			coverUrl: Type.Optional(Type.String()),
+			coverUrl: Type.Union([Type.String(), Type.Null()]),
 			title: Type.String(),
 			description: Type.String(),
 			authors: Type.Array(Author),
@@ -96,7 +96,7 @@ const collectionsRoutes: FastifyPluginAsync = async (fastify) => {
 						authors.push({
 							id: author.slug,
 							name: author.name,
-							profileImage: author.profileImage || undefined,
+							profileImage: author.profileImage,
 						});
 					}
 				}
@@ -113,7 +113,7 @@ const collectionsRoutes: FastifyPluginAsync = async (fastify) => {
 					collections.push({
 						title: collection.title,
 						description: collection.description,
-						coverUrl: collection.coverImage || undefined,
+						coverUrl: collection.coverImage,
 						authors,
 						chapterCount,
 					});
