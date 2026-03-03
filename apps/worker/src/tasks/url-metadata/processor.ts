@@ -1,65 +1,50 @@
-import { URL } from "url";
-
-import {
-	fetchPageHtml,
-	getOpenGraphImages,
-	getPageTitle,
-} from "./utils/fetchPageHtml.ts";
-import { fetchPageIcons } from "./utils/fetchPageIcons.ts";
-import { processImages } from "./utils/processImage.ts";
-import { env } from "@playfulprogramming/common";
 import { Tasks } from "@playfulprogramming/bullmq";
 import { db, urlMetadata } from "@playfulprogramming/db";
-import { s3 } from "@playfulprogramming/s3";
-import { RobotDeniedError } from "../../utils/fetchAsBot.ts";
 import { createProcessor } from "../../createProcessor.ts";
+import { type EmbedData } from "./common.ts";
+import { getEmbedDataFromGist, gistHosts } from "./getEmbedDataFromGist.ts";
+import { getEmbedDataFromHtml } from "./getEmbedDataFromHtml.ts";
+import { getEmbedDataFromVideo, videoHosts } from "./getEmbedDataFromVideo.ts";
+import { getEmbedDataFromPost, postHosts } from "./getEmbedDataFromPost.ts";
+
+type UrlMetadataEmbedType = "gist" | "video" | "post";
 
 export default createProcessor(Tasks.URL_METADATA, async (job, { signal }) => {
-	const BUCKET = await s3.ensureBucket(env.S3_BUCKET);
-
-	let error: boolean = false;
+	const jobId = job.id;
+	if (!jobId) throw new Error("Job ID is undefined!");
 	const inputUrl = new URL(job.data.url);
-	const root = await fetchPageHtml(inputUrl, { signal }).catch((e) => {
-		console.error(`Unable to fetch HTML for ${inputUrl}`, e);
-		if (!(e instanceof RobotDeniedError)) {
-			error = true;
-		}
-		if (e instanceof DOMException && e.name === "TimeoutError") {
-			throw e;
-		}
-		return undefined;
+
+	let embedPromise: Promise<EmbedData>;
+	let embedType: UrlMetadataEmbedType | undefined = undefined;
+	if (gistHosts.includes(inputUrl.hostname)) {
+		embedType = "gist";
+		embedPromise = getEmbedDataFromGist(inputUrl, signal);
+	} else if (postHosts.includes(inputUrl.hostname)) {
+		embedType = "post";
+		embedPromise = getEmbedDataFromPost(jobId, inputUrl, signal);
+	} else if (videoHosts.includes(inputUrl.hostname)) {
+		embedType = "video";
+		embedPromise = getEmbedDataFromVideo(jobId, inputUrl, signal);
+	} else {
+		embedPromise = getEmbedDataFromHtml(jobId, inputUrl, signal);
+	}
+
+	const embedData: EmbedData = await embedPromise.catch((e) => {
+		console.error(`Error fetching embed data for '${inputUrl}'`, e);
+		return { error: true };
 	});
 
-	const title = root && getPageTitle(root);
-
-	const iconPromise =
-		root &&
-		fetchPageIcons(inputUrl, root, signal)
-			.then(
-				(url) =>
-					url && processImages(url, 24, BUCKET, "remote-icon", job.id, signal),
-			)
-			.catch((e) => {
-				console.error(`Unable to fetch icon for ${inputUrl}`, e);
-				error = true;
-				return undefined;
-			});
-
-	const bannerPromise =
-		root &&
-		getOpenGraphImages(root, inputUrl)
-			.then(
-				(url) =>
-					url &&
-					processImages(url, 896, BUCKET, "remote-banner", job.id, signal),
-			)
-			.catch((e) => {
-				console.error(`Unable to fetch banner for ${inputUrl}`, e);
-				error = true;
-				return undefined;
-			});
-
-	const [icon, banner] = await Promise.all([iconPromise, bannerPromise]);
+	const {
+		icon,
+		banner,
+		title,
+		embedSrc,
+		embedWidth,
+		embedHeight,
+		gistId,
+		postId,
+		error,
+	} = embedData;
 
 	console.log("Storing url_metadata...");
 	const result = {
@@ -71,6 +56,12 @@ export default createProcessor(Tasks.URL_METADATA, async (job, { signal }) => {
 		bannerKey: banner?.key ?? null,
 		bannerWidth: banner?.width ?? null,
 		bannerHeight: banner?.height ?? null,
+		gistId,
+		postId,
+		embedSrc,
+		embedWidth,
+		embedHeight,
+		embedType,
 		fetchedAt: new Date(),
 		error,
 	};

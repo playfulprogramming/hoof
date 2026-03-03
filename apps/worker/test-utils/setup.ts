@@ -22,14 +22,35 @@ vi.mock("@playfulprogramming/s3", () => {
 		s3: {
 			ensureBucket: vi.fn(() => "example-bucket"),
 			upload: vi.fn(),
+			remove: vi.fn(),
 		},
 	};
 });
 
 vi.mock("@playfulprogramming/db", () => {
+	const insertMap = new Map<unknown, unknown>();
+	const insertMockResponse = () => {
+		const onConflictDoUpdate = vi.fn();
+		return { values: vi.fn(() => ({ onConflictDoUpdate })) };
+	};
+
+	const deleteMap = new Map<unknown, unknown>();
+	const deleteMockResponse = () => {
+		const returning = vi.fn();
+		return { where: vi.fn(() => ({ returning })) };
+	};
+
 	const db = {
-		insert: vi.fn(),
-		delete: vi.fn(),
+		insert: vi.fn((arg) => {
+			return (
+				insertMap.get(arg) ?? insertMap.set(arg, insertMockResponse()).get(arg)
+			);
+		}),
+		delete: vi.fn((arg) => {
+			return (
+				deleteMap.get(arg) ?? deleteMap.set(arg, deleteMockResponse()).get(arg)
+			);
+		}),
 		select: vi.fn(),
 		transaction: vi.fn((cb: (tx: unknown) => unknown) => cb(db)),
 	};
@@ -65,6 +86,10 @@ vi.mock("@playfulprogramming/db", () => {
 			postSlug: {},
 			locale: {},
 		},
+		urlMetadata: {},
+		urlMetadataPost: {},
+		urlMetadataGist: {},
+		urlMetadataGistFile: {},
 		db,
 	};
 });
@@ -74,5 +99,6 @@ vi.mock("@playfulprogramming/github-api", () => {
 		getContents: vi.fn(),
 		getContentsRaw: vi.fn(),
 		getContentsRawStream: vi.fn(),
+		getGistById: vi.fn(),
 	};
 });

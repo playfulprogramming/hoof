@@ -6,7 +6,7 @@ import { s3 } from "@playfulprogramming/s3";
 import { createProcessor } from "../../createProcessor.ts";
 import matter from "gray-matter";
 import { AuthorMetaSchema } from "./types.ts";
-import { Value } from "@sinclair/typebox/value";
+import { Value } from "typebox/value";
 import sharp from "sharp";
 import { Readable } from "node:stream";
 import { eq } from "drizzle-orm";

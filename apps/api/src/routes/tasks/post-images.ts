@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { env } from "@playfulprogramming/common";
 import { db } from "@playfulprogramming/db";
-import { Type, type Static } from "@sinclair/typebox";
+import { Type, type Static } from "typebox";
 import {
 	type PostImageOutput,
 	Tasks,

@@ -1,5 +1,6 @@
-import { type Static, Type } from "@sinclair/typebox";
-import { Value } from "@sinclair/typebox/value";
+import { type Static, Type } from "typebox";
+import { Settings } from "typebox/system";
+import { Value } from "typebox/value";
 
 export const EnvSchema = Type.Object({
 	PORT: Type.Integer({ default: 3000 }),
@@ -35,4 +36,5 @@ export const EnvSchema = Type.Object({
 
 export type EnvType = Static<typeof EnvSchema>;
 
-export const env = Value.Parse(EnvSchema, process.env);
+Settings.Set({ correctiveParse: true });
+export const env = Value.Parse(EnvSchema, { ...process.env });
