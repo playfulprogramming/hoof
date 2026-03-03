@@ -1,5 +1,5 @@
 import { Worker } from "bullmq";
-import type { TasksValues } from "@playfulprogramming/common";
+import type { TasksValues } from "@playfulprogramming/bullmq";
 import { redis } from "@playfulprogramming/redis";
 
 export function createWorker<T extends TasksValues>(
@@ -10,11 +10,15 @@ export function createWorker<T extends TasksValues>(
 		.resolve(processor)
 		.replace(/^file:\/\//, "");
 	const worker = new Worker(task, processorFile, {
-		connection: redis,
+		connection: redis as never,
 		concurrency: 2,
 		removeOnComplete: { count: 1000 },
 		removeOnFail: { count: 5000 },
 		useWorkerThreads: true,
+		workerThreadsOptions: {
+			// Workaround for https://github.com/taskforcesh/bullmq/issues/3699
+			execArgv: [],
+		},
 	});
 
 	worker.on("completed", (job) => {

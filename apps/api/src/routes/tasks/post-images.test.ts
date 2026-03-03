@@ -1,7 +1,7 @@
 import fastify from "fastify";
 import postImagesRoutes from "./post-images.ts";
 import { db } from "@playfulprogramming/db";
-import { queues } from "../../utils/queues.ts";
+import { createJob } from "@playfulprogramming/bullmq";
 
 test("post-images creates a job when none is present", async () => {
 	const app = fastify();
@@ -21,20 +21,12 @@ test("post-images creates a job when none is present", async () => {
 	});
 
 	expect(response.statusCode).to.equal(201);
-	expect(queues["post-images"].add).toBeCalledWith(
-		"example",
-		{
-			slug: "example",
-			author: "fennifith",
-			path: "content/fennifith/posts/example/index.md",
-			indexMd5: "test-md5",
-		},
-		{
-			deduplication: {
-				id: "example",
-			},
-		},
-	);
+	expect(createJob).toBeCalledWith("post-images", "example", {
+		slug: "example",
+		author: "fennifith",
+		path: "content/fennifith/posts/example/index.md",
+		indexMd5: "test-md5",
+	});
 });
 
 test("post-images returns existing data from the db", async () => {
@@ -68,5 +60,5 @@ test("post-images returns existing data from the db", async () => {
 		  "linkPreview": "https://s3_public_url.test/s3_bucket/test-link-preview-key",
 		}
 	`);
-	expect(queues["post-images"].add).toBeCalledTimes(0);
+	expect(createJob).toBeCalledTimes(0);
 });

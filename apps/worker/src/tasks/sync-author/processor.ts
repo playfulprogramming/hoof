@@ -1,4 +1,5 @@
-import { Tasks, env } from "@playfulprogramming/common";
+import { env } from "@playfulprogramming/common";
+import { Tasks } from "@playfulprogramming/bullmq";
 import { db, profiles } from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
 import { s3 } from "@playfulprogramming/s3";
