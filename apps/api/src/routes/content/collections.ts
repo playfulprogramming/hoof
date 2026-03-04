@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { db } from "@playfulprogramming/db";
 import { Type, type Static } from "@sinclair/typebox";
 
-const CollectionsParamsSchema = Type.Object({
+const CollectionsQueryParamsSchema = Type.Object({
 	locale: Type.String({ default: "en" }),
 	page: Type.Number(),
 	limit: Type.Number(),
@@ -40,14 +40,14 @@ const CollectionsResponseSchema = Type.Array(
 
 const collectionsRoutes: FastifyPluginAsync = async (fastify) => {
 	fastify.get<{
-		Params: Static<typeof CollectionsParamsSchema>;
+		Querystring: Static<typeof CollectionsQueryParamsSchema>;
 		Reply: Static<typeof CollectionsResponseSchema>;
 	}>(
 		"/content/collections",
 		{
 			schema: {
 				description: "Fetch a list of collections",
-				params: CollectionsParamsSchema,
+				querystring: CollectionsQueryParamsSchema,
 				response: {
 					200: {
 						description: "Successful",
@@ -61,23 +61,23 @@ const collectionsRoutes: FastifyPluginAsync = async (fastify) => {
 			},
 		},
 		async (request, reply) => {
-			const params = request.params;
+			const queryParams = request.query;
 
 			const result = await db.query.collections.findMany({
 				where: {
 					authors: {
-						slug: params.author,
+						slug: queryParams.author,
 					},
 				},
-				limit: params.limit,
-				offset: params.limit * params.page,
+				limit: queryParams.limit,
+				offset: queryParams.limit * queryParams.page,
 			});
 
 			const collections: Static<typeof CollectionsResponseSchema> = [];
 			for (const { slug } of result) {
 				const collection = await db.query.collectionData.findFirst({
 					where: {
-						locale: params.locale,
+						locale: queryParams.locale,
 						slug,
 					},
 				});
