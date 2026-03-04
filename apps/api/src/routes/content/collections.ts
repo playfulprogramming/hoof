@@ -25,13 +25,35 @@ const CollectionsResponseSchema = Type.Array(
 			chapterCount: Type.Number(),
 		},
 		{
+			// TODO: update coverUrl and profileImage fields according to feedback
 			examples: [
-				// TODO: update them
 				{
-					banner:
-						"http://localhost:9000/hoof-storage/post-images/example.banner.png",
-					linkPreview:
-						"http://localhost:9000/hoof-storage/post-images/example.link-preview.png",
+					coverUrl: "?",
+					title: "Pragmatic Advice for Teams",
+					description:
+						"Practical guidance for engineering management and team building.n",
+					authors: [
+						{
+							id: "crutchcorn",
+							name: "Corbin Crutchley",
+							profileImage: "?",
+						},
+					],
+					chapterCount: 2,
+				},
+				{
+					coverUrl: "?",
+					title: "Harsh Leadership Truths",
+					description:
+						"Exploring the often overlooked and uncomfortable realities of engineering leadership.",
+					authors: [
+						{
+							id: "crutchcorn",
+							name: "Corbin Crutchley",
+							profileImage: "?",
+						},
+					],
+					chapterCount: 1,
 				},
 			],
 		},
