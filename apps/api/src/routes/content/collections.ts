@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync } from "fastify";
+import { env } from "@playfulprogramming/common";
 import { db } from "@playfulprogramming/db";
 import { Type, type Static } from "@sinclair/typebox";
 
@@ -60,6 +61,11 @@ const CollectionsResponseSchema = Type.Array(
 	),
 );
 
+function createImageUrl(path: string): string {
+	const s3PublicUrl = `${env.S3_PUBLIC_URL}/${env.S3_BUCKET}/`;
+	return new URL(path, s3PublicUrl).toString();
+}
+
 const collectionsRoutes: FastifyPluginAsync = async (fastify) => {
 	fastify.get<{
 		Querystring: Static<typeof CollectionsQueryParamsSchema>;
@@ -118,7 +124,9 @@ const collectionsRoutes: FastifyPluginAsync = async (fastify) => {
 						authors.push({
 							id: author.slug,
 							name: author.name,
-							profileImage: author.profileImage,
+							profileImage: author.profileImage
+								? createImageUrl(author.profileImage)
+								: null,
 						});
 					}
 				}
@@ -135,7 +143,9 @@ const collectionsRoutes: FastifyPluginAsync = async (fastify) => {
 					collections.push({
 						title: collection.title,
 						description: collection.description,
-						coverUrl: collection.coverImage,
+						coverUrl: collection.coverImage
+							? createImageUrl(collection.coverImage)
+							: null,
 						authors,
 						chapterCount,
 					});
