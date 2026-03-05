@@ -26,10 +26,9 @@ const CollectionsResponseSchema = Type.Array(
 			chapterCount: Type.Number(),
 		},
 		{
-			// TODO: update coverUrl and profileImage fields according to feedback
 			examples: [
 				{
-					coverUrl: "?",
+					coverUrl: "content/crutchcorn/pragmatic-advice-for-teams/cover.png",
 					title: "Pragmatic Advice for Teams",
 					description:
 						"Practical guidance for engineering management and team building.n",
@@ -37,13 +36,13 @@ const CollectionsResponseSchema = Type.Array(
 						{
 							id: "crutchcorn",
 							name: "Corbin Crutchley",
-							profileImage: "?",
+							profileImage: "content/crutchcorn/crutchcorn.png",
 						},
 					],
 					chapterCount: 2,
 				},
 				{
-					coverUrl: "?",
+					coverUrl: "content/harsh-leadership-truths/cover.png",
 					title: "Harsh Leadership Truths",
 					description:
 						"Exploring the often overlooked and uncomfortable realities of engineering leadership.",
@@ -51,10 +50,15 @@ const CollectionsResponseSchema = Type.Array(
 						{
 							id: "crutchcorn",
 							name: "Corbin Crutchley",
-							profileImage: "?",
+							profileImage: "content/crutchcorn/crutchcorn.png",
+						},
+						{
+							id: "fennifith",
+							name: "James Fenn",
+							profileImage: "content/fennifith/fennifith.jpg",
 						},
 					],
-					chapterCount: 1,
+					chapterCount: 5,
 				},
 			],
 		},
