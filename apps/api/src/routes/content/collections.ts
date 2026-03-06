@@ -28,7 +28,7 @@ const CollectionsResponseSchema = Type.Array(
 		{
 			examples: [
 				{
-					coverUrl: "content/crutchcorn/pragmatic-advice-for-teams/cover.png",
+					coverUrl: "https://example.test/cover.png",
 					title: "Pragmatic Advice for Teams",
 					description:
 						"Practical guidance for engineering management and team building.n",
@@ -36,13 +36,13 @@ const CollectionsResponseSchema = Type.Array(
 						{
 							id: "crutchcorn",
 							name: "Corbin Crutchley",
-							profileImage: "content/crutchcorn/crutchcorn.png",
+							profileImage: "https://example.test/profile.jpg",
 						},
 					],
 					chapterCount: 2,
 				},
 				{
-					coverUrl: "content/harsh-leadership-truths/cover.png",
+					coverUrl: "https://example.test/cover.png",
 					title: "Harsh Leadership Truths",
 					description:
 						"Exploring the often overlooked and uncomfortable realities of engineering leadership.",
@@ -50,12 +50,12 @@ const CollectionsResponseSchema = Type.Array(
 						{
 							id: "crutchcorn",
 							name: "Corbin Crutchley",
-							profileImage: "content/crutchcorn/crutchcorn.png",
+							profileImage: "https://example.test/profile.jpg",
 						},
 						{
 							id: "fennifith",
 							name: "James Fenn",
-							profileImage: "content/fennifith/fennifith.jpg",
+							profileImage: "https://example.test/profile.jpg",
 						},
 					],
 					chapterCount: 5,
