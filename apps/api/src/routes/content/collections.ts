@@ -7,7 +7,7 @@ const CollectionsQueryParamsSchema = Type.Object({
 	locale: Type.String({ default: "en" }),
 	page: Type.Number(),
 	limit: Type.Number(),
-	author: Type.String(),
+	author: Type.Optional(Type.String()),
 });
 
 const Author = Type.Object({
