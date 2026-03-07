@@ -6,7 +6,7 @@ import { s3 } from "@playfulprogramming/s3";
 import { createProcessor } from "../../createProcessor.ts";
 import { eq } from "drizzle-orm";
 import matter from "gray-matter";
-import { Value } from "@sinclair/typebox/value";
+import { Value } from "typebox/value";
 import { PostMetaSchema } from "./types.ts";
 import { extractLocale } from "../../utils/extractLocale.ts";
 

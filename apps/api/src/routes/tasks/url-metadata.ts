@@ -1,26 +1,89 @@
 import type { FastifyPluginAsync } from "fastify";
 import { env } from "@playfulprogramming/common";
 import { db } from "@playfulprogramming/db";
-import { Type, type Static } from "@sinclair/typebox";
+import { Type, type Static } from "typebox";
 import {
 	type UrlMetadataInput,
-	type UrlMetadataOutput,
 	Tasks,
 	UrlMetadataInputSchema,
 	createJob,
 } from "@playfulprogramming/bullmq";
 
+type UrlMetadataDbResult = NonNullable<
+	Awaited<ReturnType<typeof db.query.urlMetadata.findFirst>>
+>;
+
 const ImageSchema = Type.Object({
 	src: Type.String(),
 	width: Type.Optional(Type.Number()),
 	height: Type.Optional(Type.Number()),
+	altText: Type.Optional(Type.String()),
 });
+
+const GistSchema = Type.Object({
+	username: Type.String(),
+	description: Type.Optional(Type.String()),
+	files: Type.Array(
+		Type.Object({
+			filename: Type.String(),
+			contentUrl: Type.String(),
+			language: Type.String(),
+		}),
+		{
+			minItems: 1,
+		},
+	),
+});
+
+const PostSchema = Type.Object({
+	author: Type.Object({
+		name: Type.String(),
+		handle: Type.String(),
+		avatar: Type.Optional(ImageSchema),
+	}),
+	content: Type.String(),
+	url: Type.String(),
+	image: Type.Optional(ImageSchema),
+	numLikes: Type.Optional(Type.Number()),
+	numReposts: Type.Optional(Type.Number()),
+	numReplies: Type.Optional(Type.Number()),
+	createdAt: Type.String(),
+});
+
+const EmbedGistSchema = Type.Object(
+	{
+		type: Type.Literal("gist"),
+		gist: Type.Optional(GistSchema),
+	},
+	{ title: "gist" },
+);
+
+const EmbedPostSchema = Type.Object(
+	{
+		type: Type.Literal("post"),
+		post: Type.Optional(PostSchema),
+	},
+	{ title: "post" },
+);
+
+const EmbedVideoSchema = Type.Object(
+	{
+		type: Type.Literal("video"),
+		src: Type.Optional(Type.String()),
+		width: Type.Optional(Type.Number()),
+		height: Type.Optional(Type.Number()),
+	},
+	{ title: "video" },
+);
 
 const UrlMetadataResponseSchema = Type.Object(
 	{
 		title: Type.Optional(Type.String()),
 		icon: Type.Optional(ImageSchema),
 		banner: Type.Optional(ImageSchema),
+		embed: Type.Optional(
+			Type.Union([EmbedGistSchema, EmbedPostSchema, EmbedVideoSchema]),
+		),
 		error: Type.Boolean(),
 	},
 	{
@@ -43,31 +106,119 @@ const UrlMetadataResponseSchema = Type.Object(
 	},
 );
 
+function mapObjectKey(key: string): string {
+	const s3PublicUrl = `${env.S3_PUBLIC_URL}/${env.S3_BUCKET}/`;
+	return new URL(key, s3PublicUrl).toString();
+}
+
 function mapImageData(
-	key: string,
+	key: string | null,
 	width: number | null,
 	height: number | null,
-): Static<typeof ImageSchema> {
-	const s3PublicUrl = `${env.S3_PUBLIC_URL}/${env.S3_BUCKET}/`;
-	const src = new URL(key, s3PublicUrl).toString();
+	altText?: string | null,
+): Static<typeof ImageSchema> | undefined {
+	if (!key) return undefined;
 	return {
-		src,
+		src: mapObjectKey(key),
 		width: width || undefined,
 		height: height || undefined,
+		altText: altText || undefined,
 	};
 }
 
+async function mapEmbedGist(
+	gistId: string,
+): Promise<Static<typeof GistSchema> | undefined> {
+	const gist = await db.query.urlMetadataGist.findFirst({ where: { gistId } });
+	if (!gist) return undefined;
+
+	const gistFiles = await db.query.urlMetadataGistFile.findMany({
+		where: { gistId },
+	});
+
+	if (gistFiles.length === 0) return undefined;
+
+	return {
+		username: gist.username,
+		description: gist.description || undefined,
+		files: gistFiles.map((file) => ({
+			filename: file.filename,
+			contentUrl: mapObjectKey(file.contentKey),
+			language: file.language,
+		})),
+	};
+}
+
+async function mapEmbedPost(
+	postId: string,
+): Promise<Static<typeof PostSchema> | undefined> {
+	const post = await db.query.urlMetadataPost.findFirst({ where: { postId } });
+	if (!post) return undefined;
+
+	return {
+		author: {
+			name: post.authorName,
+			handle: post.authorHandle,
+			avatar: mapImageData(post.avatarKey, post.avatarWidth, post.avatarHeight),
+		},
+		content: post.content,
+		url: post.url,
+		image: mapImageData(
+			post.imageKey,
+			post.imageWidth,
+			post.imageHeight,
+			post.imageAltText,
+		),
+		numLikes: post.numLikes !== null ? post.numLikes : undefined,
+		numReplies: post.numReplies !== null ? post.numReplies : undefined,
+		numReposts: post.numReposts !== null ? post.numReposts : undefined,
+		createdAt: post.createdAt.toISOString(),
+	};
+}
+
+function mapEmbedVideo(
+	result: UrlMetadataDbResult,
+): Static<typeof EmbedVideoSchema> {
+	return {
+		type: "video",
+		src: result.embedSrc || undefined,
+		width: result.embedWidth || undefined,
+		height: result.embedHeight || undefined,
+	};
+}
+
+async function mapEmbed(
+	result: UrlMetadataDbResult,
+): Promise<Static<typeof UrlMetadataResponseSchema>["embed"]> {
+	if (result.embedType === "post") {
+		return {
+			type: "post",
+			post: result.postId ? await mapEmbedPost(result.postId) : undefined,
+		};
+	}
+	if (result.embedType === "gist") {
+		return {
+			type: "gist",
+			gist: result.gistId ? await mapEmbedGist(result.gistId) : undefined,
+		};
+	}
+	if (result.embedType === "video") {
+		return mapEmbedVideo(result);
+	}
+	return undefined;
+}
+
 function mapUrlMetadata(
-	result: UrlMetadataOutput,
+	result: UrlMetadataDbResult,
 ): Static<typeof UrlMetadataResponseSchema> {
 	return {
 		title: result.title || undefined,
-		icon: result.iconKey
-			? mapImageData(result.iconKey, result.iconWidth, result.iconHeight)
-			: undefined,
-		banner: result.bannerKey
-			? mapImageData(result.bannerKey, result.bannerWidth, result.bannerHeight)
-			: undefined,
+		icon: mapImageData(result.iconKey, result.iconWidth, result.iconHeight),
+		banner: mapImageData(
+			result.bannerKey,
+			result.bannerWidth,
+			result.bannerHeight,
+		),
 		error: result.error,
 	};
 }
@@ -103,7 +254,7 @@ const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 			}
 
 			const normalizedUrl = new URL(
-				inputUrl.pathname,
+				inputUrl.pathname + inputUrl.search,
 				inputUrl.origin.toLowerCase(),
 			).toString();
 
@@ -122,8 +273,13 @@ const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 					shouldSubmitJob = true;
 				}
 
+				const response = {
+					...mapUrlMetadata(result),
+					embed: await mapEmbed(result),
+				};
+
 				reply.code(200);
-				reply.send(mapUrlMetadata(result));
+				reply.send(response);
 			} else {
 				shouldSubmitJob = true;
 				reply.code(201);

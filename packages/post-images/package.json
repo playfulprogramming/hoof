@@ -14,7 +14,6 @@
 	"dependencies": {
 		"@playfulprogramming/bullmq": "workspace:*",
 		"@resvg/resvg-js": "2.6.2",
-		"@sinclair/typebox": "catalog:",
 		"dayjs": "^1.11.18",
 		"gray-matter": "catalog:",
 		"hast-util-to-string": "^3.0.1",
@@ -22,6 +21,7 @@
 		"remark-rehype": "^11.1.2",
 		"satori": "^0.13.1",
 		"sharp": "catalog:",
+		"typebox": "catalog:",
 		"unified": "^11.0.5",
 		"unist-util-find-all-after": "^5.0.0",
 		"xhtm": "^1.6.3"

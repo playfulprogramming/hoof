@@ -9,7 +9,7 @@ import { fetchAsBot } from "../../../utils/fetchAsBot.ts";
 import { setTimeout } from "timers/promises";
 import type { Dispatcher } from "undici";
 
-interface ProcessImageResult {
+export interface ProcessImageResult {
 	key: string;
 	width?: number;
 	height?: number;

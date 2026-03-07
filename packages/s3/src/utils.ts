@@ -2,6 +2,7 @@ import {
 	BucketAlreadyExists,
 	BucketAlreadyOwnedByYou,
 	CreateBucketCommand,
+	DeleteObjectCommand,
 	GetObjectCommand,
 	HeadObjectCommand,
 	NoSuchKey,
@@ -63,6 +64,10 @@ export async function exists(bucket: string, key: string) {
 		if (e instanceof NoSuchKey) return false;
 		throw e;
 	}
+}
+
+export async function remove(bucket: string, key: string) {
+	await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
 }
 
 export async function matchesEtag(
