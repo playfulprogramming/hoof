@@ -29,7 +29,7 @@ export async function getEmbedDataFromPost(
 	const postId = xPathParts[2];
 	if (!userId || !postId) return { error: true };
 
-	const post = await getXPostData({ userId, postId }).catch((e) => {
+	const post = await getXPostData({ userId, postId, signal }).catch((e) => {
 		console.error(`Error fetching x post '${inputUrl}'`, e);
 		return undefined;
 	});

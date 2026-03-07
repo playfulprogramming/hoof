@@ -22,6 +22,7 @@ const youtubeShortHost = "youtu.be";
 // webpages from a hosted domain, like GitHub actions or Fly.io
 export async function getYouTubeOEmbedDataFromUrl(
 	url: URL,
+	signal: AbortSignal,
 ): Promise<YouTubeOEmbedResponse | null> {
 	const splitPath = url.pathname.split("/").filter(Boolean);
 	let videoId: string;
@@ -51,6 +52,7 @@ export async function getYouTubeOEmbedDataFromUrl(
 		),
 		method: "GET",
 		skipRobotsCheck: true,
+		signal,
 	}).then((res) => res.body.json() as Promise<YouTubeOEmbedResponse>);
 }
 

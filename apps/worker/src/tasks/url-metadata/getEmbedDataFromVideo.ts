@@ -26,7 +26,7 @@ export async function getEmbedDataFromVideo(
 ): Promise<EmbedData> {
 	let error = false;
 
-	const videoData = await getVideoDataFromUrl(inputUrl).catch((e) => {
+	const videoData = await getVideoDataFromUrl(inputUrl, signal).catch((e) => {
 		console.error(`Unable to fetch video data for ${inputUrl}`, e);
 		error = true;
 		return undefined;

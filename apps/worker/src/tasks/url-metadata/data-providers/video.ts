@@ -16,15 +16,16 @@ import {
 
 export async function getVideoDataFromUrl(
 	url: URL,
+	signal: AbortSignal,
 ): Promise<
 	YouTubeOEmbedResponse | VimeoOEmbedResponse | TwitchOEmbedResponse | null
 > {
 	if (youtubeHosts.includes(url.hostname)) {
-		return getYouTubeOEmbedDataFromUrl(url);
+		return getYouTubeOEmbedDataFromUrl(url, signal);
 	}
 
 	if (vimeoHosts.includes(url.hostname)) {
-		return getVimeoOEmbedDataFromUrl(url);
+		return getVimeoOEmbedDataFromUrl(url, signal);
 	}
 
 	if (twitchHosts.includes(url.hostname)) {

@@ -27,6 +27,7 @@ export interface VimeoOEmbedResponse {
 // Can't access Vimeo oEmbed directly due to JS Turnstile protection blocking any info about the video
 export async function getVimeoOEmbedDataFromUrl(
 	url: URL,
+	signal: AbortSignal,
 ): Promise<VimeoOEmbedResponse> {
 	return await fetchAsBot({
 		url: new URL(
@@ -34,6 +35,7 @@ export async function getVimeoOEmbedDataFromUrl(
 		),
 		method: "GET",
 		skipRobotsCheck: true,
+		signal,
 	}).then((res) => res.body.json() as Promise<VimeoOEmbedResponse>);
 }
 
