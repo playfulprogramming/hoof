@@ -19,7 +19,6 @@
 		"@playfulprogramming/post-images": "workspace:*",
 		"@playfulprogramming/redis": "workspace:*",
 		"@playfulprogramming/s3": "workspace:*",
-		"@sinclair/typebox": "catalog:",
 		"bullmq": "catalog:",
 		"drizzle-orm": "catalog:",
 		"gray-matter": "catalog:",
@@ -28,6 +27,7 @@
 		"robots-parser": "^3.0.1",
 		"sharp": "catalog:",
 		"svgo": "^4.0.0",
+		"typebox": "catalog:",
 		"undici": "catalog:",
 		"unist-util-find": "^3.0.0",
 		"unist-util-visit": "^5.0.0"

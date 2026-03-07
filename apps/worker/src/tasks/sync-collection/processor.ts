@@ -11,7 +11,7 @@ import { createProcessor } from "../../createProcessor.ts";
 import { eq } from "drizzle-orm";
 import matter from "gray-matter";
 import { CollectionMetaSchema } from "./types.ts";
-import { Value } from "@sinclair/typebox/value";
+import { Value } from "typebox/value";
 import sharp from "sharp";
 import { Readable } from "node:stream";
 import { s3 } from "@playfulprogramming/s3";

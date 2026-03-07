@@ -10,6 +10,6 @@
 		"build": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@sinclair/typebox": "catalog:"
+		"typebox": "catalog:"
 	}
 }
