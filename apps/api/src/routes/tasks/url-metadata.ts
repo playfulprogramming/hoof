@@ -29,6 +29,9 @@ const GistSchema = Type.Object({
 			contentUrl: Type.String(),
 			language: Type.String(),
 		}),
+		{
+			minItems: 1,
+		},
 	),
 });
 
@@ -47,27 +50,40 @@ const PostSchema = Type.Object({
 	createdAt: Type.String(),
 });
 
-const EmbedSchema = Type.Object({
-	src: Type.String(),
-	width: Type.Optional(Type.Number()),
-	height: Type.Optional(Type.Number()),
-});
+const EmbedGistSchema = Type.Object(
+	{
+		type: Type.Literal("gist"),
+		gist: Type.Optional(GistSchema),
+	},
+	{ title: "gist" },
+);
+
+const EmbedPostSchema = Type.Object(
+	{
+		type: Type.Literal("post"),
+		post: Type.Optional(PostSchema),
+	},
+	{ title: "post" },
+);
+
+const EmbedVideoSchema = Type.Object(
+	{
+		type: Type.Literal("video"),
+		src: Type.Optional(Type.String()),
+		width: Type.Optional(Type.Number()),
+		height: Type.Optional(Type.Number()),
+	},
+	{ title: "video" },
+);
 
 const UrlMetadataResponseSchema = Type.Object(
 	{
 		title: Type.Optional(Type.String()),
 		icon: Type.Optional(ImageSchema),
 		banner: Type.Optional(ImageSchema),
-		gist: Type.Optional(GistSchema),
-		post: Type.Optional(PostSchema),
-		embedType: Type.Optional(
-			Type.Enum({
-				post: "post",
-				gist: "gist",
-				video: "video",
-			}),
+		embed: Type.Optional(
+			Type.Union([EmbedGistSchema, EmbedPostSchema, EmbedVideoSchema]),
 		),
-		embed: Type.Optional(EmbedSchema),
 		error: Type.Boolean(),
 	},
 	{
@@ -110,13 +126,17 @@ function mapImageData(
 	};
 }
 
-async function mapGist(gistId: string): Promise<Static<typeof GistSchema>> {
+async function mapEmbedGist(
+	gistId: string,
+): Promise<Static<typeof GistSchema> | undefined> {
 	const gist = await db.query.urlMetadataGist.findFirst({ where: { gistId } });
-	if (!gist) throw new Error(`Gist information for ${gistId} not found!`);
+	if (!gist) return undefined;
 
 	const gistFiles = await db.query.urlMetadataGistFile.findMany({
 		where: { gistId },
 	});
+
+	if (gistFiles.length === 0) return undefined;
 
 	return {
 		username: gist.username,
@@ -129,9 +149,11 @@ async function mapGist(gistId: string): Promise<Static<typeof GistSchema>> {
 	};
 }
 
-async function mapPost(postId: string): Promise<Static<typeof PostSchema>> {
+async function mapEmbedPost(
+	postId: string,
+): Promise<Static<typeof PostSchema> | undefined> {
 	const post = await db.query.urlMetadataPost.findFirst({ where: { postId } });
-	if (!post) throw new Error(`Post information for ${postId} not found!`);
+	if (!post) return undefined;
 
 	return {
 		author: {
@@ -154,15 +176,36 @@ async function mapPost(postId: string): Promise<Static<typeof PostSchema>> {
 	};
 }
 
-function mapEmbed(
+function mapEmbedVideo(
 	result: UrlMetadataDbResult,
-): Static<typeof EmbedSchema> | undefined {
-	if (!result.embedSrc) return;
+): Static<typeof EmbedVideoSchema> {
 	return {
-		src: result.embedSrc,
+		type: "video",
+		src: result.embedSrc || undefined,
 		width: result.embedWidth || undefined,
 		height: result.embedHeight || undefined,
 	};
+}
+
+async function mapEmbed(
+	result: UrlMetadataDbResult,
+): Promise<Static<typeof UrlMetadataResponseSchema>["embed"]> {
+	if (result.embedType === "post") {
+		return {
+			type: "post",
+			post: result.postId ? await mapEmbedPost(result.postId) : undefined,
+		};
+	}
+	if (result.embedType === "gist") {
+		return {
+			type: "gist",
+			gist: result.gistId ? await mapEmbedGist(result.gistId) : undefined,
+		};
+	}
+	if (result.embedType === "video") {
+		return mapEmbedVideo(result);
+	}
+	return undefined;
 }
 
 function mapUrlMetadata(
@@ -232,10 +275,7 @@ const urlMetadataRoutes: FastifyPluginAsync = async (fastify) => {
 
 				const response = {
 					...mapUrlMetadata(result),
-					gist: result.gistId ? await mapGist(result.gistId) : undefined,
-					post: result.postId ? await mapPost(result.postId) : undefined,
-					embedType: result.embedType as "post" | "gist" | "video" | undefined,
-					embed: mapEmbed(result),
+					embed: await mapEmbed(result),
 				};
 
 				reply.code(200);

@@ -1,12 +1,21 @@
 import { db, urlMetadataPost } from "@playfulprogramming/db";
 import { type EmbedData, BUCKET } from "./common.ts";
-import { getXPostData, xHosts } from "./data-providers/x.ts";
+import { getXPostData } from "./data-providers/x.ts";
 import {
 	type ProcessImageResult,
 	processImages,
 } from "./utils/processImage.ts";
 
-export const postHosts = [...xHosts];
+const xHosts = ["x.com", "twitter.com"];
+function isXPostUrl(url: URL) {
+	if (!xHosts.includes(url.hostname)) return false;
+	const parts = url.pathname.split("/").filter(Boolean);
+	return parts.length >= 3 && parts[1] === "status";
+}
+
+export function isPostUrl(url: URL) {
+	return isXPostUrl(url);
+}
 
 export async function getEmbedDataFromPost(
 	jobId: string,
@@ -17,9 +26,8 @@ export async function getEmbedDataFromPost(
 
 	const xPathParts = inputUrl.pathname.split("/").filter(Boolean);
 	const userId = xPathParts[0];
-	const isStatus = xPathParts[1] === "status";
 	const postId = xPathParts[2];
-	if (!userId || !isStatus || !postId) return { error: true };
+	if (!userId || !postId) return { error: true };
 
 	const post = await getXPostData({ userId, postId }).catch((e) => {
 		console.error(`Error fetching x post '${inputUrl}'`, e);

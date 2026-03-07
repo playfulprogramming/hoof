@@ -15,5 +15,3 @@ export async function getXPostData({ userId, postId }: GetXPostDataProps) {
 	const json = (await res.body.json()) as TweetAPIResponse;
 	return json.tweet;
 }
-
-export const xHosts = ["twitter.com", "x.com"];

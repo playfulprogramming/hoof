@@ -5,7 +5,7 @@ import { type EmbedData } from "./common.ts";
 import { getEmbedDataFromGist, gistHosts } from "./getEmbedDataFromGist.ts";
 import { getEmbedDataFromHtml } from "./getEmbedDataFromHtml.ts";
 import { getEmbedDataFromVideo, videoHosts } from "./getEmbedDataFromVideo.ts";
-import { getEmbedDataFromPost, postHosts } from "./getEmbedDataFromPost.ts";
+import { getEmbedDataFromPost, isPostUrl } from "./getEmbedDataFromPost.ts";
 
 type UrlMetadataEmbedType = "gist" | "video" | "post";
 
@@ -19,7 +19,7 @@ export default createProcessor(Tasks.URL_METADATA, async (job, { signal }) => {
 	if (gistHosts.includes(inputUrl.hostname)) {
 		embedType = "gist";
 		embedPromise = getEmbedDataFromGist(inputUrl, signal);
-	} else if (postHosts.includes(inputUrl.hostname)) {
+	} else if (isPostUrl(inputUrl)) {
 		embedType = "post";
 		embedPromise = getEmbedDataFromPost(jobId, inputUrl, signal);
 	} else if (videoHosts.includes(inputUrl.hostname)) {
