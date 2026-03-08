@@ -10,20 +10,21 @@ const CollectionsQueryParamsSchema = Type.Object({
 	author: Type.Optional(Type.String()),
 });
 
-const Author = Type.Object({
-	id: Type.String(),
-	name: Type.String(),
-	profileImage: Type.Union([Type.String(), Type.Null()]),
-});
-
 const CollectionsResponseSchema = Type.Array(
 	Type.Object(
 		{
-			coverUrl: Type.Union([Type.String(), Type.Null()]),
+			slug: Type.String(),
+			coverUrl: Type.Optional(Type.String()),
 			title: Type.String(),
 			description: Type.String(),
-			authors: Type.Array(Author),
 			chapterCount: Type.Number(),
+			authors: Type.Array(
+				Type.Object({
+					id: Type.String(),
+					name: Type.String(),
+					profileImageUrl: Type.Optional(Type.String()),
+				}),
+			),
 		},
 		{
 			examples: [
@@ -65,6 +66,8 @@ const CollectionsResponseSchema = Type.Array(
 	),
 );
 
+type CollectionsResponse = Static<typeof CollectionsResponseSchema>;
+
 function createImageUrl(path: string): string {
 	const s3PublicUrl = `${env.S3_PUBLIC_URL}/${env.S3_BUCKET}/`;
 	return new URL(path, s3PublicUrl).toString();
@@ -73,7 +76,7 @@ function createImageUrl(path: string): string {
 const collectionsRoutes: FastifyPluginAsync = async (fastify) => {
 	fastify.get<{
 		Querystring: Static<typeof CollectionsQueryParamsSchema>;
-		Reply: Static<typeof CollectionsResponseSchema>;
+		Reply: CollectionsResponse;
 	}>(
 		"/content/collections",
 		{
@@ -95,69 +98,46 @@ const collectionsRoutes: FastifyPluginAsync = async (fastify) => {
 		async (request, reply) => {
 			const queryParams = request.query;
 
-			const result = await db.query.collections.findMany({
-				where: {
-					authors: {
-						slug: queryParams.author,
+			const collections = await db.query.collections.findMany({
+				where: { authors: { slug: queryParams.author } },
+				with: {
+					data: {
+						columns: { coverImage: true, title: true, description: true },
+						where: { locale: queryParams.locale },
 					},
+					posts: { columns: { collectionOrder: true } }, // Only get minimum data, will be used for measuring `chapterCount`
+					authors: { columns: { slug: true, name: true, profileImage: true } },
 				},
 				limit: queryParams.limit,
 				offset: queryParams.limit * queryParams.page,
 			});
 
-			const collections: Static<typeof CollectionsResponseSchema> = [];
-			for (const { slug } of result) {
-				const collection = await db.query.collectionData.findFirst({
-					where: {
-						locale: queryParams.locale,
-						slug,
-					},
-				});
-
-				const collectionAuthors = await db.query.collectionAuthors.findMany({
-					where: { collectionSlug: slug },
-				});
-
-				const authors: Static<typeof Author>[] = [];
-				for (const { authorSlug } of collectionAuthors) {
-					const author = await db.query.profiles.findFirst({
-						where: { slug: authorSlug },
-					});
-
-					if (author) {
-						authors.push({
-							id: author.slug,
-							name: author.name,
-							profileImage: author.profileImage
-								? createImageUrl(author.profileImage)
-								: null,
-						});
-					}
-				}
-
-				const chapterCount = (
-					await db.query.posts.findMany({
-						where: {
-							collectionSlug: slug,
-						},
-					})
-				).length;
-
-				if (collection) {
-					collections.push({
-						title: collection.title,
-						description: collection.description,
-						coverUrl: collection.coverImage
-							? createImageUrl(collection.coverImage)
-							: null,
-						authors,
-						chapterCount,
+			const collectionsResponse: CollectionsResponse = [];
+			for (const collection of collections) {
+				const collectionData = collection.data[0];
+				const formattedCollection: CollectionsResponse[number] = {
+					slug: collection.slug,
+					coverUrl: collectionData.coverImage
+						? createImageUrl(collectionData.coverImage)
+						: undefined,
+					title: collectionData.title,
+					description: collectionData.description,
+					chapterCount: collection.posts.length,
+					authors: [],
+				};
+				for (const author of collection.authors) {
+					formattedCollection.authors.push({
+						id: author.slug,
+						name: author.name,
+						profileImageUrl: author.profileImage
+							? createImageUrl(author.profileImage)
+							: undefined,
 					});
 				}
 			}
 
 			reply.code(200);
-			reply.send(collections);
+			reply.send(collectionsResponse);
 		},
 	);
 };
