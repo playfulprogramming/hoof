@@ -125,6 +125,7 @@ const collectionsRoutes: FastifyPluginAsync = async (fastify) => {
 					chapterCount: collection.posts.length,
 					authors: [],
 				};
+
 				for (const author of collection.authors) {
 					formattedCollection.authors.push({
 						id: author.slug,
@@ -134,6 +135,8 @@ const collectionsRoutes: FastifyPluginAsync = async (fastify) => {
 							: undefined,
 					});
 				}
+
+				collectionsResponse.push(formattedCollection);
 			}
 
 			reply.code(200);
