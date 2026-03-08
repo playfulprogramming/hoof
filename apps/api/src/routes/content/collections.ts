@@ -105,7 +105,7 @@ const collectionsRoutes: FastifyPluginAsync = async (fastify) => {
 						columns: { coverImage: true, title: true, description: true },
 						where: { locale: queryParams.locale },
 					},
-					posts: { columns: { collectionOrder: true } }, // Only get minimum data, will be used for measuring `chapterCount`
+					posts: { columns: { collectionOrder: true } }, // Only get minimum data, will be only used for measuring `chapterCount`
 					authors: { columns: { slug: true, name: true, profileImage: true } },
 				},
 				limit: queryParams.limit,
