@@ -101,7 +101,9 @@ const collectionsRoutes: FastifyPluginAsync = async (fastify) => {
 			const queryParams = request.query;
 
 			const collections = await db.query.collections.findMany({
-				where: { authors: { slug: queryParams.author } },
+				where: queryParams.author
+					? { authors: { slug: queryParams.author } }
+					: undefined,
 				with: {
 					data: {
 						columns: { coverImage: true, title: true, description: true },
