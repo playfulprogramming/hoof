@@ -5,7 +5,7 @@ import { db } from "@playfulprogramming/db";
 describe("Collections Routes Tests", () => {
 	let app: FastifyInstance;
 	beforeAll(async () => {
-		app = await fastify();
+		app = fastify();
 		await app.register(collectionsRoutes);
 	});
 
