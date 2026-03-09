@@ -29,20 +29,22 @@ const CollectionsResponseSchema = Type.Array(
 		{
 			examples: [
 				{
+					slug: "pragmatic-advice-for-teams",
 					coverUrl: "https://example.test/cover.png",
 					title: "Pragmatic Advice for Teams",
 					description:
-						"Practical guidance for engineering management and team building.n",
+						"Practical guidance for engineering management and team building.",
 					authors: [
 						{
 							id: "crutchcorn",
 							name: "Corbin Crutchley",
-							profileImage: "https://example.test/profile.jpg",
+							profileImageUrl: "https://example.test/profile.jpg",
 						},
 					],
 					chapterCount: 2,
 				},
 				{
+					slug: "harsh-leadership-truths",
 					coverUrl: "https://example.test/cover.png",
 					title: "Harsh Leadership Truths",
 					description:
@@ -51,12 +53,12 @@ const CollectionsResponseSchema = Type.Array(
 						{
 							id: "crutchcorn",
 							name: "Corbin Crutchley",
-							profileImage: "https://example.test/profile.jpg",
+							profileImageUrl: "https://example.test/profile.jpg",
 						},
 						{
 							id: "fennifith",
 							name: "James Fenn",
-							profileImage: "https://example.test/profile.jpg",
+							profileImageUrl: "https://example.test/profile.jpg",
 						},
 					],
 					chapterCount: 5,
