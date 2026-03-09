@@ -5,8 +5,8 @@ import { Type, type Static } from "typebox";
 
 const CollectionsQueryParamsSchema = Type.Object({
 	locale: Type.String({ default: "en" }),
-	page: Type.Number(),
-	limit: Type.Number(),
+	page: Type.Number({ minimum: 0 }),
+	limit: Type.Number({ minimum: 1 }),
 	author: Type.Optional(Type.String()),
 });
 
