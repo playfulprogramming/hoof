@@ -117,6 +117,8 @@ const collectionsRoutes: FastifyPluginAsync = async (fastify) => {
 			const collectionsResponse: CollectionsResponse = [];
 			for (const collection of collections) {
 				const collectionData = collection.data[0];
+				if (!collectionData) continue;
+
 				const formattedCollection: CollectionsResponse[number] = {
 					slug: collection.slug,
 					coverUrl: collectionData.coverImage
