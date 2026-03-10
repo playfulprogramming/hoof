@@ -29,6 +29,9 @@ vi.mock("@playfulprogramming/db", () => {
 				urlMetadata: {
 					findFirst: vi.fn(),
 				},
+				collections: {
+					findMany: vi.fn(),
+				},
 			},
 		},
 	};
