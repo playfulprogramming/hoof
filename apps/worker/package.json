@@ -26,7 +26,7 @@
 		"lru-cache": "^11.2.2",
 		"robots-parser": "^3.0.1",
 		"sharp": "catalog:",
-		"svgo": "^4.0.0",
+		"svgo": "^4.0.1",
 		"typebox": "catalog:",
 		"undici": "catalog:",
 		"unist-util-find": "^3.0.0",
