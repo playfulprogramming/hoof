@@ -26,7 +26,6 @@ describe("Collections Routes Tests", () => {
 							coverImage: "content/cover.png",
 						},
 					],
-					posts: [{ collectionOrder: 1 }, { collectionOrder: 2 }],
 					authors: [
 						{
 							slug: "crutchcorn",
@@ -39,6 +38,7 @@ describe("Collections Routes Tests", () => {
 							profileImage: "content/profile.png",
 						},
 					],
+					chapterCount: 2,
 				},
 			] as never);
 
@@ -99,7 +99,6 @@ describe("Collections Routes Tests", () => {
 							coverImage: null,
 						},
 					],
-					posts: [{ collectionOrder: 1 }],
 					authors: [
 						{
 							slug: "crutchcorn",
@@ -107,6 +106,7 @@ describe("Collections Routes Tests", () => {
 							profileImage: null,
 						},
 					],
+					chapterCount: 1,
 				},
 			] as never);
 
