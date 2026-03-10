@@ -116,8 +116,8 @@ const collectionsRoutes: FastifyPluginAsync = async (fastify) => {
 					chapterCount: (collectionsTable) =>
 						db.$count(posts, eq(posts.collectionSlug, collectionsTable.slug)),
 				},
+				offset: queryParams.page * queryParams.limit,
 				limit: queryParams.limit,
-				offset: queryParams.limit * queryParams.page,
 			});
 
 			const collectionsResponse: CollectionsResponse = [];
