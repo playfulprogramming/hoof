@@ -6,6 +6,8 @@ import { env } from "@playfulprogramming/common";
  * @returns The absolute URL to the image.
  */
 export function createImageUrl(path: string): string {
-	const s3PublicUrl = `${env.S3_PUBLIC_URL}/${env.S3_BUCKET}/`;
-	return new URL(path, s3PublicUrl).toString();
+	const trimSlashes = (input: string) => input.replace(/^\/+|\/+$/g, "");
+
+	const s3PublicUrl = `${trimSlashes(env.S3_PUBLIC_URL)}/${trimSlashes(env.S3_BUCKET)}/`;
+	return new URL(trimSlashes(path), s3PublicUrl).toString();
 }
