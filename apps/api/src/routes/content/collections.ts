@@ -1,7 +1,8 @@
 import type { FastifyPluginAsync } from "fastify";
 import { env } from "@playfulprogramming/common";
-import { db } from "@playfulprogramming/db";
+import { db, posts } from "@playfulprogramming/db";
 import { Type, type Static } from "typebox";
+import { eq } from "drizzle-orm";
 
 const CollectionsQueryParamsSchema = Type.Object({
 	locale: Type.String({ default: "en" }),
@@ -109,8 +110,11 @@ const collectionsRoutes: FastifyPluginAsync = async (fastify) => {
 						columns: { coverImage: true, title: true, description: true },
 						where: { locale: queryParams.locale },
 					},
-					posts: { columns: { collectionOrder: true } }, // Only get minimum data, will be only used for counting `chapterCount`
 					authors: { columns: { slug: true, name: true, profileImage: true } },
+				},
+				extras: {
+					chapterCount: (collectionsTable) =>
+						db.$count(posts, eq(posts.collectionSlug, collectionsTable.slug)),
 				},
 				limit: queryParams.limit,
 				offset: queryParams.limit * queryParams.page,
@@ -128,7 +132,7 @@ const collectionsRoutes: FastifyPluginAsync = async (fastify) => {
 						: undefined,
 					title: collectionData.title,
 					description: collectionData.description,
-					chapterCount: collection.posts.length,
+					chapterCount: collection.chapterCount,
 					authors: [],
 				};
 
