@@ -15,7 +15,7 @@ describe("Collections Routes Tests", () => {
 
 	describe("/content/collections", () => {
 		test("collections returns all collections", async () => {
-			vi.mocked(db.query.collections.findMany).mockReturnValue([
+			vi.mocked(db.query.collections.findMany).mockResolvedValue([
 				{
 					slug: "harsh-leadership-truths",
 					data: [
@@ -75,7 +75,7 @@ describe("Collections Routes Tests", () => {
 		});
 
 		test("collections returns an empty list for no collections", async () => {
-			vi.mocked(db.query.collections.findMany).mockReturnValue([] as never);
+			vi.mocked(db.query.collections.findMany).mockResolvedValue([]);
 
 			const response = await app.inject({
 				method: "GET",
@@ -88,7 +88,7 @@ describe("Collections Routes Tests", () => {
 		});
 
 		test("collections returns all collections for the given author", async () => {
-			vi.mocked(db.query.collections.findMany).mockReturnValue([
+			vi.mocked(db.query.collections.findMany).mockResolvedValue([
 				{
 					slug: "harsh-leadership-truths",
 					data: [
@@ -136,7 +136,7 @@ describe("Collections Routes Tests", () => {
 		});
 
 		test("collections returns an empty list for an author who has no collections", async () => {
-			vi.mocked(db.query.collections.findMany).mockReturnValue([] as never);
+			vi.mocked(db.query.collections.findMany).mockResolvedValue([]);
 
 			const response = await app.inject({
 				method: "GET",
