@@ -1,5 +1,4 @@
 import type { FastifyPluginAsync } from "fastify";
-import { env } from "@playfulprogramming/common";
 import { db } from "@playfulprogramming/db";
 import { Type, type Static } from "typebox";
 import {
@@ -7,6 +6,7 @@ import {
 	Tasks,
 	createJob,
 } from "@playfulprogramming/bullmq";
+import { createImageUrl } from "../../utils.ts";
 
 const PostImageRequestSchema = Type.Object(
 	{
@@ -49,13 +49,10 @@ const PostImagesResponseSchema = Type.Object(
 function mapPostImages(
 	result: PostImageOutput,
 ): Static<typeof PostImagesResponseSchema> {
-	const s3PublicUrl = `${env.S3_PUBLIC_URL}/${env.S3_BUCKET}/`;
 	return {
-		banner: result.bannerKey
-			? new URL(result.bannerKey, s3PublicUrl).toString()
-			: undefined,
+		banner: result.bannerKey ? createImageUrl(result.bannerKey) : undefined,
 		linkPreview: result.linkPreviewKey
-			? new URL(result.linkPreviewKey, s3PublicUrl).toString()
+			? createImageUrl(result.linkPreviewKey)
 			: undefined,
 	};
 }
