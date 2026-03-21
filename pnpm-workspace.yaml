@@ -10,7 +10,7 @@ catalog:
   drizzle-orm: 1.0.0-beta.15-859cf75
   gray-matter: ^4.0.3
   ioredis: ^5.9.3
-  openapi-fetch: ^0.15.0
+  openapi-fetch: ^0.17.0
   openapi-typescript: ^7.13.0
   sharp: ^0.34.4
   undici: ^7.18.2
