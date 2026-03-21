@@ -42,6 +42,16 @@ async function getRobots(input: URL): Promise<Robot | undefined> {
 	return robotsParser(robotsUrl.toString(), robots);
 }
 
+async function checkRobotsAccess(url: URL) {
+	const robots = await getRobots(url);
+
+	if (robots && robots.isDisallowed(url.toString(), userAgent)) {
+		throw new RobotDeniedError(
+			`${userAgent} is disallowed from ${url.hostname}!`,
+		);
+	}
+}
+
 type FetchAsBotInit = Omit<
 	Dispatcher.RequestOptions<null>,
 	"origin" | "path"
@@ -68,13 +78,7 @@ export async function fetchAsBot(options: FetchAsBotInit) {
 	} = options;
 	const parsedUrl = url instanceof URL ? url : new URL(url);
 	if (!skipRobotsCheck) {
-		const robots = await getRobots(parsedUrl);
-
-		if (robots && robots.isDisallowed(url.toString(), userAgent)) {
-			throw new RobotDeniedError(
-				`${userAgent} is disallowed from ${parsedUrl.hostname}!`,
-			);
-		}
+		await checkRobotsAccess(parsedUrl);
 	}
 
 	console.debug(init.method ?? "GET", parsedUrl.href);
@@ -121,13 +125,7 @@ export async function fetchAsBotStream({
 }: FetchAsBotInit & { writable: Writable }) {
 	const parsedUrl = url instanceof URL ? url : new URL(url);
 	if (!skipRobotsCheck) {
-		const robots = await getRobots(parsedUrl);
-
-		if (robots && robots.isDisallowed(url.toString(), userAgent)) {
-			throw new RobotDeniedError(
-				`${userAgent} is disallowed from ${parsedUrl.hostname}!`,
-			);
-		}
+		await checkRobotsAccess(parsedUrl);
 	}
 
 	console.debug(init.method ?? "GET", parsedUrl.href);
