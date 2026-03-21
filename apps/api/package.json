@@ -21,7 +21,7 @@
 		"@playfulprogramming/redis": "workspace:*",
 		"@scalar/fastify-api-reference": "^1.38.1",
 		"drizzle-orm": "catalog:",
-		"fastify": "^5.6.0",
+		"fastify": "^5.8.1",
 		"fastify-plugin": "^5.0.1",
 		"typebox": "catalog:"
 	},
