@@ -3,8 +3,8 @@ import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
 import { visit, SKIP, EXIT } from "unist-util-visit";
 import { is } from "unist-util-is";
-import { toString } from "hast-util-to-string";
-import type { Nodes } from "hast";
+import { toString } from "mdast-util-to-string";
+import type { Nodes } from "mdast";
 
 const unifiedChain = unified()
 	.use(remarkParse, { fragment: true } as never)
