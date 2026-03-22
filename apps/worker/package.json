@@ -23,13 +23,18 @@
 		"drizzle-orm": "catalog:",
 		"gray-matter": "catalog:",
 		"hast-util-from-html": "^2.0.3",
+		"hast-util-to-string": "^3.0.1",
 		"lru-cache": "^11.2.2",
+		"remark-gfm": "^4.0.1",
+		"remark-parse": "^11.0.0",
 		"robots-parser": "^3.0.1",
 		"sharp": "catalog:",
 		"svgo": "^4.0.0",
 		"typebox": "catalog:",
 		"undici": "catalog:",
+		"unified": "^11.0.5",
 		"unist-util-find": "^3.0.0",
+		"unist-util-is": "^6.0.1",
 		"unist-util-visit": "^5.0.0"
 	},
 	"devDependencies": {

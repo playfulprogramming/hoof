@@ -4,7 +4,7 @@ export const PostMetaSchema = Type.Object(
 	{
 		title: Type.String(),
 		published: Type.String(),
-		description: Type.String({ default: "" }),
+		description: Type.Optional(Type.String()),
 		version: Type.String({ default: "" }),
 		noindex: Type.Optional(Type.Boolean({ default: false })),
 		authors: Type.Optional(Type.Array(Type.String())),
