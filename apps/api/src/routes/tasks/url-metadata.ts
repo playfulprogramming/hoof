@@ -1,5 +1,4 @@
 import type { FastifyPluginAsync } from "fastify";
-import { env } from "@playfulprogramming/common";
 import { db } from "@playfulprogramming/db";
 import { Type, type Static } from "typebox";
 import {
@@ -8,6 +7,7 @@ import {
 	UrlMetadataInputSchema,
 	createJob,
 } from "@playfulprogramming/bullmq";
+import { createImageUrl } from "../../utils.ts";
 
 type UrlMetadataDbResult = NonNullable<
 	Awaited<ReturnType<typeof db.query.urlMetadata.findFirst>>
@@ -106,11 +106,6 @@ const UrlMetadataResponseSchema = Type.Object(
 	},
 );
 
-function mapObjectKey(key: string): string {
-	const s3PublicUrl = `${env.S3_PUBLIC_URL}/${env.S3_BUCKET}/`;
-	return new URL(key, s3PublicUrl).toString();
-}
-
 function mapImageData(
 	key: string | null,
 	width: number | null,
@@ -119,7 +114,7 @@ function mapImageData(
 ): Static<typeof ImageSchema> | undefined {
 	if (!key) return undefined;
 	return {
-		src: mapObjectKey(key),
+		src: createImageUrl(key),
 		width: width || undefined,
 		height: height || undefined,
 		altText: altText || undefined,
@@ -143,7 +138,7 @@ async function mapEmbedGist(
 		description: gist.description || undefined,
 		files: gistFiles.map((file) => ({
 			filename: file.filename,
-			contentUrl: mapObjectKey(file.contentKey),
+			contentUrl: createImageUrl(file.contentKey),
 			language: file.language,
 		})),
 	};

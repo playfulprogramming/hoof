@@ -14,14 +14,14 @@
 	"dependencies": {
 		"@fastify/rate-limit": "^10.3.0",
 		"@fastify/sensible": "^6.0.0",
-		"@fastify/swagger": "^9.5.2",
+		"@fastify/swagger": "^9.7.0",
 		"@playfulprogramming/bullmq": "workspace:*",
 		"@playfulprogramming/common": "workspace:*",
 		"@playfulprogramming/db": "workspace:*",
 		"@playfulprogramming/redis": "workspace:*",
 		"@scalar/fastify-api-reference": "^1.38.1",
 		"drizzle-orm": "catalog:",
-		"fastify": "^5.6.0",
+		"fastify": "^5.8.1",
 		"fastify-plugin": "^5.0.1",
 		"typebox": "catalog:"
 	},

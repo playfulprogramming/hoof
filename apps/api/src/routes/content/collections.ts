@@ -1,8 +1,8 @@
 import type { FastifyPluginAsync } from "fastify";
-import { env } from "@playfulprogramming/common";
 import { db, posts } from "@playfulprogramming/db";
 import { Type, type Static } from "typebox";
 import { eq } from "drizzle-orm";
+import { createImageUrl } from "../../utils.ts";
 
 const CollectionsQueryParamsSchema = Type.Object({
 	locale: Type.String({ default: "en" }),
@@ -70,11 +70,6 @@ const CollectionsResponseSchema = Type.Array(
 );
 
 type CollectionsResponse = Static<typeof CollectionsResponseSchema>;
-
-function createImageUrl(path: string): string {
-	const s3PublicUrl = `${env.S3_PUBLIC_URL}/${env.S3_BUCKET}/`;
-	return new URL(path, s3PublicUrl).toString();
-}
 
 const collectionsRoutes: FastifyPluginAsync = async (fastify) => {
 	fastify.get<{

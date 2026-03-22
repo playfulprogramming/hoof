@@ -29,7 +29,7 @@
 		"remark-parse": "^11.0.0",
 		"robots-parser": "^3.0.1",
 		"sharp": "catalog:",
-		"svgo": "^4.0.0",
+		"svgo": "^4.0.1",
 		"typebox": "catalog:",
 		"undici": "catalog:",
 		"unified": "^11.0.5",
