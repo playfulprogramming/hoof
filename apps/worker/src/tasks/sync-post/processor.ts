@@ -9,6 +9,7 @@ import matter from "gray-matter";
 import { Value } from "typebox/value";
 import { PostMetaSchema } from "./types.ts";
 import { extractLocale } from "../../utils/extractLocale.ts";
+import { extractMarkdownExcerpt } from "../../utils/extractMarkdownExcerpt.ts";
 
 export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	const { author, post, collection, ref } = job.data;
@@ -90,14 +91,19 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			}
 
 			const rawMarkdown = contentResponse.data;
-			const { data: frontmatter } = matter(rawMarkdown);
+			const { data: frontmatter, content } = matter(rawMarkdown);
 			const parsed = Value.Parse(PostMetaSchema, frontmatter);
 
 			if (parsed.authors) {
 				parsed.authors.forEach((a) => allAuthorSlugs.add(a));
 			}
 
-			return { locale, rawMarkdown, parsed };
+			// If the description is missing, populate it from the content
+			parsed.description ??= extractMarkdownExcerpt(content, 150);
+			// calculate a (very) approximate word count
+			const wordCount = content.split(/\s+/).length;
+
+			return { locale, rawMarkdown, parsed, wordCount };
 		}),
 	);
 
@@ -135,13 +141,14 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			})
 			.onConflictDoNothing();
 
-		for (const { locale, parsed } of localeData) {
+		for (const { locale, parsed, wordCount } of localeData) {
 			const postDataRecord = {
 				slug: post,
 				locale,
 				title: parsed.title,
 				version: parsed.version,
 				description: parsed.description,
+				wordCount,
 				socialImage: parsed.socialImg ?? null,
 				bannerImage: parsed.bannerImg ?? null,
 				originalLink: parsed.originalLink ?? null,

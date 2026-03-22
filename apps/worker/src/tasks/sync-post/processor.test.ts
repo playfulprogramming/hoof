@@ -102,6 +102,7 @@ This is the post content.
 		title: "Example Post",
 		version: "",
 		description: "A test post",
+		wordCount: 10,
 		socialImage: null,
 		bannerImage: null,
 		originalLink: null,

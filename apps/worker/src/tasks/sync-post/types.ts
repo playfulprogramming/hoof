@@ -3,16 +3,16 @@ import { Type } from "typebox";
 export const PostMetaSchema = Type.Object(
 	{
 		title: Type.String(),
-		published: Type.String(),
-		description: Type.String({ default: "" }),
+		published: Type.String({ format: "date-time" }),
+		description: Type.Optional(Type.String()),
 		version: Type.String({ default: "" }),
 		noindex: Type.Optional(Type.Boolean({ default: false })),
 		authors: Type.Optional(Type.Array(Type.String())),
 		tags: Type.Optional(Type.Array(Type.String())),
-		edited: Type.Optional(Type.String()),
+		edited: Type.Optional(Type.String({ format: "date-time" })),
 		socialImg: Type.Optional(Type.String()),
 		bannerImg: Type.Optional(Type.String()),
-		originalLink: Type.Optional(Type.String()),
+		originalLink: Type.Optional(Type.String({ format: "url" })),
 		order: Type.Optional(Type.Number()),
 		upToDateSlug: Type.Optional(Type.String()),
 		license: Type.Optional(
@@ -20,6 +20,7 @@ export const PostMetaSchema = Type.Object(
 				Type.Literal("cc-by-4"),
 				Type.Literal("cc-by-nc-sa-4"),
 				Type.Literal("cc-by-nc-nd-4"),
+				Type.Literal("coderpad"),
 				Type.Literal("publicdomain-zero-1"),
 			]),
 		),
