@@ -132,8 +132,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/redis
       '@scalar/fastify-api-reference':
-        specifier: ^1.38.1
-        version: 1.44.15
+        specifier: ^1.48.0
+        version: 1.48.0
       drizzle-orm:
         specifier: 'catalog:'
         version: 1.0.0-beta.15-859cf75(@sinclair/typebox@0.34.48)(@types/mssql@9.1.9(@azure/core-client@1.10.1))(@types/pg@8.16.0)(mssql@11.0.1(@azure/core-client@1.10.1))(pg@8.18.0)(typebox@1.1.5)(zod@4.3.6)
@@ -2415,37 +2415,37 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@scalar/core@0.3.37':
-    resolution: {integrity: sha512-cQWMHsGD9jCiYHi91acR3tOsj+qGk+dRQ2W+N5+au1NZ/GkUNT5TUEufekn/sj1S8af+lOnn3y0xXoTI34jCog==}
-    engines: {node: '>=20'}
+  '@scalar/core@0.4.0':
+    resolution: {integrity: sha512-Zcl+V8oBxb0S7vR+Nro8J53GD/w/kSjuyX0UoT3r1sn0bUM3Buf4Ob44n3CSfluQzxmiMuZxfOROHqa9F+ckbg==}
+    engines: {node: '>=22'}
 
-  '@scalar/fastify-api-reference@1.44.15':
-    resolution: {integrity: sha512-7A085iFu4vvmQ8i4Gc7sKuDQk7nOoBs2HcLIxcFgYjEQ/GY32m93JTXI5fhm6p8yjubqysEvnwUDr6W1S4qLOw==}
-    engines: {node: '>=20'}
+  '@scalar/fastify-api-reference@1.48.0':
+    resolution: {integrity: sha512-/d5WoSetbyWxUIO7tQWgPaz2BAPiOnhIANePh4fpApvdeU6wTGJNc1J/ZEyl2dUc2WL22mLpV461PUnHhdH26w==}
+    engines: {node: '>=22'}
 
-  '@scalar/helpers@0.2.11':
-    resolution: {integrity: sha512-Y7DLt1bIZF9dvHzJwSJTcC1lpSr1Tbf4VBhHOCRIHu23Rr7/lhQnddRxFmPV1tZXwEQKz7F7yRrubwCfKPCucw==}
-    engines: {node: '>=20'}
+  '@scalar/helpers@0.3.0':
+    resolution: {integrity: sha512-lhQdehgighJC+PiSTJbbggM/SM3UydcRQil6Cfp/M4l539qklIh35pt4eh1+H+5Esa03gHnJwhTHF3TwglSOJw==}
+    engines: {node: '>=22'}
 
-  '@scalar/json-magic@0.10.0':
-    resolution: {integrity: sha512-7QCaKjhPCNBe5vieI0zZcxOupI+kk2PoWL/tuxB7ROLbDOIdmeZ8x1FrZqdtamDPi+zsQGx+kc/cvTDz7GdTKw==}
-    engines: {node: '>=20'}
+  '@scalar/json-magic@0.12.0':
+    resolution: {integrity: sha512-sDZ20ts24nLOB1XnxcyA09DEjxJSHZyMxegGXY1tar9R4OtKEXXEqpW5d6kW5WGgRCVAVZlkKLXWZ5KSluFMIw==}
+    engines: {node: '>=22'}
 
-  '@scalar/openapi-parser@0.24.8':
-    resolution: {integrity: sha512-1ZFC/nNbH/e/rriDgfsXCcr23WphvqHVxX8V90qhR8c9QWXNb0cyNXl3hNjvtTB7Lg7O9aS22BUZ14gabCWvRQ==}
-    engines: {node: '>=20'}
+  '@scalar/openapi-parser@0.25.0':
+    resolution: {integrity: sha512-OYKRLhQVVa0UXxG/IYIBiQjOt3WLpcQBcDLYtmUPluKYK97Lq2GqofRhxGcBM0O2TKz7VqYSes6hGqvsTjUIPQ==}
+    engines: {node: '>=22'}
 
-  '@scalar/openapi-types@0.5.3':
-    resolution: {integrity: sha512-m4n/Su3K01d15dmdWO1LlqecdSPKuNjuokrJLdiQ485kW/hRHbXW1QP6tJL75myhw/XhX5YhYAR+jrwnGjXiMw==}
-    engines: {node: '>=20'}
+  '@scalar/openapi-types@0.6.0':
+    resolution: {integrity: sha512-OeaCrQmXGqO+ZRGgo/mAA8X1nTsdNWW2BxQjyDWTCSD1Qv5Cm58QvKzINKvJPFWrS0LXebRF6OXN+2H2hu9xpA==}
+    engines: {node: '>=22'}
 
-  '@scalar/openapi-upgrader@0.1.8':
-    resolution: {integrity: sha512-2xuYLLs0fBadLIk4I1ObjMiCnOyLPEMPf24A1HtHQvhKGDnGlvT63F2rU2Xw8lxCjgHnzveMPnOJEbwIy64RCg==}
-    engines: {node: '>=20'}
+  '@scalar/openapi-upgrader@0.2.0':
+    resolution: {integrity: sha512-T8XKPaYBrxn+8THq8HgXjqpnqp71YZsPCamNYIYJrIM5pXSbBLyLoAh6uie7YfhcNvdQWc/KqahHQebEIcmeqA==}
+    engines: {node: '>=22'}
 
-  '@scalar/types@0.6.2':
-    resolution: {integrity: sha512-VWfY/z9R5NT8PpKVmvmIj6QSh56MMcl8x3JsGiNxR+w7txGQEq+QzEl35aU56uSBFmLfPk1oyInoaHhkosKooA==}
-    engines: {node: '>=20'}
+  '@scalar/types@0.7.0':
+    resolution: {integrity: sha512-IkG62M4ztmqkYNVhLpcswBojlQctbXLdkDa3UFsY8FfT7yfZ2LppjptycW9tWjD09ZQb4QAZ070FAUHmFRIS7w==}
+    engines: {node: '>=22'}
 
   '@shuding/opentype.js@1.4.0-beta.0':
     resolution: {integrity: sha512-3NgmNyH3l/Hv6EvsWJbsvpcpUba6R8IREQ83nH83cyakCw7uM1arZKNfHwv1Wz6jgqrF/j4x5ELvR6PnK9nTcA==}
@@ -3756,8 +3756,8 @@ packages:
     resolution: {integrity: sha512-sTSfBjoXBp89JvIKIefqw7U2CCebsc74kiY6awiGogKtoSGbgjYE/G/+l9sF3MWFPNc9IcoOC4ODfKHfxFmp0g==}
     engines: {node: '>= 0.4'}
 
-  get-tsconfig@4.13.6:
-    resolution: {integrity: sha512-shZT/QMiSHc/YBLxxOkMtgSid5HFoauqCE3/exfsEcwg1WkeqjG+V40yBbBrsD+jW2HDXcs28xOfcbm2jI8Ddw==}
+  get-tsconfig@4.13.7:
+    resolution: {integrity: sha512-7tN6rFgBlMgpBML5j8typ92BKFi2sFQvIdpAqLA2beia5avZDrMs0FLZiM5etShWq5irVyGcGMEA1jcDaK7A/Q==}
 
   github-slugger@2.0.0:
     resolution: {integrity: sha512-IaOQ9puYtjrkq7Y0Ygl9KDZnrf/aiUJYUpVf89y8kyaxbRG7Y1SrX/jaumrv81vc61+kiMempujsM3Yw7w5qcw==}
@@ -4336,8 +4336,8 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
-  nanoid@5.1.6:
-    resolution: {integrity: sha512-c7+7RQ+dMB5dPwwCp4ee1/iV/q2P6aK1mTZcfr1BTuVlyW9hJYiMPybJCcnBlQtuSmTIWNeazm/zqNoZSSElBg==}
+  nanoid@5.1.7:
+    resolution: {integrity: sha512-ua3NDgISf6jdwezAheMOk4mbE1LXjm1DfMUDMuJf4AqxLFK3ccGpgWizwa5YV7Yz9EpXwEaWoRXSb/BnV0t5dQ==}
     engines: {node: ^18 || >=20}
     hasBin: true
 
@@ -5058,8 +5058,8 @@ packages:
     resolution: {integrity: sha512-TeTSQ6H5YHvpqVwBRcnLDCBnDOHWYu7IvGbHT6N8AOymcr9PJGjc1GTtiWZTYg0NCgYwvnYWEkVChQAr9bjfwA==}
     engines: {node: '>=16'}
 
-  type-fest@5.4.3:
-    resolution: {integrity: sha512-AXSAQJu79WGc79/3e9/CR77I/KQgeY1AhNvcShIH4PTcGYyC4xv6H4R4AUOwkPS5799KlVDAu8zExeCrkGquiA==}
+  type-fest@5.5.0:
+    resolution: {integrity: sha512-PlBfpQwiUvGViBNX84Yxwjsdhd1TUlXr6zjX7eoirtCPIr08NAmxwa+fcYBTeRQxHo9YC9wwF3m9i700sHma8g==}
     engines: {node: '>=20'}
 
   type-is@2.0.1:
@@ -7582,51 +7582,52 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.57.1':
     optional: true
 
-  '@scalar/core@0.3.37':
+  '@scalar/core@0.4.0':
     dependencies:
-      '@scalar/types': 0.6.2
+      '@scalar/types': 0.7.0
 
-  '@scalar/fastify-api-reference@1.44.15':
+  '@scalar/fastify-api-reference@1.48.0':
     dependencies:
-      '@scalar/core': 0.3.37
-      '@scalar/openapi-parser': 0.24.8
-      '@scalar/openapi-types': 0.5.3
+      '@scalar/core': 0.4.0
+      '@scalar/openapi-parser': 0.25.0
+      '@scalar/openapi-types': 0.6.0
       fastify-plugin: 4.5.1
       github-slugger: 2.0.0
 
-  '@scalar/helpers@0.2.11': {}
+  '@scalar/helpers@0.3.0': {}
 
-  '@scalar/json-magic@0.10.0':
+  '@scalar/json-magic@0.12.0':
     dependencies:
-      '@scalar/helpers': 0.2.11
+      '@scalar/helpers': 0.3.0
+      pathe: 2.0.3
       yaml: 2.8.3
 
-  '@scalar/openapi-parser@0.24.8':
+  '@scalar/openapi-parser@0.25.0':
     dependencies:
-      '@scalar/helpers': 0.2.11
-      '@scalar/json-magic': 0.10.0
-      '@scalar/openapi-types': 0.5.3
-      '@scalar/openapi-upgrader': 0.1.8
-      ajv: 8.17.1
-      ajv-draft-04: 1.0.0(ajv@8.17.1)
-      ajv-formats: 3.0.1(ajv@8.17.1)
+      '@scalar/helpers': 0.3.0
+      '@scalar/json-magic': 0.12.0
+      '@scalar/openapi-types': 0.6.0
+      '@scalar/openapi-upgrader': 0.2.0
+      ajv: 8.18.0
+      ajv-draft-04: 1.0.0(ajv@8.18.0)
+      ajv-formats: 3.0.1(ajv@8.18.0)
       jsonpointer: 5.0.1
       leven: 4.1.0
       yaml: 2.8.3
 
-  '@scalar/openapi-types@0.5.3':
+  '@scalar/openapi-types@0.6.0':
     dependencies:
       zod: 4.3.6
 
-  '@scalar/openapi-upgrader@0.1.8':
+  '@scalar/openapi-upgrader@0.2.0':
     dependencies:
-      '@scalar/openapi-types': 0.5.3
+      '@scalar/openapi-types': 0.6.0
 
-  '@scalar/types@0.6.2':
+  '@scalar/types@0.7.0':
     dependencies:
-      '@scalar/helpers': 0.2.11
-      nanoid: 5.1.6
-      type-fest: 5.4.3
+      '@scalar/helpers': 0.3.0
+      nanoid: 5.1.7
+      type-fest: 5.5.0
       zod: 4.3.6
 
   '@shuding/opentype.js@1.4.0-beta.0':
@@ -8241,13 +8242,9 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  ajv-draft-04@1.0.0(ajv@8.17.1):
+  ajv-draft-04@1.0.0(ajv@8.18.0):
     optionalDependencies:
-      ajv: 8.17.1
-
-  ajv-formats@3.0.1(ajv@8.17.1):
-    optionalDependencies:
-      ajv: 8.17.1
+      ajv: 8.18.0
 
   ajv-formats@3.0.1(ajv@8.18.0):
     optionalDependencies:
@@ -9107,7 +9104,7 @@ snapshots:
       dunder-proto: 1.0.1
       es-object-atoms: 1.1.1
 
-  get-tsconfig@4.13.6:
+  get-tsconfig@4.13.7:
     dependencies:
       resolve-pkg-maps: 1.0.0
     optional: true
@@ -9792,7 +9789,7 @@ snapshots:
 
   nanoid@3.3.11: {}
 
-  nanoid@5.1.6: {}
+  nanoid@5.1.7: {}
 
   native-duplexpair@1.0.0: {}
 
@@ -10583,7 +10580,7 @@ snapshots:
   tsx@4.21.0:
     dependencies:
       esbuild: 0.27.4
-      get-tsconfig: 4.13.6
+      get-tsconfig: 4.13.7
     optionalDependencies:
       fsevents: 2.3.3
     optional: true
@@ -10594,7 +10591,7 @@ snapshots:
 
   type-fest@4.41.0: {}
 
-  type-fest@5.4.3:
+  type-fest@5.5.0:
     dependencies:
       tagged-tag: 1.0.0
 
