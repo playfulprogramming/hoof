@@ -81,7 +81,7 @@ export async function fetchAsBot(options: FetchAsBotInit) {
 		await checkRobotsAccess(parsedUrl);
 	}
 
-	console.debug(init.method ?? "GET", parsedUrl.href);
+	console.log(init.method ?? "GET", parsedUrl.href);
 
 	const response = await request(url, {
 		...init,
@@ -128,7 +128,7 @@ export async function fetchAsBotStream({
 		await checkRobotsAccess(parsedUrl);
 	}
 
-	console.debug(init.method ?? "GET", parsedUrl.href);
+	console.log(init.method ?? "GET", parsedUrl.href);
 
 	await stream(
 		url,
