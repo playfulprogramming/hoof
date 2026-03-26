@@ -149,7 +149,7 @@ export async function fetchAsBotStream({
 			const newLocation = response.headers["location"]?.toString();
 
 			if (
-				redirectCount <= followRedirects &&
+				redirectCount < followRedirects &&
 				newLocation &&
 				URL.canParse(newLocation)
 			) {
