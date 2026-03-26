@@ -121,6 +121,7 @@ export async function fetchAsBotStream({
 	skipRobotsCheck,
 	maxLength,
 	writable,
+	followRedirects = 10,
 	...init
 }: FetchAsBotInit & { writable: Writable }) {
 	const parsedUrl = url instanceof URL ? url : new URL(url);
@@ -130,8 +131,48 @@ export async function fetchAsBotStream({
 
 	console.log(init.method ?? "GET", parsedUrl.href);
 
+	let crrUrl = url;
+	let redirectCount = 0;
+	while (true) {
+		const response = await request(crrUrl, {
+			...init,
+			headers: {
+				"User-Agent": userAgent,
+				"Accept-Language": "en",
+				...init?.headers,
+			},
+			signal: init?.signal ?? AbortSignal.timeout(10 * 1000),
+		});
+
+		if (response.statusCode == 301 || response.statusCode == 302) {
+			await response.body.dump();
+			const newLocation = response.headers["location"]?.toString();
+
+			if (
+				redirectCount <= followRedirects &&
+				newLocation &&
+				URL.canParse(newLocation)
+			) {
+				console.log(
+					`redirect (${response.statusCode}) [${crrUrl} -> ${newLocation}]`,
+				);
+				const newUrl = new URL(newLocation);
+				crrUrl = newUrl;
+				redirectCount++;
+				continue;
+			}
+		}
+
+		if (response.statusCode < 200 || response.statusCode > 299) {
+			await response.body.dump();
+			throw new Error(`Request ${url} returned ${response.statusCode}`);
+		}
+
+		break;
+	}
+
 	await stream(
-		url,
+		crrUrl,
 		{
 			...init,
 			headers: {
