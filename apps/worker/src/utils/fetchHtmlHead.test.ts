@@ -23,6 +23,7 @@ test("Should return the HTML head when it exists", async () => {
 				<body></body>
 			</html>
 		`.trim(),
+		repeatTimes: 2,
 	});
 
 	const response = await fetchHtmlHead(new URL(url));
