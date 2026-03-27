@@ -82,10 +82,6 @@ describe("fetchAsBot", () => {
 				"content-type": "text/plain",
 			},
 		});
-		mockEndpoint({
-			path: url,
-			body: "Hello!",
-		});
 
 		const response = await fetchAsBot({ url, method: "GET" }).catch((e) => e);
 		expect(response).to.be.instanceOf(RobotDeniedError);
@@ -196,11 +192,6 @@ describe("fetchAsBotStream", () => {
 			headers: {
 				"content-type": "text/plain",
 			},
-		});
-		mockEndpoint({
-			path: url,
-			body: "Hello!",
-			repeatTimes: 2,
 		});
 
 		const error = await fetchAsBotStream({
