@@ -1,7 +1,9 @@
-import { request, stream, type Dispatcher } from "undici";
+import { createWriteStream } from "fs";
 import { LRUCache } from "lru-cache";
+import { devNull } from "os";
 import robotsParserDefault, { type Robot } from "robots-parser";
-import type { Writable } from "stream";
+import { type Writable } from "stream";
+import { request, stream, type Dispatcher } from "undici";
 const robotsParser =
 	robotsParserDefault as never as typeof robotsParserDefault.default;
 
@@ -131,58 +133,57 @@ export async function fetchAsBotStream({
 
 	console.log(init.method ?? "GET", parsedUrl.href);
 
-	let crrUrl = url;
-	let redirectCount = 0;
-	while (true) {
-		const response = await request(crrUrl, {
-			...init,
-			headers: {
-				"User-Agent": userAgent,
-				"Accept-Language": "en",
-				...init?.headers,
-			},
-			signal: init?.signal ?? AbortSignal.timeout(10 * 1000),
-		});
-
-		if (response.statusCode == 301 || response.statusCode == 302) {
-			await response.body.dump();
-			const newLocation = response.headers["location"]?.toString();
-
-			if (
-				redirectCount < followRedirects &&
-				newLocation &&
-				URL.canParse(newLocation)
-			) {
-				console.log(
-					`redirect (${response.statusCode}) [${crrUrl} -> ${newLocation}]`,
-				);
-				const newUrl = new URL(newLocation);
-				crrUrl = newUrl;
-				redirectCount++;
-				continue;
-			}
-		}
-
-		if (response.statusCode < 200 || response.statusCode > 299) {
-			await response.body.dump();
-			throw new Error(`Request ${url} returned ${response.statusCode}`);
-		}
-
-		break;
-	}
-
-	await stream(
-		crrUrl,
-		{
-			...init,
-			headers: {
-				"User-Agent": userAgent,
-				"Accept-Language": "en",
-				...init?.headers,
-			},
-			signal: init?.signal ?? AbortSignal.timeout(10 * 1000),
-			opaque: writable,
+	const opaque = {
+		writable,
+		followRedirects,
+		url,
+		redirect: {
+			active: false,
+			count: 0,
 		},
-		({ opaque }) => opaque,
-	);
+	};
+
+	while (true) {
+		await stream(
+			opaque.url,
+			{
+				...init,
+				headers: {
+					"User-Agent": userAgent,
+					"Accept-Language": "en",
+					...init?.headers,
+				},
+				signal: init?.signal ?? AbortSignal.timeout(10 * 1000),
+				opaque,
+			},
+			({ opaque, statusCode, headers }) => {
+				if ([301, 302, 303, 307, 308].includes(statusCode)) {
+					const newLocation = headers["location"]?.toString();
+					if (
+						opaque.redirect.count < opaque.followRedirects &&
+						newLocation &&
+						URL.canParse(newLocation)
+					) {
+						console.log(
+							`redirect (${statusCode}) [${opaque.url} -> ${newLocation}]`,
+						);
+						opaque.url = new URL(headers["location"] as string);
+						opaque.redirect.count++;
+					}
+
+					return createWriteStream(devNull);
+				}
+
+				if (statusCode < 200 || statusCode > 299) {
+					throw new Error(`Request ${url} returned ${statusCode}`);
+				}
+
+				return opaque.writable;
+			},
+		);
+
+		if (!opaque.redirect.active) {
+			break;
+		}
+	}
 }
