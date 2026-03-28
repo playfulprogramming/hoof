@@ -1,3 +1,5 @@
+import { createWriteStream } from "fs";
+import { devNull } from "os";
 import { Writable } from "stream";
 import { mockEndpoint } from "../../test-utils/server.ts";
 import {
@@ -109,17 +111,13 @@ describe("fetchAsBotStream", () => {
 			status: 400,
 		});
 
-		await expect(
-			fetchAsBotStream({
-				url,
-				method: "GET",
-				writable: new Writable({
-					write(_, __, next) {
-						next();
-					},
-				}),
-			}),
-		).rejects.toThrow();
+		const botFetchStream = fetchAsBotStream({
+			url,
+			method: "GET",
+			writable: createWriteStream(devNull),
+		});
+
+		await expect(botFetchStream).rejects.toThrow();
 	});
 
 	test("Should return successful data for a URL with no robots.txt", async () => {
@@ -141,7 +139,7 @@ describe("fetchAsBotStream", () => {
 			url,
 			method: "GET",
 			writable: new Writable({
-				write(chunk, _, next) {
+				write(chunk, _encoding, next) {
 					body += chunk;
 					next();
 				},
@@ -171,12 +169,13 @@ describe("fetchAsBotStream", () => {
 			url,
 			method: "GET",
 			writable: new Writable({
-				write(chunk, _, next) {
+				write(chunk, _encoding, next) {
 					body += chunk;
 					next();
 				},
 			}),
 		});
+
 		expect(body).toBe("Hello!");
 	});
 
@@ -195,8 +194,9 @@ describe("fetchAsBotStream", () => {
 		const error = await fetchAsBotStream({
 			url,
 			method: "GET",
-			writable: new Writable(),
+			writable: createWriteStream(devNull),
 		}).catch((e) => e as Error);
+
 		expect(error).toBeInstanceOf(RobotDeniedError);
 		expect(error?.message).toBe(
 			`playful-programming/1.0 is disallowed from ${url.hostname}!`,
