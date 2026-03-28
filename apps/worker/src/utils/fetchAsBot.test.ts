@@ -134,7 +134,6 @@ describe("fetchAsBotStream", () => {
 		mockEndpoint({
 			path: url,
 			body: "Hello!",
-			repeatTimes: 2,
 		});
 
 		let body = "";
@@ -165,7 +164,6 @@ describe("fetchAsBotStream", () => {
 		mockEndpoint({
 			path: url,
 			body: "Hello!",
-			repeatTimes: 2,
 		});
 
 		let body = "";

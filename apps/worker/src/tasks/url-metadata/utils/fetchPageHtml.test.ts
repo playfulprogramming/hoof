@@ -23,7 +23,6 @@ test("should fetch page HTML", async () => {
 	mockEndpoint({
 		path: domain.href,
 		body: html,
-		repeatTimes: 2,
 	});
 
 	const response = await fetchPageHtml(domain);
@@ -99,7 +98,6 @@ test("should get page title", async () => {
 	mockEndpoint({
 		path: domain,
 		body: html,
-		repeatTimes: 2,
 	});
 	const root = await fetchPageHtml(new URL(domain));
 	const response = await getPageTitle(root!);
@@ -111,7 +109,6 @@ test("Should gather image URL from OpenGraph metadata", async () => {
 	mockEndpoint({
 		path: domain,
 		body: html,
-		repeatTimes: 2,
 	});
 	const root = await fetchPageHtml(new URL(domain));
 	const response = await getOpenGraphImages(root!, new URL(domain));
