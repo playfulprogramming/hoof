@@ -16,8 +16,8 @@ catalogs:
       specifier: ^5.40.2
       version: 5.70.1
     drizzle-orm:
-      specifier: 1.0.0-beta.15-859cf75
-      version: 1.0.0-beta.15-859cf75
+      specifier: 1.0.0-beta.18-5ffac6d
+      version: 1.0.0-beta.18-5ffac6d
     gray-matter:
       specifier: ^4.0.3
       version: 4.0.3
@@ -136,7 +136,7 @@ importers:
         version: 1.48.0
       drizzle-orm:
         specifier: 'catalog:'
-        version: 1.0.0-beta.15-859cf75(@sinclair/typebox@0.34.49)(@types/mssql@9.1.9(@azure/core-client@1.10.1))(@types/pg@8.16.0)(mssql@11.0.1(@azure/core-client@1.10.1))(pg@8.18.0)(typebox@1.1.5)(zod@4.3.6)
+        version: 1.0.0-beta.18-5ffac6d(@sinclair/typebox@0.34.49)(@types/mssql@9.1.9(@azure/core-client@1.10.1))(@types/pg@8.16.0)(mssql@11.0.1(@azure/core-client@1.10.1))(pg@8.18.0)(typebox@1.1.5)(zod@4.3.6)
       fastify:
         specifier: ^5.8.3
         version: 5.8.3
@@ -198,7 +198,7 @@ importers:
         version: 5.70.1
       drizzle-orm:
         specifier: 'catalog:'
-        version: 1.0.0-beta.15-859cf75(@sinclair/typebox@0.34.49)(@types/mssql@9.1.9(@azure/core-client@1.10.1))(@types/pg@8.16.0)(mssql@11.0.1(@azure/core-client@1.10.1))(pg@8.18.0)(typebox@1.1.5)(zod@4.3.6)
+        version: 1.0.0-beta.18-5ffac6d(@sinclair/typebox@0.34.49)(@types/mssql@9.1.9(@azure/core-client@1.10.1))(@types/pg@8.16.0)(mssql@11.0.1(@azure/core-client@1.10.1))(pg@8.18.0)(typebox@1.1.5)(zod@4.3.6)
       gray-matter:
         specifier: 'catalog:'
         version: 4.0.3
@@ -283,7 +283,7 @@ importers:
         version: link:../common
       drizzle-orm:
         specifier: 'catalog:'
-        version: 1.0.0-beta.15-859cf75(@sinclair/typebox@0.34.49)(@types/mssql@9.1.9(@azure/core-client@1.10.1))(@types/pg@8.16.0)(mssql@11.0.1(@azure/core-client@1.10.1))(pg@8.18.0)(typebox@1.1.5)(zod@4.3.6)
+        version: 1.0.0-beta.18-5ffac6d(@sinclair/typebox@0.34.49)(@types/mssql@9.1.9(@azure/core-client@1.10.1))(@types/pg@8.16.0)(mssql@11.0.1(@azure/core-client@1.10.1))(pg@8.18.0)(typebox@1.1.5)(zod@4.3.6)
       pg:
         specifier: ^8.16.3
         version: 8.18.0
@@ -3264,8 +3264,8 @@ packages:
     resolution: {integrity: sha512-Y36s1XQGVb1PgU3aRNgufp1K3D2VkIifu8kv4Ubsmxi+Dq+N7KMklnpp7Knu/XC4FZi2MHPPG3v3o097r0/TcQ==}
     hasBin: true
 
-  drizzle-orm@1.0.0-beta.15-859cf75:
-    resolution: {integrity: sha512-dGVb2Q70H2AV6513hkOXR3Ud0FeGXLdugVq3YehoqkGIVTJrkuo0gRnCcW/dfI00O07t3T4HSh4clF/D/o/IsQ==}
+  drizzle-orm@1.0.0-beta.18-5ffac6d:
+    resolution: {integrity: sha512-OEciFT+jGV7YgS1FMA1PL1UFYiBy26CjmCqwE1QCcyPyWpLuPnl607+iIcYgpyygOUbptA6AM9D9vzQYUDIzqg==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=4'
@@ -3278,7 +3278,6 @@ packages:
       '@op-engineering/op-sqlite': '>=2'
       '@opentelemetry/api': ^1.4.1
       '@planetscale/database': '>=1.13'
-      '@prisma/client': '*'
       '@sinclair/typebox': '>=0.34.8'
       '@sqlitecloud/drivers': '>=1.0.653'
       '@tidbcloud/serverless': '*'
@@ -3301,7 +3300,6 @@ packages:
       mysql2: '>=2'
       pg: '>=8'
       postgres: '>=3'
-      prisma: '*'
       sql.js: '>=1'
       sqlite3: '>=5'
       typebox: '>=1.0.0'
@@ -3329,8 +3327,6 @@ packages:
       '@opentelemetry/api':
         optional: true
       '@planetscale/database':
-        optional: true
-      '@prisma/client':
         optional: true
       '@sinclair/typebox':
         optional: true
@@ -3371,8 +3367,6 @@ packages:
       pg:
         optional: true
       postgres:
-        optional: true
-      prisma:
         optional: true
       sql.js:
         optional: true
@@ -8696,7 +8690,7 @@ snapshots:
       esbuild: 0.25.12
       jiti: 2.6.1
 
-  drizzle-orm@1.0.0-beta.15-859cf75(@sinclair/typebox@0.34.49)(@types/mssql@9.1.9(@azure/core-client@1.10.1))(@types/pg@8.16.0)(mssql@11.0.1(@azure/core-client@1.10.1))(pg@8.18.0)(typebox@1.1.5)(zod@4.3.6):
+  drizzle-orm@1.0.0-beta.18-5ffac6d(@sinclair/typebox@0.34.49)(@types/mssql@9.1.9(@azure/core-client@1.10.1))(@types/pg@8.16.0)(mssql@11.0.1(@azure/core-client@1.10.1))(pg@8.18.0)(typebox@1.1.5)(zod@4.3.6):
     dependencies:
       '@types/mssql': 9.1.9(@azure/core-client@1.10.1)
       mssql: 11.0.1(@azure/core-client@1.10.1)
