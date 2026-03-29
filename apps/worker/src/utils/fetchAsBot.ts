@@ -56,9 +56,10 @@ async function checkRobotsAccess(url: URL) {
 
 type FetchAsBotInit = Omit<
 	Dispatcher.RequestOptions<null>,
-	"origin" | "path"
+	"origin" | "path" | "method"
 > & {
 	url: string | URL;
+	method: "GET" | "POST" | "PUT" | "DELETE" | "HEAD";
 	skipRobotsCheck?: boolean;
 	maxLength?: number;
 	followRedirects?: number;
