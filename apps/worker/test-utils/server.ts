@@ -1,12 +1,19 @@
 import { MockAgent, setGlobalDispatcher } from "undici";
 
-const mockAgent = new MockAgent({
-	connections: 1,
-	bodyTimeout: 10,
-	connectTimeout: 10,
-	headersTimeout: 10,
+let mockAgent: MockAgent;
+beforeEach(() => {
+	mockAgent = new MockAgent({
+		connections: 1,
+		bodyTimeout: 10,
+		connectTimeout: 10,
+		headersTimeout: 10,
+	});
+	setGlobalDispatcher(mockAgent);
 });
-setGlobalDispatcher(mockAgent);
+afterEach(async () => {
+	mockAgent.assertNoPendingInterceptors();
+	await mockAgent.close();
+});
 
 interface MockEndpointProps {
 	path: string | URL;
