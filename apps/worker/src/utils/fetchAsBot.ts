@@ -1,7 +1,9 @@
-import { request, stream, type Dispatcher } from "undici";
+import { createWriteStream } from "fs";
 import { LRUCache } from "lru-cache";
+import { devNull } from "os";
 import robotsParserDefault, { type Robot } from "robots-parser";
-import type { Writable } from "stream";
+import { type Writable } from "stream";
+import { request, stream, type Dispatcher } from "undici";
 const robotsParser =
 	robotsParserDefault as never as typeof robotsParserDefault.default;
 
@@ -42,6 +44,16 @@ async function getRobots(input: URL): Promise<Robot | undefined> {
 	return robotsParser(robotsUrl.toString(), robots);
 }
 
+async function checkRobotsAccess(url: URL) {
+	const robots = await getRobots(url);
+
+	if (robots && robots.isDisallowed(url.toString(), userAgent)) {
+		throw new RobotDeniedError(
+			`${userAgent} is disallowed from ${url.hostname}!`,
+		);
+	}
+}
+
 type FetchAsBotInit = Omit<
 	Dispatcher.RequestOptions<null>,
 	"origin" | "path"
@@ -68,16 +80,10 @@ export async function fetchAsBot(options: FetchAsBotInit) {
 	} = options;
 	const parsedUrl = url instanceof URL ? url : new URL(url);
 	if (!skipRobotsCheck) {
-		const robots = await getRobots(parsedUrl);
-
-		if (robots && robots.isDisallowed(url.toString(), userAgent)) {
-			throw new RobotDeniedError(
-				`${userAgent} is disallowed from ${parsedUrl.hostname}!`,
-			);
-		}
+		await checkRobotsAccess(parsedUrl);
 	}
 
-	console.debug(init.method ?? "GET", parsedUrl.href);
+	console.log(init.method ?? "GET", parsedUrl.href);
 
 	const response = await request(url, {
 		...init,
@@ -117,33 +123,67 @@ export async function fetchAsBotStream({
 	skipRobotsCheck,
 	maxLength,
 	writable,
+	followRedirects = 10,
 	...init
 }: FetchAsBotInit & { writable: Writable }) {
 	const parsedUrl = url instanceof URL ? url : new URL(url);
 	if (!skipRobotsCheck) {
-		const robots = await getRobots(parsedUrl);
-
-		if (robots && robots.isDisallowed(url.toString(), userAgent)) {
-			throw new RobotDeniedError(
-				`${userAgent} is disallowed from ${parsedUrl.hostname}!`,
-			);
-		}
+		await checkRobotsAccess(parsedUrl);
 	}
 
-	console.debug(init.method ?? "GET", parsedUrl.href);
+	console.log(init.method ?? "GET", parsedUrl.href);
 
-	await stream(
+	const opaque = {
+		writable,
+		followRedirects,
 		url,
-		{
-			...init,
-			headers: {
-				"User-Agent": userAgent,
-				"Accept-Language": "en",
-				...init?.headers,
-			},
-			signal: init?.signal ?? AbortSignal.timeout(10 * 1000),
-			opaque: writable,
+		redirect: {
+			active: false,
+			count: 0,
 		},
-		({ opaque }) => opaque,
-	);
+	};
+
+	while (true) {
+		await stream(
+			opaque.url,
+			{
+				...init,
+				headers: {
+					"User-Agent": userAgent,
+					"Accept-Language": "en",
+					...init?.headers,
+				},
+				signal: init?.signal ?? AbortSignal.timeout(10 * 1000),
+				opaque,
+			},
+			({ opaque, statusCode, headers }) => {
+				if ([301, 302, 303, 307, 308].includes(statusCode)) {
+					const newLocation = headers["location"]?.toString();
+					if (
+						opaque.redirect.count < opaque.followRedirects &&
+						newLocation &&
+						URL.canParse(newLocation)
+					) {
+						console.log(
+							`redirect (${statusCode}) [${opaque.url} -> ${newLocation}]`,
+						);
+						opaque.url = new URL(headers["location"] as string);
+						opaque.redirect.count++;
+					}
+
+					return createWriteStream(devNull);
+				}
+
+				if (statusCode < 200 || statusCode > 299) {
+					throw new Error(`Request ${url} returned ${statusCode}`);
+				}
+
+				return opaque.writable;
+			},
+		);
+
+		if (!opaque.redirect.active) {
+			break;
+		}
+	}
 }
