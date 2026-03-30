@@ -26,7 +26,7 @@ test("Creates an example profile successfully", async () => {
 }
 ---
 `,
-				response: {} as never,
+				status: 200,
 			});
 		}
 		return Promise.reject();
@@ -40,7 +40,7 @@ test("Creates an example profile successfully", async () => {
 			);
 			return Promise.resolve({
 				data: Readable.toWeb(Readable.from(buffer)) as never,
-				response: {} as never,
+				status: 200,
 			});
 		}
 		return Promise.reject();
@@ -85,10 +85,7 @@ test("Deletes a profile record if it no longer exists", async () => {
 		if (params.path === "/content/example/index.md") {
 			return Promise.resolve({
 				data: undefined,
-				error: {},
-				response: {
-					status: 404,
-				} as never,
+				status: 404,
 			});
 		}
 		return Promise.reject();

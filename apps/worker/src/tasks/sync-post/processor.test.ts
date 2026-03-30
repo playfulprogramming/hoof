@@ -47,8 +47,7 @@ test("Syncs a standalone post successfully", async () => {
 						},
 					],
 				},
-				error: undefined,
-				response: {} as never,
+				status: 200,
 			});
 		}
 		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
@@ -71,7 +70,7 @@ tags:
 
 This is the post content.
 `,
-				response: {} as never,
+				status: 200,
 			});
 		}
 		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
@@ -137,10 +136,7 @@ test("Deletes a post record if it no longer exists", async () => {
 		if (params.path === "/content/example-author/posts/example-post/") {
 			return Promise.resolve({
 				data: undefined,
-				error: {},
-				response: {
-					status: 404,
-				} as never,
+				status: 404,
 			});
 		}
 		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
@@ -204,8 +200,7 @@ test("Links post to collection when collection is provided", async () => {
 						},
 					],
 				},
-				error: undefined,
-				response: {} as never,
+				status: 200,
 			});
 		}
 		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
@@ -224,7 +219,7 @@ published: "2024-01-15T00:00:00Z"
 order: 1
 ---
 `,
-				response: {} as never,
+				status: 200,
 			});
 		}
 		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
@@ -293,8 +288,7 @@ test("Syncs post with multiple locales", async () => {
 						},
 					],
 				},
-				error: undefined,
-				response: {} as never,
+				status: 200,
 			});
 		}
 		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
@@ -310,7 +304,7 @@ title: "English Post"
 published: "2024-01-15T00:00:00Z"
 ---
 `,
-				response: {} as never,
+				status: 200,
 			});
 		}
 		if (
@@ -322,7 +316,7 @@ title: "Post en Español"
 published: "2024-01-15T00:00:00Z"
 ---
 `,
-				response: {} as never,
+				status: 200,
 			});
 		}
 		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
@@ -409,8 +403,7 @@ test("Handles post with multiple authors", async () => {
 						},
 					],
 				},
-				error: undefined,
-				response: {} as never,
+				status: 200,
 			});
 		}
 		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
@@ -426,7 +419,7 @@ authors:
   - co-author
 ---
 `,
-				response: {} as never,
+				status: 200,
 			});
 		}
 		return Promise.reject(new Error(`Unexpected path: ${params.path}`));

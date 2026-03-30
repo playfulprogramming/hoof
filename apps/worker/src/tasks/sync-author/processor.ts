@@ -47,7 +47,7 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 	});
 
 	if (authorMetaResponse.data === undefined) {
-		if (authorMetaResponse.response.status == 404) {
+		if (authorMetaResponse.status == 404) {
 			console.log(
 				`Metadata for ${authorId} (${authorMetaUrl.pathname}) returned 404 - removing profile entry.`,
 			);

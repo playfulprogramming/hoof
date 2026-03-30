@@ -55,8 +55,7 @@ test("Creates an example collection successfully", async () => {
 						},
 					],
 				},
-				error: undefined,
-				response: {} as never,
+				status: 200,
 			});
 		}
 		return Promise.reject();
@@ -75,7 +74,7 @@ coverImg: "./cover.png"
 published: "2023-01-01T00:00:00Z"
 ---
 `,
-				response: {} as never,
+				status: 200,
 			});
 		}
 		return Promise.reject();
@@ -89,7 +88,7 @@ published: "2023-01-01T00:00:00Z"
 			const buffer = Buffer.from(mockImage, "base64");
 			return Promise.resolve({
 				data: Readable.toWeb(Readable.from(buffer)) as never,
-				response: {} as never,
+				status: 200,
 			});
 		}
 		return Promise.reject();
@@ -154,10 +153,7 @@ test("Deletes a collection record if it no longer exists", async () => {
 		) {
 			return Promise.resolve({
 				data: undefined,
-				error: {},
-				response: {
-					status: 404,
-				} as never,
+				status: 404,
 			});
 		}
 		return Promise.reject();
@@ -219,8 +215,7 @@ test("Fails if author profile does not exist", async () => {
 						},
 					],
 				},
-				error: undefined,
-				response: {} as never,
+				status: 200,
 			});
 		}
 		return Promise.reject();
@@ -239,7 +234,7 @@ coverImg: "./cover.png"
 published: "2023-01-01T00:00:00Z"
 ---
 `,
-				response: {} as never,
+				status: 200,
 			});
 		}
 		return Promise.reject();
@@ -253,7 +248,7 @@ published: "2023-01-01T00:00:00Z"
 			const buffer = Buffer.from(mockImage, "base64");
 			return Promise.resolve({
 				data: Readable.toWeb(Readable.from(buffer)) as never,
-				response: {} as never,
+				status: 200,
 			});
 		}
 		return Promise.reject();
@@ -311,8 +306,7 @@ test("Handles collection with multiple authors", async () => {
 						},
 					],
 				},
-				error: undefined,
-				response: {} as never,
+				status: 200,
 			});
 		}
 		return Promise.reject();
@@ -333,7 +327,7 @@ coverImg: "./cover.png"
 published: "2023-01-01T00:00:00Z"
 ---
 `,
-				response: {} as never,
+				status: 200,
 			});
 		}
 		return Promise.reject();
@@ -347,7 +341,7 @@ published: "2023-01-01T00:00:00Z"
 			const buffer = Buffer.from(mockImage, "base64");
 			return Promise.resolve({
 				data: Readable.toWeb(Readable.from(buffer)) as never,
-				response: {} as never,
+				status: 200,
 			});
 		}
 		return Promise.reject();
