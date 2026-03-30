@@ -35,7 +35,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	});
 
 	if (folderResponse.data === undefined) {
-		if (folderResponse.response.status === 404) {
+		if (folderResponse.status === 404) {
 			console.log(
 				`Post ${post} (${basePath}) returned 404 - removing from database.`,
 			);

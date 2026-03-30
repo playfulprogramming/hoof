@@ -57,7 +57,7 @@ export default createProcessor(
 		});
 
 		if (collectionMetaResponse.data === undefined) {
-			if (collectionMetaResponse.response.status === 404) {
+			if (collectionMetaResponse.status === 404) {
 				console.log(
 					`Metadata for ${collectionId} (${collectionMetaUrl.pathname}) returned 404 - removing collection entry.`,
 				);
