@@ -119,6 +119,52 @@ export async function fetchAsBot(options: FetchAsBotInit) {
 	return response;
 }
 
+interface FetchAsBotStreamFactoryOpaque {
+	writable: Writable;
+	followRedirects: number;
+	currentUrl: string | URL;
+	redirect: boolean;
+	error: Error | null;
+}
+
+const fetchAsBotStreamFactory: Dispatcher.StreamFactory<
+	FetchAsBotStreamFactoryOpaque
+> = ({ opaque, statusCode, headers }) => {
+	opaque.redirect = false;
+
+	if (
+		[301, 302, 303, 307, 308].includes(statusCode) &&
+		opaque.followRedirects > 0
+	) {
+		const newLocation = headers["location"]?.toString() ?? "";
+		const newLocationUrl = URL.parse(newLocation, opaque.currentUrl);
+		if (newLocationUrl) {
+			console.log(
+				`redirect (${statusCode}) [${opaque.currentUrl} -> ${newLocationUrl}]`,
+			);
+			opaque.currentUrl = newLocationUrl;
+			opaque.followRedirects -= 1;
+			opaque.redirect = true;
+		} else {
+			opaque.error = new Error(
+				`The redirect location ${newLocation} couldn't be parsed as a URL for ${opaque.currentUrl}`,
+			);
+		}
+
+		return createWriteStream(devNull);
+	}
+
+	if (statusCode < 200 || statusCode > 299) {
+		opaque.error = new Error(
+			`Request ${opaque.currentUrl} returned ${statusCode}`,
+		);
+
+		return createWriteStream(devNull);
+	}
+
+	return opaque.writable;
+};
+
 export async function fetchAsBotStream({
 	url,
 	skipRobotsCheck,
@@ -134,19 +180,17 @@ export async function fetchAsBotStream({
 
 	console.log(init.method ?? "GET", parsedUrl.href);
 
-	const opaque = {
+	const opaque: FetchAsBotStreamFactoryOpaque = {
 		writable,
 		followRedirects,
-		url,
-		redirect: {
-			active: false,
-			count: 0,
-		},
+		currentUrl: url,
+		redirect: false,
+		error: null,
 	};
 
 	while (true) {
 		await stream(
-			opaque.url,
+			opaque.currentUrl,
 			{
 				...init,
 				headers: {
@@ -157,33 +201,14 @@ export async function fetchAsBotStream({
 				signal: init?.signal ?? AbortSignal.timeout(10 * 1000),
 				opaque,
 			},
-			({ opaque, statusCode, headers }) => {
-				if ([301, 302, 303, 307, 308].includes(statusCode)) {
-					const newLocation = headers["location"]?.toString();
-					if (
-						opaque.redirect.count < opaque.followRedirects &&
-						newLocation &&
-						URL.canParse(newLocation)
-					) {
-						console.log(
-							`redirect (${statusCode}) [${opaque.url} -> ${newLocation}]`,
-						);
-						opaque.url = new URL(headers["location"] as string);
-						opaque.redirect.count++;
-					}
-
-					return createWriteStream(devNull);
-				}
-
-				if (statusCode < 200 || statusCode > 299) {
-					throw new Error(`Request ${url} returned ${statusCode}`);
-				}
-
-				return opaque.writable;
-			},
+			fetchAsBotStreamFactory,
 		);
 
-		if (!opaque.redirect.active) {
+		if (opaque.error) {
+			throw opaque.error;
+		}
+
+		if (!opaque.redirect) {
 			break;
 		}
 	}
