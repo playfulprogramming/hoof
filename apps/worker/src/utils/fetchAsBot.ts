@@ -196,9 +196,6 @@ export async function fetchAsBotStream({
 	...init
 }: FetchAsBotInit & { writable: Writable }) {
 	const parsedUrl = url instanceof URL ? url : new URL(url);
-	if (!skipRobotsCheck) {
-		await checkRobotsAccess(parsedUrl);
-	}
 
 	console.log(init.method ?? "GET", parsedUrl.href);
 
@@ -211,6 +208,10 @@ export async function fetchAsBotStream({
 	};
 
 	while (true) {
+		if (!skipRobotsCheck) {
+			await checkRobotsAccess(parsedUrl);
+		}
+
 		await stream(
 			opaque.currentUrl,
 			{
