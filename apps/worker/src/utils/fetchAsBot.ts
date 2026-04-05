@@ -96,18 +96,32 @@ export async function fetchAsBot(options: FetchAsBotInit) {
 		signal: init?.signal ?? AbortSignal.timeout(10 * 1000),
 	});
 
-	if (response.statusCode == 301 || response.statusCode == 302) {
+	if (
+		[301, 302, 303, 307, 308].includes(response.statusCode) &&
+		followRedirects > 0
+	) {
 		await response.body.dump();
-		const newLocation = response.headers["location"]?.toString();
-		console.log(`redirect (${response.statusCode})`);
+		const newLocation = response.headers["location"]?.toString() ?? "";
+		const newLocationUrl = URL.parse(newLocation, parsedUrl.origin);
 
-		if (followRedirects > 0 && newLocation && URL.canParse(newLocation)) {
-			const newUrl = new URL(newLocation);
+		if (newLocationUrl) {
+			console.log(
+				`redirect (${response.statusCode}) [${url} -> ${newLocationUrl}]`,
+			);
+
+			if (!["https:", "http:"].includes(newLocationUrl.protocol)) {
+				throw new Error(`Invalid redirect protocol for ${url}`);
+			}
+
 			return await fetchAsBot({
 				...options,
-				url: newUrl,
+				url: newLocationUrl,
 				followRedirects: followRedirects - 1,
 			});
+		} else {
+			throw new Error(
+				`The redirect location ${newLocation} couldn't be parsed as a URL for ${url}`,
+			);
 		}
 	}
 
