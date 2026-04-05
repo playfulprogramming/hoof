@@ -142,6 +142,14 @@ const fetchAsBotStreamFactory: Dispatcher.StreamFactory<
 			console.log(
 				`redirect (${statusCode}) [${opaque.currentUrl} -> ${newLocationUrl}]`,
 			);
+
+			if (!["https:", "http:"].includes(newLocationUrl.protocol)) {
+				opaque.error = new Error(
+					`Invalid redirect protocol for ${opaque.currentUrl}`,
+				);
+				return createWriteStream(devNull);
+			}
+
 			opaque.currentUrl = newLocationUrl;
 			opaque.followRedirects -= 1;
 			opaque.redirect = true;
