@@ -86,7 +86,7 @@ export async function fetchAsBot(options: FetchAsBotInit) {
 
 	console.log(init.method ?? "GET", parsedUrl.href);
 
-	const response = await request(url, {
+	const response = await request(parsedUrl, {
 		...init,
 		headers: {
 			"User-Agent": userAgent,
@@ -106,11 +106,11 @@ export async function fetchAsBot(options: FetchAsBotInit) {
 
 		if (newLocationUrl) {
 			console.log(
-				`redirect (${response.statusCode}) [${url} -> ${newLocationUrl}]`,
+				`redirect (${response.statusCode}) [${parsedUrl} -> ${newLocationUrl}]`,
 			);
 
 			if (!["https:", "http:"].includes(newLocationUrl.protocol)) {
-				throw new Error(`Invalid redirect protocol for ${url}`);
+				throw new Error(`Invalid redirect protocol for ${parsedUrl}`);
 			}
 
 			return await fetchAsBot({
@@ -120,14 +120,14 @@ export async function fetchAsBot(options: FetchAsBotInit) {
 			});
 		} else {
 			throw new Error(
-				`The redirect location ${newLocation} couldn't be parsed as a URL for ${url}`,
+				`The redirect location ${newLocation} couldn't be parsed as a URL for ${parsedUrl}`,
 			);
 		}
 	}
 
 	if (response.statusCode < 200 || response.statusCode > 299) {
 		await response.body.dump();
-		throw new Error(`Request ${url} returned ${response.statusCode}`);
+		throw new Error(`Request ${parsedUrl} returned ${response.statusCode}`);
 	}
 
 	return response;
