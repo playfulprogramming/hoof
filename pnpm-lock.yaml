@@ -13,8 +13,8 @@ catalogs:
       specifier: ^4.0.5
       version: 4.0.18
     bullmq:
-      specifier: ^5.70.1
-      version: 5.70.1
+      specifier: ^5.71.0
+      version: 5.73.0
     drizzle-kit:
       specifier: 1.0.0-beta.20
       version: 1.0.0-beta.20
@@ -198,7 +198,7 @@ importers:
         version: link:../../packages/s3
       bullmq:
         specifier: 'catalog:'
-        version: 5.70.1
+        version: 5.73.0
       drizzle-orm:
         specifier: 'catalog:'
         version: 1.0.0-beta.20(@sinclair/typebox@0.34.49)(@types/mssql@9.1.9(@azure/core-client@1.10.1))(@types/pg@8.16.0)(mssql@11.0.1(@azure/core-client@1.10.1))(pg@8.18.0)(typebox@1.1.5)(zod@4.3.6)
@@ -268,7 +268,7 @@ importers:
         version: link:../redis
       bullmq:
         specifier: 'catalog:'
-        version: 5.70.1
+        version: 5.73.0
       typebox:
         specifier: 'catalog:'
         version: 1.1.5
@@ -3160,8 +3160,8 @@ packages:
   buffer@6.0.3:
     resolution: {integrity: sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==}
 
-  bullmq@5.70.1:
-    resolution: {integrity: sha512-HjfGHfICkAClrFL0Y07qNbWcmiOCv1l+nusupXUjrvTPuDEyPEJ23MP0lUwUs/QEy1a3pWt/P/sCsSZ1RjRK+w==}
+  bullmq@5.73.0:
+    resolution: {integrity: sha512-uX8RbQaBbzk0H9JYXKGrNxpDqFcDBQFFKCyKarMjtfYHuct5X48M2LUq3Q9FXt/P2kWzPrqYlNnNqsico7ty5A==}
 
   bundle-name@4.1.0:
     resolution: {integrity: sha512-tjwM5exMg6BGRI+kNmTntNsvdZS1X8BFYS6tnJ2hdH0kVxM6/eVZ2xy+FqStSWvYmtfFMDLIxurorHwDKfDz5Q==}
@@ -8665,6 +8665,14 @@ snapshots:
     optionalDependencies:
       vite: 7.3.1(@types/node@24.10.11)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3)
 
+  '@vitest/mocker@4.0.18(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))':
+    dependencies:
+      '@vitest/spy': 4.0.18
+      estree-walker: 3.0.3
+      magic-string: 0.30.21
+    optionalDependencies:
+      vite: 7.3.1(@types/node@25.5.0)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3)
+
   '@vitest/pretty-format@4.0.18':
     dependencies:
       tinyrainbow: 3.0.3
@@ -8944,7 +8952,7 @@ snapshots:
       base64-js: 1.5.1
       ieee754: 1.2.1
 
-  bullmq@5.70.1:
+  bullmq@5.73.0:
     dependencies:
       cron-parser: 4.9.0
       ioredis: 5.10.1
@@ -11507,7 +11515,7 @@ snapshots:
   vitest@4.0.18(@types/node@25.5.0)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3):
     dependencies:
       '@vitest/expect': 4.0.18
-      '@vitest/mocker': 4.0.18(vite@7.3.1(@types/node@24.10.11)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))
+      '@vitest/mocker': 4.0.18(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.3))
       '@vitest/pretty-format': 4.0.18
       '@vitest/runner': 4.0.18
       '@vitest/snapshot': 4.0.18
