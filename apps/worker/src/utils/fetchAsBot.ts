@@ -122,7 +122,7 @@ export async function fetchAsBot(options: FetchAsBotInit) {
 interface FetchAsBotStreamFactoryOpaque {
 	writable: Writable;
 	followRedirects: number;
-	currentUrl: string | URL;
+	currentUrl: URL;
 	redirect: boolean;
 	error: Error | null;
 }
@@ -137,7 +137,7 @@ const fetchAsBotStreamFactory: Dispatcher.StreamFactory<
 		opaque.followRedirects > 0
 	) {
 		const newLocation = headers["location"]?.toString() ?? "";
-		const newLocationUrl = URL.parse(newLocation, opaque.currentUrl);
+		const newLocationUrl = URL.parse(newLocation, opaque.currentUrl.origin);
 		if (newLocationUrl) {
 			console.log(
 				`redirect (${statusCode}) [${opaque.currentUrl} -> ${newLocationUrl}]`,
@@ -191,7 +191,7 @@ export async function fetchAsBotStream({
 	const opaque: FetchAsBotStreamFactoryOpaque = {
 		writable,
 		followRedirects,
-		currentUrl: url,
+		currentUrl: parsedUrl,
 		redirect: false,
 		error: null,
 	};
