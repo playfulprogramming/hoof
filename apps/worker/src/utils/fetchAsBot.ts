@@ -213,7 +213,7 @@ export async function fetchAsBotStream({
 
 	while (true) {
 		if (!skipRobotsCheck) {
-			await checkRobotsAccess(parsedUrl);
+			await checkRobotsAccess(opaque.currentUrl);
 		}
 
 		await stream(
