@@ -8,6 +8,7 @@ beforeEach(() => {
 		connectTimeout: 10,
 		headersTimeout: 10,
 	});
+	mockAgent.disableNetConnect();
 	setGlobalDispatcher(mockAgent);
 });
 afterEach(async () => {
