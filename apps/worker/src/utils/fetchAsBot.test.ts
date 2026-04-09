@@ -122,6 +122,56 @@ describe("fetchAsBot", () => {
 		await request(robotsUrl);
 	});
 
+	test("Should not follow redirects when followRedirects is 0", async () => {
+		const baseUrl = "https://example.com";
+
+		mockEndpoint({
+			path: new URL("/robots.txt", baseUrl),
+			body: "User-agent: *\nDisallow:\n",
+			headers: {
+				"content-type": "text/plain",
+			},
+		});
+
+		const url = new URL("/test", baseUrl);
+		const redirectPath = "/another-test";
+		const redirectStatus = 301;
+		mockEndpoint({
+			path: url,
+			body: "Redirecting..",
+			headers: {
+				"content-type": "text/plain",
+				location: redirectPath,
+			},
+			status: redirectStatus,
+		});
+
+		const redirectedUrl = new URL(redirectPath, baseUrl);
+		const redirectionBody = "This is the redirection result.";
+		mockEndpoint({
+			path: redirectedUrl,
+			body: redirectionBody,
+			headers: {
+				"content-type": "text/plain",
+			},
+		});
+
+		const response = await fetchAsBot({
+			url,
+			method: "GET",
+			followRedirects: 0,
+		}).catch((e) => e as Error);
+
+		expect.assert(
+			response instanceof Error === true,
+			"Expected an error to be thrown",
+		);
+		expect(response.message).toBe(`Request ${url} returned ${redirectStatus}`);
+
+		// Consume the remaining redirect mock so afterEach has no pending interceptors
+		await request(redirectedUrl);
+	});
+
 	test("Should handle single redirect", async () => {
 		const baseUrl = "https://example.com";
 
@@ -779,6 +829,64 @@ describe("fetchAsBotStream", () => {
 
 		// Consume the remaining robots.txt mock so afterEach has no pending interceptors
 		await request(robotsUrl);
+	});
+
+	test("Should not follow redirects when followRedirects is 0", async () => {
+		const baseUrl = "https://example.com";
+
+		mockEndpoint({
+			path: new URL("/robots.txt", baseUrl),
+			body: "User-agent: *\nDisallow:\n",
+			headers: {
+				"content-type": "text/plain",
+			},
+		});
+
+		const url = new URL("/test", baseUrl);
+		const redirectPath = "/another-test";
+		const redirectStatus = 301;
+		mockEndpoint({
+			path: url,
+			body: "Redirecting..",
+			headers: {
+				"content-type": "text/plain",
+				location: redirectPath,
+			},
+			status: redirectStatus,
+		});
+
+		const redirectedUrl = new URL(redirectPath, baseUrl);
+		const redirectionBody = "This is the redirection result.";
+		mockEndpoint({
+			path: redirectedUrl,
+			body: redirectionBody,
+			headers: {
+				"content-type": "text/plain",
+			},
+		});
+
+		let body = "";
+		const error = await fetchAsBotStream({
+			url,
+			method: "GET",
+			writable: new Writable({
+				write(chunk, _encoding, next) {
+					body += chunk;
+					next();
+				},
+			}),
+			followRedirects: 0,
+		}).catch((e) => e as Error);
+
+		expect.assert(
+			error instanceof Error === true,
+			"Expected an error to be thrown",
+		);
+		expect(error.message).toBe(`Request ${url} returned ${redirectStatus}`);
+		expect(body).toBe("");
+
+		// Consume the remaining redirect mock so afterEach has no pending interceptors
+		await request(redirectedUrl);
 	});
 
 	test("Should handle single redirect", async () => {
