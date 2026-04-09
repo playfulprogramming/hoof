@@ -1,0 +1,1 @@
+ALTER TABLE "post_data" ADD COLUMN IF NOT EXISTS "word_count" integer DEFAULT 0 NOT NULL;

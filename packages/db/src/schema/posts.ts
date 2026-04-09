@@ -30,6 +30,7 @@ export const postData = pgTable(
 		title: text("title").notNull(),
 		version: text("version").notNull().default(""),
 		description: text("description").notNull().default(""),
+		wordCount: integer("word_count").notNull().default(0),
 		socialImage: text("social_image"),
 		bannerImage: text("banner_image"),
 		originalLink: text("original_link"),

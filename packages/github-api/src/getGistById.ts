@@ -1,4 +1,4 @@
-import { clientWithType } from "./client.ts";
+import { client } from "./client.ts";
 
 export interface GetGistByIdParams {
 	gistId: string;
@@ -6,28 +6,11 @@ export interface GetGistByIdParams {
 }
 
 export async function getGistById(params: GetGistByIdParams) {
-	const response = await clientWithType("application/json").GET(
-		"/gists/{gist_id}",
-		{
-			params: {
-				path: {
-					gist_id: params.gistId,
-				},
-			},
-			headers: {
-				Accept: "application/vnd.github+json",
-			},
+	const response = await client.rest.gists.get({
+		gist_id: params.gistId,
+		request: {
 			signal: params.signal,
 		},
-	);
-
-	const data = response.data;
-
-	if (typeof data === "undefined" || response.error) {
-		throw new Error(
-			`GitHub API (getCommits) returned ${response.response.status} ${response.error}`,
-		);
-	}
-
-	return data;
+	});
+	return response.data;
 }
