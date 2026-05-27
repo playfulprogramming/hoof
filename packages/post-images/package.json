@@ -14,7 +14,7 @@
 	"dependencies": {
 		"@playfulprogramming/bullmq": "workspace:*",
 		"@resvg/resvg-js": "2.6.2",
-		"dayjs": "^1.11.18",
+		"dayjs": "^1.11.20",
 		"gray-matter": "catalog:",
 		"hast-util-to-string": "^3.0.1",
 		"remark-parse": "^11.0.0",
