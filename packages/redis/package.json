@@ -11,6 +11,6 @@
 	},
 	"dependencies": {
 		"@playfulprogramming/common": "workspace:*",
-		"ioredis": "catalog:"
+		"ioredis": "^5.10.1"
 	}
 }
