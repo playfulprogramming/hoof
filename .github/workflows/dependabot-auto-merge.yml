@@ -4,6 +4,9 @@ on:
   pull_request:
     types: [opened, reopened]
 
+permissions:
+  pull-requests: read
+
 jobs:
   dependabot:
     runs-on: ubuntu-latest

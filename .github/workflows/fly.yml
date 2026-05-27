@@ -10,6 +10,9 @@ concurrency:
   group: deploy-group # ensure only one deploy action runs at a time
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     name: Deploy app
