@@ -1,3 +1,4 @@
+export * from "./getAuthorGitHubStats.ts";
 export * from "./getCommits.ts";
 export * from "./getContents.ts";
 export * from "./getContentsRaw.ts";

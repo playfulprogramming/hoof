@@ -59,6 +59,10 @@ vi.mock("@playfulprogramming/db", () => {
 		profiles: {
 			slug: {},
 		},
+		profileAchievements: {
+			profileSlug: {},
+			achievementId: {},
+		},
 		posts: {
 			slug: {},
 		},

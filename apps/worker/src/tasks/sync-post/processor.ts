@@ -1,5 +1,5 @@
 import { env } from "@playfulprogramming/common";
-import { Tasks } from "@playfulprogramming/bullmq";
+import { Tasks, createJob } from "@playfulprogramming/bullmq";
 import { db, posts, postData, postAuthors } from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
 import { s3 } from "@playfulprogramming/s3";
@@ -182,4 +182,15 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			})),
 		);
 	});
+
+	// Re-evaluate achievements for every author touched by this post.
+	// createJob deduplicates by key, so concurrent post syncs for the same
+	// author collapse into a single achievements job.
+	for (const authorSlug of authorSlugs) {
+		await createJob(
+			Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
+			`grant-author-achievements:${authorSlug}`,
+			{ profileSlug: authorSlug, ref },
+		);
+	}
 });

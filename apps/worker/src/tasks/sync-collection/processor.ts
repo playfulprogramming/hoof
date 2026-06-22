@@ -1,5 +1,5 @@
 import { env } from "@playfulprogramming/common";
-import { Tasks } from "@playfulprogramming/bullmq";
+import { Tasks, createJob } from "@playfulprogramming/bullmq";
 import {
 	collectionAuthors,
 	collectionData,
@@ -96,6 +96,10 @@ export default createProcessor(
 			[] as Array<{ entry: Entry; locale: string }>,
 		);
 
+		// Accumulate all unique author slugs touched across locale iterations
+		// so we can enqueue achievements for each of them after the loop.
+		const touchedAuthorSlugs = new Set<string>();
+
 		// Check if coverImg or socialImg have changed since last edit, if so upload to S3
 		for (const { entry, locale } of collectionEntries) {
 			const contentUrl = new URL(entry.path, "http://localhost");
@@ -187,6 +191,8 @@ export default createProcessor(
 				? [...new Set([...collectionParsedData.authors, authorId])]
 				: [authorId];
 
+			authorSlugs.forEach((s) => touchedAuthorSlugs.add(s));
+
 			await db.transaction(async (tx) => {
 				await tx
 					.insert(collections)
@@ -216,6 +222,14 @@ export default createProcessor(
 					);
 				}
 			});
+		}
+
+		for (const authorSlug of touchedAuthorSlugs) {
+			await createJob(
+				Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
+				`grant-author-achievements:${authorSlug}`,
+				{ profileSlug: authorSlug, ref: job.data.ref },
+			);
 		}
 	},
 );

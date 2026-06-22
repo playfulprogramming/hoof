@@ -1,6 +1,6 @@
 import { env } from "@playfulprogramming/common";
-import { Tasks } from "@playfulprogramming/bullmq";
-import { db, profiles } from "@playfulprogramming/db";
+import { Tasks, createJob } from "@playfulprogramming/bullmq";
+import { db, profiles, profileAchievements } from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
 import { s3 } from "@playfulprogramming/s3";
 import { createProcessor } from "../../createProcessor.ts";
@@ -9,7 +9,8 @@ import { AuthorMetaSchema } from "./types.ts";
 import { Value } from "typebox/value";
 import sharp from "sharp";
 import { Readable } from "node:stream";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
+import { MANUAL_ACHIEVEMENT_IDS } from "../grant-author-achievements/achievement-ids.ts";
 
 const PROFILE_IMAGE_SIZE_MAX = 2048;
 
@@ -93,8 +94,42 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 		},
 	};
 
-	await db
-		.insert(profiles)
-		.values(result)
-		.onConflictDoUpdate({ target: profiles.slug, set: result });
+	const earnedManualIds = authorData.achievements.filter(
+		(id): id is (typeof MANUAL_ACHIEVEMENT_IDS)[number] =>
+			(MANUAL_ACHIEVEMENT_IDS as readonly string[]).includes(id),
+	);
+
+	await db.transaction(async (tx) => {
+		await tx
+			.insert(profiles)
+			.values(result)
+			.onConflictDoUpdate({ target: profiles.slug, set: result });
+
+		await tx
+			.delete(profileAchievements)
+			.where(
+				and(
+					eq(profileAchievements.profileSlug, authorId),
+					inArray(
+						profileAchievements.achievementId,
+						MANUAL_ACHIEVEMENT_IDS as unknown as string[],
+					),
+				),
+			);
+
+		if (earnedManualIds.length > 0) {
+			await tx.insert(profileAchievements).values(
+				earnedManualIds.map((achievementId) => ({
+					profileSlug: authorId,
+					achievementId,
+				})),
+			);
+		}
+	});
+
+	await createJob(
+		Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
+		`grant-author-achievements:${authorId}`,
+		{ profileSlug: authorId, ref: job.data.ref },
+	);
 });

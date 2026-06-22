@@ -8,4 +8,8 @@ createWorker(Tasks.SYNC_ALL, "./tasks/sync-all/processor.ts");
 createWorker(Tasks.SYNC_AUTHOR, "./tasks/sync-author/processor.ts");
 createWorker(Tasks.SYNC_COLLECTION, "./tasks/sync-collection/processor.ts");
 createWorker(Tasks.SYNC_POST, "./tasks/sync-post/processor.ts");
+createWorker(
+	Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
+	"./tasks/grant-author-achievements/processor.ts",
+);
 createHealthcheck();
