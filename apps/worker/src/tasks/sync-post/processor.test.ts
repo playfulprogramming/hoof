@@ -60,7 +60,7 @@ test("Syncs a standalone post successfully", async () => {
 				data: `---
 title: "Example Post"
 description: "A test post"
-published: "2024-01-15T00:00:00Z"
+published: "2024-01-15"
 tags:
   - javascript
   - tutorial
@@ -107,7 +107,7 @@ This is the post content.
 		originalLink: null,
 		noindex: false,
 		editedAt: null,
-		publishedAt: new Date("2024-01-15T00:00:00Z"),
+		publishedAt: new Date("2024-01-15"),
 		meta: {
 			tags: ["javascript", "tutorial"],
 		},
@@ -215,7 +215,7 @@ test("Links post to collection when collection is provided", async () => {
 				data: `---
 title: "Chapter One"
 description: "The first chapter"
-published: "2024-01-15T00:00:00Z"
+published: "2024-01-15"
 order: 1
 ---
 `,
@@ -301,7 +301,7 @@ test("Syncs post with multiple locales", async () => {
 			return Promise.resolve({
 				data: `---
 title: "English Post"
-published: "2024-01-15T00:00:00Z"
+published: "2024-01-15"
 ---
 `,
 				status: 200,
@@ -313,7 +313,7 @@ published: "2024-01-15T00:00:00Z"
 			return Promise.resolve({
 				data: `---
 title: "Post en Español"
-published: "2024-01-15T00:00:00Z"
+published: "2024-01-15"
 ---
 `,
 				status: 200,
@@ -414,7 +414,7 @@ test("Handles post with multiple authors", async () => {
 			return Promise.resolve({
 				data: `---
 title: "Collaborative Post"
-published: "2024-01-15T00:00:00Z"
+published: "2024-01-15"
 authors:
   - co-author
 ---
