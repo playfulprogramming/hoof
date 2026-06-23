@@ -87,12 +87,7 @@ export default createProcessor(Tasks.GRANT_AUTHOR_ACHIEVEMENTS, async (job) => {
 	// ── GitHub stats ──────────────────────────────────────────────────────────
 
 	const githubStats = githubLogin
-		? await github.getAuthorGitHubStats(githubLogin).catch((e) => {
-				console.warn(
-					`grant-author-achievements: GitHub stats fetch failed for ${profileSlug}: ${e}`,
-				);
-				return undefined;
-			})
+		? await github.getAuthorGitHubStats(githubLogin)
 		: undefined;
 
 	// ── Evaluate rules ────────────────────────────────────────────────────────

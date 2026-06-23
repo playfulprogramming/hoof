@@ -131,6 +131,12 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	// =========================================================================
 	// Phase 3: Perform all database operations in a single transaction
 	// =========================================================================
+	const previousAuthorRows = await db
+		.select({ authorSlug: postAuthors.authorSlug })
+		.from(postAuthors)
+		.where(eq(postAuthors.postSlug, post));
+	const previousAuthorSlugs = previousAuthorRows.map((r) => r.authorSlug);
+
 	await db.transaction(async (tx) => {
 		await tx
 			.insert(posts)
@@ -183,10 +189,15 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		);
 	});
 
-	// Re-evaluate achievements for every author touched by this post.
+	// Re-evaluate achievements for every author touched by this post, including
+	// authors removed from the frontmatter so their stats are recomputed too.
 	// createJob deduplicates by key, so concurrent post syncs for the same
 	// author collapse into a single achievements job.
-	for (const authorSlug of authorSlugs) {
+	const affectedAuthorSlugs = [
+		...new Set([...authorSlugs, ...previousAuthorSlugs]),
+	];
+
+	for (const authorSlug of affectedAuthorSlugs) {
 		await createJob(
 			Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
 			`grant-author-achievements:${authorSlug}`,

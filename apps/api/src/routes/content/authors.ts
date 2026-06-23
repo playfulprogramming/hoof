@@ -154,6 +154,10 @@ const AuthorResponseSchema = Type.Object({
 
 type AuthorResponse = Static<typeof AuthorResponseSchema>;
 
+const AuthorErrorResponseSchema = Type.Object({
+	error: Type.String(),
+});
+
 const authorsRoutes: FastifyPluginAsync = async (fastify) => {
 	fastify.get<{
 		Params: Static<typeof AuthorParamsSchema>;
@@ -169,6 +173,12 @@ const authorsRoutes: FastifyPluginAsync = async (fastify) => {
 						description: "Successful",
 						content: {
 							"application/json": { schema: AuthorResponseSchema },
+						},
+					},
+					404: {
+						description: "Author not found",
+						content: {
+							"application/json": { schema: AuthorErrorResponseSchema },
 						},
 					},
 				},

@@ -94,7 +94,7 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 		},
 	};
 
-	const earnedManualIds = authorData.achievements.filter(
+	const earnedManualIds = [...new Set(authorData.achievements)].filter(
 		(id): id is (typeof MANUAL_ACHIEVEMENT_IDS)[number] =>
 			(MANUAL_ACHIEVEMENT_IDS as readonly string[]).includes(id),
 	);

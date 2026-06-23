@@ -33,6 +33,12 @@ test("Syncs a standalone post successfully", async () => {
 		where: deleteWhere,
 	} as never);
 
+	vi.mocked(db.select).mockReturnValue({
+		from: vi.fn().mockReturnValue({
+			where: vi.fn().mockResolvedValue([]),
+		}),
+	} as never);
+
 	// Mock GitHub: return folder listing with index.md
 	vi.mocked(github.getContents).mockImplementation(((params: {
 		path: string;
@@ -183,6 +189,12 @@ test("Links post to collection when collection is provided", async () => {
 		where: deleteWhere,
 	} as never);
 
+	vi.mocked(db.select).mockReturnValue({
+		from: vi.fn().mockReturnValue({
+			where: vi.fn().mockResolvedValue([]),
+		}),
+	} as never);
+
 	// Note: collection path format
 	vi.mocked(github.getContents).mockImplementation(((params: {
 		path: string;
@@ -268,6 +280,12 @@ test("Syncs post with multiple locales", async () => {
 	const deleteWhere = vi.fn();
 	vi.mocked(db.delete).mockReturnValue({
 		where: deleteWhere,
+	} as never);
+
+	vi.mocked(db.select).mockReturnValue({
+		from: vi.fn().mockReturnValue({
+			where: vi.fn().mockResolvedValue([]),
+		}),
 	} as never);
 
 	// Return folder listing with both index.md and index.es.md
@@ -388,6 +406,12 @@ test("Handles post with multiple authors", async () => {
 	const deleteWhere = vi.fn();
 	vi.mocked(db.delete).mockReturnValue({
 		where: deleteWhere,
+	} as never);
+
+	vi.mocked(db.select).mockReturnValue({
+		from: vi.fn().mockReturnValue({
+			where: vi.fn().mockResolvedValue([]),
+		}),
 	} as never);
 
 	vi.mocked(github.getContents).mockImplementation(((params: {

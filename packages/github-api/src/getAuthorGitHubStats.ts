@@ -63,7 +63,8 @@ export async function getAuthorGitHubStats(
 	if (!env.GITHUB_TOKEN) return undefined;
 
 	const userResult = (await client.graphql<Record<string, { id: string }>>(
-		`query { user(login: "${githubLogin}") { id } }`,
+		`query($login: String!) { user(login: $login) { id } }`,
+		{ login: githubLogin },
 	)) as Record<string, { id: string }>;
 
 	const userId = userResult?.user?.id;
