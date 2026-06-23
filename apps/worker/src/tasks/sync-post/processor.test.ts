@@ -1,5 +1,5 @@
 import processor from "./processor.ts";
-import type { TaskInputs } from "@playfulprogramming/bullmq";
+import { createJob, type TaskInputs, Tasks } from "@playfulprogramming/bullmq";
 import type { Job } from "bullmq";
 import { posts, postData, postAuthors, db } from "@playfulprogramming/db";
 import { s3 } from "@playfulprogramming/s3";
@@ -135,6 +135,17 @@ test("Deletes a post record if it no longer exists", async () => {
 		where: deleteWhere,
 	} as never);
 
+	vi.mocked(db.select).mockReturnValue({
+		from: vi.fn().mockReturnValue({
+			where: vi
+				.fn()
+				.mockResolvedValue([
+					{ authorSlug: "example-author" },
+					{ authorSlug: "co-author" },
+				]),
+		}),
+	} as never);
+
 	// Mock GitHub: return 404
 	vi.mocked(github.getContents).mockImplementation(((params: {
 		path: string;
@@ -160,6 +171,18 @@ test("Deletes a post record if it no longer exists", async () => {
 	// Assert: Post was deleted from posts table (cascade handles related tables)
 	expect(db.delete).toBeCalledWith(posts);
 	expect(deleteWhere).toBeCalledWith(eq(posts.slug, "example-post"));
+
+	// Assert: Achievements re-evaluated for the authors who were on the post
+	expect(createJob).toBeCalledWith(
+		Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
+		"grant-author-achievements:example-author",
+		{ profileSlug: "example-author", ref: "main" },
+	);
+	expect(createJob).toBeCalledWith(
+		Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
+		"grant-author-achievements:co-author",
+		{ profileSlug: "co-author", ref: "main" },
+	);
 });
 
 test("Links post to collection when collection is provided", async () => {

@@ -40,7 +40,20 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 				`Post ${post} (${basePath}) returned 404 - removing from database.`,
 			);
 
+			const removedAuthorRows = await db
+				.select({ authorSlug: postAuthors.authorSlug })
+				.from(postAuthors)
+				.where(eq(postAuthors.postSlug, post));
+
 			await db.delete(posts).where(eq(posts.slug, post));
+
+			for (const { authorSlug } of removedAuthorRows) {
+				await createJob(
+					Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
+					`grant-author-achievements:${authorSlug}`,
+					{ profileSlug: authorSlug, ref },
+				);
+			}
 
 			return;
 		}
