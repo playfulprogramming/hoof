@@ -60,7 +60,7 @@ test("Syncs a standalone post successfully", async () => {
 				data: `---
 title: "Example Post"
 description: "A test post"
-published: "2024-01-15"
+published: "2024-01-15T00:00:00Z"
 tags:
   - javascript
   - tutorial
@@ -107,7 +107,7 @@ This is the post content.
 		originalLink: null,
 		noindex: false,
 		editedAt: null,
-		publishedAt: new Date("2024-01-15"),
+		publishedAt: new Date("2024-01-15T00:00:00Z"),
 		meta: {
 			tags: ["javascript", "tutorial"],
 		},
@@ -121,6 +121,90 @@ This is the post content.
 			authorSlug: "example-author",
 		},
 	]);
+});
+
+test("Syncs a post with a date-only published value", async () => {
+	const insertPostsValues = vi.fn().mockReturnValue({
+		onConflictDoNothing: vi.fn(),
+	});
+	const insertPostDataValues = vi.fn().mockReturnValue({
+		onConflictDoUpdate: vi.fn(),
+	});
+	const insertPostAuthorsValues = vi.fn();
+
+	vi.mocked(db.insert).mockImplementation((table) => {
+		if (table === posts) {
+			return { values: insertPostsValues } as never;
+		}
+		if (table === postData) {
+			return { values: insertPostDataValues } as never;
+		}
+		if (table === postAuthors) {
+			return { values: insertPostAuthorsValues } as never;
+		}
+		throw new Error(`Unexpected table: ${table}`);
+	});
+
+	const deleteWhere = vi.fn();
+	vi.mocked(db.delete).mockReturnValue({
+		where: deleteWhere,
+	} as never);
+
+	vi.mocked(github.getContents).mockImplementation(((params: {
+		path: string;
+	}) => {
+		if (params.path === "/content/example-author/posts/date-only-post/") {
+			return Promise.resolve({
+				data: {
+					entries: [
+						{
+							name: "index.md",
+							path: "content/example-author/posts/date-only-post/index.md",
+						},
+					],
+				},
+				status: 200,
+			});
+		}
+		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
+	}) as never);
+
+	vi.mocked(github.getContentsRaw).mockImplementation((params) => {
+		if (
+			params.path === "/content/example-author/posts/date-only-post/index.md"
+		) {
+			return Promise.resolve({
+				data: `---
+title: "Date Only Post"
+description: "A test post with a date-only published value"
+published: "2024-01-15"
+---
+
+# Hello World
+
+This is the post content.
+`,
+				status: 200,
+			});
+		}
+		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
+	});
+
+	await processor({
+		data: {
+			author: "example-author",
+			post: "date-only-post",
+			ref: "main",
+		},
+	} as unknown as Job<TaskInputs["sync-post"]>);
+
+	expect(insertPostDataValues).toBeCalledWith(
+		expect.objectContaining({
+			slug: "date-only-post",
+			title: "Date Only Post",
+			publishedAt: new Date("2024-01-15"),
+		}),
+	);
 });
 
 test("Deletes a post record if it no longer exists", async () => {
@@ -215,7 +299,7 @@ test("Links post to collection when collection is provided", async () => {
 				data: `---
 title: "Chapter One"
 description: "The first chapter"
-published: "2024-01-15"
+published: "2024-01-15T00:00:00Z"
 order: 1
 ---
 `,
@@ -301,7 +385,7 @@ test("Syncs post with multiple locales", async () => {
 			return Promise.resolve({
 				data: `---
 title: "English Post"
-published: "2024-01-15"
+published: "2024-01-15T00:00:00Z"
 ---
 `,
 				status: 200,
@@ -313,7 +397,7 @@ published: "2024-01-15"
 			return Promise.resolve({
 				data: `---
 title: "Post en Español"
-published: "2024-01-15"
+published: "2024-01-15T00:00:00Z"
 ---
 `,
 				status: 200,
@@ -414,7 +498,7 @@ test("Handles post with multiple authors", async () => {
 			return Promise.resolve({
 				data: `---
 title: "Collaborative Post"
-published: "2024-01-15"
+published: "2024-01-15T00:00:00Z"
 authors:
   - co-author
 ---

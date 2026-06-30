@@ -3,7 +3,10 @@ import { Type } from "typebox";
 export const PostMetaSchema = Type.Object(
 	{
 		title: Type.String(),
-		published: Type.String({ format: "date" }),
+		published: Type.Union([
+			Type.String({ format: "date" }),
+			Type.String({ format: "date-time" }),
+		]),
 		description: Type.Optional(Type.String()),
 		version: Type.String({ default: "" }),
 		noindex: Type.Optional(Type.Boolean({ default: false })),
