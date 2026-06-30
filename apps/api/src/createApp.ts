@@ -6,6 +6,7 @@ import { healthRoutes } from "./routes/health.ts";
 import postImagesRoutes from "./routes/tasks/post-images.ts";
 import urlMetadataRoutes from "./routes/tasks/url-metadata.ts";
 import collectionsRoutes from "./routes/content/collections.ts";
+import profilesRoutes from "./routes/content/profiles.ts";
 import fastify from "fastify";
 import devRoutes from "./routes/dev/index.ts";
 
@@ -21,6 +22,7 @@ export const createApp = () => {
 	app.register(postImagesRoutes);
 	app.register(urlMetadataRoutes);
 	app.register(collectionsRoutes);
+	app.register(profilesRoutes);
 
 	if (env.ENVIRONMENT === "development") {
 		app.register(devRoutes);
