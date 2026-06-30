@@ -123,6 +123,90 @@ This is the post content.
 	]);
 });
 
+test("Syncs a post with a date-only published value", async () => {
+	const insertPostsValues = vi.fn().mockReturnValue({
+		onConflictDoNothing: vi.fn(),
+	});
+	const insertPostDataValues = vi.fn().mockReturnValue({
+		onConflictDoUpdate: vi.fn(),
+	});
+	const insertPostAuthorsValues = vi.fn();
+
+	vi.mocked(db.insert).mockImplementation((table) => {
+		if (table === posts) {
+			return { values: insertPostsValues } as never;
+		}
+		if (table === postData) {
+			return { values: insertPostDataValues } as never;
+		}
+		if (table === postAuthors) {
+			return { values: insertPostAuthorsValues } as never;
+		}
+		throw new Error(`Unexpected table: ${table}`);
+	});
+
+	const deleteWhere = vi.fn();
+	vi.mocked(db.delete).mockReturnValue({
+		where: deleteWhere,
+	} as never);
+
+	vi.mocked(github.getContents).mockImplementation(((params: {
+		path: string;
+	}) => {
+		if (params.path === "/content/example-author/posts/date-only-post/") {
+			return Promise.resolve({
+				data: {
+					entries: [
+						{
+							name: "index.md",
+							path: "content/example-author/posts/date-only-post/index.md",
+						},
+					],
+				},
+				status: 200,
+			});
+		}
+		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
+	}) as never);
+
+	vi.mocked(github.getContentsRaw).mockImplementation((params) => {
+		if (
+			params.path === "/content/example-author/posts/date-only-post/index.md"
+		) {
+			return Promise.resolve({
+				data: `---
+title: "Date Only Post"
+description: "A test post with a date-only published value"
+published: "2024-01-15"
+---
+
+# Hello World
+
+This is the post content.
+`,
+				status: 200,
+			});
+		}
+		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
+	});
+
+	await processor({
+		data: {
+			author: "example-author",
+			post: "date-only-post",
+			ref: "main",
+		},
+	} as unknown as Job<TaskInputs["sync-post"]>);
+
+	expect(insertPostDataValues).toBeCalledWith(
+		expect.objectContaining({
+			slug: "date-only-post",
+			title: "Date Only Post",
+			publishedAt: new Date("2024-01-15"),
+		}),
+	);
+});
+
 test("Deletes a post record if it no longer exists", async () => {
 	const deleteWhere = vi.fn();
 	vi.mocked(db.delete).mockReturnValue({
