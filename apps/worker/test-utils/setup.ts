@@ -106,5 +106,6 @@ vi.mock("@playfulprogramming/github-api", async (importOriginal) => {
 		getContentsRaw: vi.fn(),
 		getContentsRawStream: vi.fn(),
 		getGistById: vi.fn(),
+		getAuthorGitHubStats: vi.fn().mockResolvedValue(undefined),
 	};
 });
