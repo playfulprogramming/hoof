@@ -1,20 +1,11 @@
 import { client } from "./client.ts";
 import { env } from "@playfulprogramming/common";
+import { contributorYears } from "./contributorYears.ts";
 
 export interface AuthorGitHubStats {
 	issueCount: number;
 	pullRequestCount: number;
 	commitsInYear: number[];
-}
-
-const FIRST_CONTRIBUTOR_YEAR = 2019;
-
-function contributorYears(): number[] {
-	const years: number[] = [];
-	for (let y = FIRST_CONTRIBUTOR_YEAR; y <= new Date().getFullYear(); y++) {
-		years.push(y);
-	}
-	return years;
 }
 
 const years = contributorYears();

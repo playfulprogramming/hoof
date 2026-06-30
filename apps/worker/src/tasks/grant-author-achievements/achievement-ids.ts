@@ -1,3 +1,5 @@
+import { contributorYears } from "@playfulprogramming/github-api";
+
 export const MANUAL_ACHIEVEMENT_IDS = [
 	"site-redesign",
 	"site-logo",
@@ -25,16 +27,6 @@ interface AchievementRuleInput {
 interface AchievementRule {
 	id: string;
 	check: (input: AchievementRuleInput) => boolean;
-}
-
-const FIRST_CONTRIBUTOR_YEAR = 2019;
-
-function contributorYears(): number[] {
-	const years: number[] = [];
-	for (let y = FIRST_CONTRIBUTOR_YEAR; y <= new Date().getFullYear(); y++) {
-		years.push(y);
-	}
-	return years;
 }
 
 export const ACHIEVEMENT_RULES: AchievementRule[] = [
