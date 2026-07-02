@@ -36,6 +36,7 @@ describe("Post Routes Tests", () => {
 				],
 				collection: {
 					slug: "example-collection",
+					data: [{ title: "Example Collection" }],
 					posts: [
 						{
 							slug: "chapter-two",
@@ -68,20 +69,20 @@ describe("Post Routes Tests", () => {
 				    },
 				  ],
 				  "bannerUrl": "https://s3_public_url.test/s3_bucket/content/banner.png",
-				  "chapters": [
-				    {
-				      "collectionOrder": 0,
-				      "isCurrent": false,
-				      "slug": "chapter-one",
-				      "title": "Chapter One",
-				    },
-				    {
-				      "collectionOrder": 1,
-				      "isCurrent": true,
-				      "slug": "chapter-two",
-				      "title": "Chapter Two",
-				    },
-				  ],
+				  "collection": {
+				    "chapters": [
+				      {
+				        "slug": "chapter-one",
+				        "title": "Chapter One",
+				      },
+				      {
+				        "slug": "chapter-two",
+				        "title": "Chapter Two",
+				      },
+				    ],
+				    "slug": "example-collection",
+				    "title": "Example Collection",
+				  },
 				  "description": "The second chapter",
 				  "publishedAt": "2024-01-15T00:00:00.000Z",
 				  "slug": "chapter-two",
@@ -92,7 +93,7 @@ describe("Post Routes Tests", () => {
 			`);
 		});
 
-		test("returns an empty chapter list when the post is not part of a collection", async () => {
+		test("omits collection when the post is not part of a collection", async () => {
 			vi.mocked(db.query.posts.findFirst).mockResolvedValue({
 				slug: "standalone-post",
 				data: [
@@ -126,7 +127,6 @@ describe("Post Routes Tests", () => {
 				      "name": "Corbin Crutchley",
 				    },
 				  ],
-				  "chapters": [],
 				  "description": "A post with no collection",
 				  "publishedAt": "2024-01-15T00:00:00.000Z",
 				  "slug": "standalone-post",
@@ -183,6 +183,7 @@ describe("Post Routes Tests", () => {
 				authors: [],
 				collection: {
 					slug: "example-collection",
+					data: [{ title: "Example Collection" }],
 					posts: [
 						{
 							slug: "chapter-one",
@@ -223,20 +224,20 @@ describe("Post Routes Tests", () => {
 			expect(response.json()).toMatchInlineSnapshot(`
 				{
 				  "authors": [],
-				  "chapters": [
-				    {
-				      "collectionOrder": 0,
-				      "isCurrent": true,
-				      "slug": "chapter-one",
-				      "title": "Chapter One",
-				    },
-				    {
-				      "collectionOrder": 2,
-				      "isCurrent": false,
-				      "slug": "chapter-three",
-				      "title": "Chapter Three",
-				    },
-				  ],
+				  "collection": {
+				    "chapters": [
+				      {
+				        "slug": "chapter-one",
+				        "title": "Chapter One",
+				      },
+				      {
+				        "slug": "chapter-three",
+				        "title": "Chapter Three",
+				      },
+				    ],
+				    "slug": "example-collection",
+				    "title": "Example Collection",
+				  },
 				  "description": "The first chapter",
 				  "publishedAt": "2024-01-15T00:00:00.000Z",
 				  "slug": "chapter-one",

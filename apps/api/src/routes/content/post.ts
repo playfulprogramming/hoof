@@ -27,12 +27,16 @@ const PostResponseSchema = Type.Object(
 				profileImageUrl: Type.Optional(Type.String()),
 			}),
 		),
-		chapters: Type.Array(
+		collection: Type.Optional(
 			Type.Object({
 				slug: Type.String(),
 				title: Type.String(),
-				collectionOrder: Type.Number(),
-				isCurrent: Type.Boolean(),
+				chapters: Type.Array(
+					Type.Object({
+						slug: Type.String(),
+						title: Type.String(),
+					}),
+				),
 			}),
 		),
 	},
@@ -53,20 +57,14 @@ const PostResponseSchema = Type.Object(
 						profileImageUrl: "https://example.test/profile.jpg",
 					},
 				],
-				chapters: [
-					{
-						slug: "example-post",
-						title: "Example Post",
-						collectionOrder: 0,
-						isCurrent: true,
-					},
-					{
-						slug: "example-post-2",
-						title: "Example Post 2",
-						collectionOrder: 1,
-						isCurrent: false,
-					},
-				],
+				collection: {
+					slug: "example-collection",
+					title: "Example Collection",
+					chapters: [
+						{ slug: "example-post", title: "Example Post" },
+						{ slug: "example-post-2", title: "Example Post 2" },
+					],
+				},
 			},
 		],
 	},
@@ -128,6 +126,10 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 					authors: { columns: { slug: true, name: true, profileImage: true } },
 					collection: {
 						with: {
+							data: {
+								columns: { title: true },
+								where: { locale },
+							},
 							posts: {
 								columns: { slug: true, collectionOrder: true },
 								with: {
@@ -150,17 +152,25 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 				return;
 			}
 
-			const chapters = (post.collection?.posts ?? [])
-				.filter(
-					(chapter) => chapter.data[0] && chapter.data[0].publishedAt !== null,
-				)
-				.map((chapter) => ({
-					slug: chapter.slug,
-					title: chapter.data[0].title,
-					collectionOrder: chapter.collectionOrder,
-					isCurrent: chapter.slug === post.slug,
-				}))
-				.sort((a, b) => a.collectionOrder - b.collectionOrder);
+			const collectionData = post.collection?.data[0];
+
+			const collection: PostResponse["collection"] =
+				post.collection && collectionData
+					? {
+							slug: post.collection.slug,
+							title: collectionData.title,
+							chapters: post.collection.posts
+								.filter(
+									(chapter) =>
+										chapter.data[0] && chapter.data[0].publishedAt !== null,
+								)
+								.sort((a, b) => a.collectionOrder - b.collectionOrder)
+								.map((chapter) => ({
+									slug: chapter.slug,
+									title: chapter.data[0].title,
+								})),
+						}
+					: undefined;
 
 			const response: PostResponse = {
 				slug: post.slug,
@@ -183,7 +193,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 						? createImageUrl(author.profileImage)
 						: undefined,
 				})),
-				chapters,
+				collection,
 			};
 
 			reply.code(200);
