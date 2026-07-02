@@ -176,12 +176,12 @@ test("Deletes a post record if it no longer exists", async () => {
 	expect(createJob).toBeCalledWith(
 		Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
 		"grant-author-achievements:example-author",
-		{ profileSlug: "example-author", ref: "main" },
+		{ profileSlug: "example-author" },
 	);
 	expect(createJob).toBeCalledWith(
 		Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
 		"grant-author-achievements:co-author",
-		{ profileSlug: "co-author", ref: "main" },
+		{ profileSlug: "co-author" },
 	);
 });
 

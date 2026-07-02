@@ -5,24 +5,24 @@ import {
 	postAuthors,
 	postData,
 	collectionAuthors,
+	collectionData,
 } from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
 import { createProcessor } from "../../createProcessor.ts";
-import { and, eq, inArray, max, count, ne } from "drizzle-orm";
+import { and, eq, inArray, max, count, ne, isNotNull } from "drizzle-orm";
 import { ACHIEVEMENT_RULES, ALL_POSSIBLE_AUTO_IDS } from "./achievement-ids.ts";
 
 export default createProcessor(Tasks.GRANT_AUTHOR_ACHIEVEMENTS, async (job) => {
-	const { profileSlug, ref: _ref } = job.data;
+	const { profileSlug } = job.data;
 
 	const profile = await db.query.profiles.findFirst({
 		where: { slug: profileSlug },
 	});
 
 	if (!profile) {
-		console.log(
-			`grant-author-achievements: profile ${profileSlug} not found, skipping.`,
+		throw new Error(
+			`grant-author-achievements: profile ${profileSlug} not found.`,
 		);
-		return;
 	}
 
 	const meta = profile.meta as {
@@ -47,7 +47,12 @@ export default createProcessor(Tasks.GRANT_AUTHOR_ACHIEVEMENTS, async (job) => {
 			postData,
 			and(eq(postData.slug, postAuthors.postSlug), eq(postData.locale, "en")),
 		)
-		.where(eq(postAuthors.authorSlug, profileSlug))
+		.where(
+			and(
+				eq(postAuthors.authorSlug, profileSlug),
+				isNotNull(postData.publishedAt),
+			),
+		)
 		.groupBy(postAuthors.postSlug);
 
 	const postCount = wordCountRows.length;
@@ -81,7 +86,19 @@ export default createProcessor(Tasks.GRANT_AUTHOR_ACHIEVEMENTS, async (job) => {
 	const collectionCountResult = await db
 		.select({ value: count() })
 		.from(collectionAuthors)
-		.where(eq(collectionAuthors.authorSlug, profileSlug));
+		.innerJoin(
+			collectionData,
+			and(
+				eq(collectionData.slug, collectionAuthors.collectionSlug),
+				eq(collectionData.locale, "en"),
+			),
+		)
+		.where(
+			and(
+				eq(collectionAuthors.authorSlug, profileSlug),
+				isNotNull(collectionData.publishedAt),
+			),
+		);
 	const collectionCount = collectionCountResult[0]?.value ?? 0;
 
 	// ── GitHub stats ──────────────────────────────────────────────────────────

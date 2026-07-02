@@ -130,6 +130,6 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 	await createJob(
 		Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
 		`grant-author-achievements:${authorId}`,
-		{ profileSlug: authorId, ref: job.data.ref },
+		{ profileSlug: authorId },
 	);
 });
