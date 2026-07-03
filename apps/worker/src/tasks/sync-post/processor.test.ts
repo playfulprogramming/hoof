@@ -1,7 +1,13 @@
 import processor from "./processor.ts";
 import type { TaskInputs } from "@playfulprogramming/bullmq";
 import type { Job } from "bullmq";
-import { posts, postData, postAuthors, db } from "@playfulprogramming/db";
+import {
+	posts,
+	postData,
+	postAuthors,
+	postTags,
+	db,
+} from "@playfulprogramming/db";
 import { s3 } from "@playfulprogramming/s3";
 import * as github from "@playfulprogramming/github-api";
 import { eq } from "drizzle-orm";
@@ -14,6 +20,7 @@ test("Syncs a standalone post successfully", async () => {
 		onConflictDoUpdate: vi.fn(),
 	});
 	const insertPostAuthorsValues = vi.fn();
+	const insertPostTagsValues = vi.fn();
 
 	vi.mocked(db.insert).mockImplementation((table) => {
 		if (table === posts) {
@@ -24,6 +31,9 @@ test("Syncs a standalone post successfully", async () => {
 		}
 		if (table === postAuthors) {
 			return { values: insertPostAuthorsValues } as never;
+		}
+		if (table === postTags) {
+			return { values: insertPostTagsValues } as never;
 		}
 		throw new Error(`Unexpected table: ${table}`);
 	});
@@ -119,6 +129,19 @@ This is the post content.
 		{
 			postSlug: "example-post",
 			authorSlug: "example-author",
+		},
+	]);
+
+	// Assert: Old tags deleted, new tags inserted
+	expect(deleteWhere).toBeCalledWith(eq(postTags.postSlug, "example-post"));
+	expect(insertPostTagsValues).toBeCalledWith([
+		{
+			postSlug: "example-post",
+			tag: "javascript",
+		},
+		{
+			postSlug: "example-post",
+			tag: "tutorial",
 		},
 	]);
 });
@@ -526,6 +549,122 @@ authors:
 		{
 			postSlug: "collab-post",
 			authorSlug: "co-author",
+		},
+	]);
+});
+
+test("Unions tags across all locales", async () => {
+	const insertPostsValues = vi.fn().mockReturnValue({
+		onConflictDoNothing: vi.fn(),
+	});
+	const insertPostDataValues = vi.fn().mockReturnValue({
+		onConflictDoUpdate: vi.fn(),
+	});
+	const insertPostAuthorsValues = vi.fn();
+	const insertPostTagsValues = vi.fn();
+
+	vi.mocked(db.insert).mockImplementation((table) => {
+		if (table === posts) {
+			return { values: insertPostsValues } as never;
+		}
+		if (table === postData) {
+			return { values: insertPostDataValues } as never;
+		}
+		if (table === postAuthors) {
+			return { values: insertPostAuthorsValues } as never;
+		}
+		if (table === postTags) {
+			return { values: insertPostTagsValues } as never;
+		}
+		throw new Error(`Unexpected table: ${table}`);
+	});
+
+	const deleteWhere = vi.fn();
+	vi.mocked(db.delete).mockReturnValue({
+		where: deleteWhere,
+	} as never);
+
+	// Return folder listing with both index.md and index.es.md
+	vi.mocked(github.getContents).mockImplementation(((params: {
+		path: string;
+	}) => {
+		if (params.path === "/content/example-author/posts/multilang-tags-post/") {
+			return Promise.resolve({
+				data: {
+					entries: [
+						{
+							name: "index.md",
+							path: "content/example-author/posts/multilang-tags-post/index.md",
+						},
+						{
+							name: "index.es.md",
+							path: "content/example-author/posts/multilang-tags-post/index.es.md",
+						},
+					],
+				},
+				status: 200,
+			});
+		}
+		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
+	}) as never);
+
+	vi.mocked(github.getContentsRaw).mockImplementation((params) => {
+		if (
+			params.path ===
+			"/content/example-author/posts/multilang-tags-post/index.md"
+		) {
+			return Promise.resolve({
+				data: `---
+title: "English Post"
+published: "2024-01-15T00:00:00Z"
+tags:
+  - javascript
+  - tutorial
+---
+`,
+				status: 200,
+			});
+		}
+		if (
+			params.path ===
+			"/content/example-author/posts/multilang-tags-post/index.es.md"
+		) {
+			return Promise.resolve({
+				data: `---
+title: "Post en Español"
+published: "2024-01-15T00:00:00Z"
+tags:
+  - tutorial
+  - espanol
+---
+`,
+				status: 200,
+			});
+		}
+		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
+	});
+
+	await processor({
+		data: {
+			author: "example-author",
+			post: "multilang-tags-post",
+			ref: "main",
+		},
+	} as unknown as Job<TaskInputs["sync-post"]>);
+
+	// Assert: Tags from both locales are unioned, with duplicates deduped
+	expect(insertPostTagsValues).toBeCalledWith([
+		{
+			postSlug: "multilang-tags-post",
+			tag: "javascript",
+		},
+		{
+			postSlug: "multilang-tags-post",
+			tag: "tutorial",
+		},
+		{
+			postSlug: "multilang-tags-post",
+			tag: "espanol",
 		},
 	]);
 });

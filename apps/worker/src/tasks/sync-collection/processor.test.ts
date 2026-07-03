@@ -5,6 +5,7 @@ import {
 	collections,
 	collectionAuthors,
 	collectionData,
+	collectionTags,
 	db,
 } from "@playfulprogramming/db";
 import { s3 } from "@playfulprogramming/s3";
@@ -22,6 +23,7 @@ test("Creates an example collection successfully", async () => {
 		onConflictDoUpdate: vi.fn(),
 	});
 	const insertAuthorValues = vi.fn();
+	const insertTagsValues = vi.fn();
 	vi.mocked(db.insert).mockImplementation((table) => {
 		if (table === collections) {
 			return { values: insertCollectionValues } as never;
@@ -31,6 +33,9 @@ test("Creates an example collection successfully", async () => {
 		}
 		if (table === collectionAuthors) {
 			return { values: insertAuthorValues } as never;
+		}
+		if (table === collectionTags) {
+			return { values: insertTagsValues } as never;
 		}
 		throw new Error(`Unexpected table: ${table}`);
 	});
@@ -72,6 +77,9 @@ title: "Example Collection"
 description: "A test collection"
 coverImg: "./cover.png"
 published: "2023-01-01T00:00:00Z"
+tags:
+  - javascript
+  - tutorial
 ---
 `,
 				status: 200,
@@ -122,7 +130,7 @@ published: "2023-01-01T00:00:00Z"
 		socialImage: null,
 		meta: {
 			buttons: undefined,
-			tags: undefined,
+			tags: ["javascript", "tutorial"],
 			chapterList: undefined,
 		},
 	});
@@ -135,6 +143,21 @@ published: "2023-01-01T00:00:00Z"
 		{
 			collectionSlug: "example-collection",
 			authorSlug: "example-author",
+		},
+	]);
+
+	// The tag association was deleted and re-inserted
+	expect(deleteWhere).toBeCalledWith(
+		eq(collectionTags.collectionSlug, "example-collection"),
+	);
+	expect(insertTagsValues).toBeCalledWith([
+		{
+			collectionSlug: "example-collection",
+			tag: "javascript",
+		},
+		{
+			collectionSlug: "example-collection",
+			tag: "tutorial",
 		},
 	]);
 });
@@ -364,6 +387,117 @@ published: "2023-01-01T00:00:00Z"
 		{
 			collectionSlug: "example-collection",
 			authorSlug: "example-author",
+		},
+	]);
+});
+
+test("Handles collection with multiple tags", async () => {
+	const insertCollectionValues = vi.fn().mockReturnValue({
+		onConflictDoNothing: vi.fn(),
+	});
+	const insertCollectionDataValues = vi.fn().mockReturnValue({
+		onConflictDoUpdate: vi.fn(),
+	});
+	const insertAuthorValues = vi.fn();
+	const insertTagsValues = vi.fn();
+	vi.mocked(db.insert).mockImplementation((table) => {
+		if (table === collections) {
+			return { values: insertCollectionValues } as never;
+		}
+		if (table === collectionData) {
+			return { values: insertCollectionDataValues } as never;
+		}
+		if (table === collectionAuthors) {
+			return { values: insertAuthorValues } as never;
+		}
+		if (table === collectionTags) {
+			return { values: insertTagsValues } as never;
+		}
+		throw new Error(`Unexpected table: ${table}`);
+	});
+
+	const deleteWhere = vi.fn();
+	vi.mocked(db.delete).mockReturnValue({
+		where: deleteWhere,
+	} as never);
+
+	vi.mocked(github.getContents).mockImplementation(((params: {
+		path: string;
+	}) => {
+		if (
+			params.path === "/content/example-author/collections/example-collection/"
+		) {
+			return Promise.resolve({
+				data: {
+					entries: [
+						{
+							name: "index.md",
+							path: "content/example-author/collections/example-collection/index.md",
+						},
+					],
+				},
+				status: 200,
+			});
+		}
+		return Promise.reject();
+	}) as never);
+
+	vi.mocked(github.getContentsRaw).mockImplementation((params) => {
+		if (
+			params.path ===
+			"/content/example-author/collections/example-collection/index.md"
+		) {
+			return Promise.resolve({
+				data: `---
+title: "Example Collection"
+description: "A test collection"
+coverImg: "./cover.png"
+published: "2023-01-01T00:00:00Z"
+tags:
+  - javascript
+  - tutorial
+---
+`,
+				status: 200,
+			});
+		}
+		return Promise.reject();
+	});
+
+	vi.mocked(github.getContentsRawStream).mockImplementation((params) => {
+		if (
+			params.path ===
+			"/content/example-author/collections/example-collection/cover.png"
+		) {
+			const buffer = Buffer.from(mockImage, "base64");
+			return Promise.resolve({
+				data: Readable.toWeb(Readable.from(buffer)) as never,
+				status: 200,
+			});
+		}
+		return Promise.reject();
+	});
+
+	await processor({
+		data: {
+			author: "example-author",
+			collection: "example-collection",
+			ref: "main",
+		},
+	} as unknown as Job<TaskInputs["sync-collection"]>);
+
+	// Both tags should be inserted, and the old association deleted first
+	expect(deleteWhere).toBeCalledWith(
+		eq(collectionTags.collectionSlug, "example-collection"),
+	);
+	expect(insertTagsValues).toBeCalledWith([
+		{
+			collectionSlug: "example-collection",
+			tag: "javascript",
+		},
+		{
+			collectionSlug: "example-collection",
+			tag: "tutorial",
 		},
 	]);
 });

@@ -1,6 +1,12 @@
 import { env } from "@playfulprogramming/common";
 import { Tasks } from "@playfulprogramming/bullmq";
-import { db, posts, postData, postAuthors } from "@playfulprogramming/db";
+import {
+	db,
+	posts,
+	postData,
+	postAuthors,
+	postTags,
+} from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
 import { s3 } from "@playfulprogramming/s3";
 import { createProcessor } from "../../createProcessor.ts";
@@ -70,6 +76,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	// Phase 1: Collect all data from GitHub
 	// =========================================================================
 	const allAuthorSlugs = new Set<string>([author]);
+	const allTags = new Set<string>();
 
 	const localeData = await Promise.all(
 		localeFiles.map(async (file) => {
@@ -98,6 +105,10 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 				parsed.authors.forEach((a) => allAuthorSlugs.add(a));
 			}
 
+			if (parsed.tags) {
+				parsed.tags.forEach((t) => allTags.add(t));
+			}
+
 			// If the description is missing, populate it from the content
 			parsed.description ??= extractMarkdownExcerpt(content, 150);
 			// calculate a (very) approximate word count
@@ -108,6 +119,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	);
 
 	const authorSlugs = [...allAuthorSlugs];
+	const tags = [...allTags];
 
 	// =========================================================================
 	// Phase 2: Upload all markdown to S3
@@ -181,5 +193,16 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 				authorSlug,
 			})),
 		);
+
+		await tx.delete(postTags).where(eq(postTags.postSlug, post));
+
+		if (tags.length > 0) {
+			await tx.insert(postTags).values(
+				tags.map((tag) => ({
+					postSlug: post,
+					tag,
+				})),
+			);
+		}
 	});
 });

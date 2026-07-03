@@ -73,6 +73,10 @@ vi.mock("@playfulprogramming/db", () => {
 			collectionSlug: {},
 			authorSlug: {},
 		},
+		collectionTags: {
+			collectionSlug: {},
+			tag: {},
+		},
 		postData: {
 			slug: {},
 			locale: {},
@@ -81,6 +85,10 @@ vi.mock("@playfulprogramming/db", () => {
 		postAuthors: {
 			postSlug: {},
 			authorSlug: {},
+		},
+		postTags: {
+			postSlug: {},
+			tag: {},
 		},
 		collectionChapters: {
 			postSlug: {},

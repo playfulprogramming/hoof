@@ -4,6 +4,7 @@ import {
 	collectionAuthors,
 	collectionData,
 	collections,
+	collectionTags,
 	db,
 } from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
@@ -212,6 +213,21 @@ export default createProcessor(
 						authorSlugs.map((authorSlug) => ({
 							collectionSlug: collectionId,
 							authorSlug,
+						})),
+					);
+				}
+
+				// Delete existing tag associations for this collection
+				await tx
+					.delete(collectionTags)
+					.where(eq(collectionTags.collectionSlug, collectionId));
+
+				// Insert new tag associations
+				if (collectionParsedData.tags && collectionParsedData.tags.length > 0) {
+					await tx.insert(collectionTags).values(
+						collectionParsedData.tags.map((tag) => ({
+							collectionSlug: collectionId,
+							tag,
 						})),
 					);
 				}
