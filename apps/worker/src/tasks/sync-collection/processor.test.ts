@@ -391,7 +391,7 @@ published: "2023-01-01T00:00:00Z"
 	]);
 });
 
-test("Handles collection with multiple tags", async () => {
+test("Replaces tags when synced again with a different tag set", async () => {
 	const insertCollectionValues = vi.fn().mockReturnValue({
 		onConflictDoNothing: vi.fn(),
 	});
@@ -442,6 +442,21 @@ test("Handles collection with multiple tags", async () => {
 		return Promise.reject();
 	}) as never);
 
+	vi.mocked(github.getContentsRawStream).mockImplementation((params) => {
+		if (
+			params.path ===
+			"/content/example-author/collections/example-collection/cover.png"
+		) {
+			const buffer = Buffer.from(mockImage, "base64");
+			return Promise.resolve({
+				data: Readable.toWeb(Readable.from(buffer)) as never,
+				status: 200,
+			});
+		}
+		return Promise.reject();
+	});
+
+	// First sync: original tag set
 	vi.mocked(github.getContentsRaw).mockImplementation((params) => {
 		if (
 			params.path ===
@@ -464,14 +479,44 @@ tags:
 		return Promise.reject();
 	});
 
-	vi.mocked(github.getContentsRawStream).mockImplementation((params) => {
+	await processor({
+		data: {
+			author: "example-author",
+			collection: "example-collection",
+			ref: "main",
+		},
+	} as unknown as Job<TaskInputs["sync-collection"]>);
+
+	expect(insertTagsValues).toBeCalledWith([
+		{
+			collectionSlug: "example-collection",
+			tag: "javascript",
+		},
+		{
+			collectionSlug: "example-collection",
+			tag: "tutorial",
+		},
+	]);
+
+	insertTagsValues.mockClear();
+	deleteWhere.mockClear();
+
+	// Second sync: a different tag set
+	vi.mocked(github.getContentsRaw).mockImplementation((params) => {
 		if (
 			params.path ===
-			"/content/example-author/collections/example-collection/cover.png"
+			"/content/example-author/collections/example-collection/index.md"
 		) {
-			const buffer = Buffer.from(mockImage, "base64");
 			return Promise.resolve({
-				data: Readable.toWeb(Readable.from(buffer)) as never,
+				data: `---
+title: "Example Collection"
+description: "A test collection"
+coverImg: "./cover.png"
+published: "2023-01-01T00:00:00Z"
+tags:
+  - rust
+---
+`,
 				status: 200,
 			});
 		}
@@ -486,18 +531,170 @@ tags:
 		},
 	} as unknown as Job<TaskInputs["sync-collection"]>);
 
-	// Both tags should be inserted, and the old association deleted first
+	// Old tags were deleted and only the new tag set remains
 	expect(deleteWhere).toBeCalledWith(
 		eq(collectionTags.collectionSlug, "example-collection"),
 	);
 	expect(insertTagsValues).toBeCalledWith([
 		{
 			collectionSlug: "example-collection",
+			tag: "rust",
+		},
+	]);
+	expect(insertTagsValues).not.toBeCalledWith(
+		expect.arrayContaining([expect.objectContaining({ tag: "javascript" })]),
+	);
+	expect(insertTagsValues).not.toBeCalledWith(
+		expect.arrayContaining([expect.objectContaining({ tag: "tutorial" })]),
+	);
+});
+
+test("Unions tags across all locales", async () => {
+	const insertCollectionValues = vi.fn().mockReturnValue({
+		onConflictDoNothing: vi.fn(),
+	});
+	const insertCollectionDataValues = vi.fn().mockReturnValue({
+		onConflictDoUpdate: vi.fn(),
+	});
+	const insertAuthorValues = vi.fn();
+	const insertTagsValues = vi.fn();
+	vi.mocked(db.insert).mockImplementation((table) => {
+		if (table === collections) {
+			return { values: insertCollectionValues } as never;
+		}
+		if (table === collectionData) {
+			return { values: insertCollectionDataValues } as never;
+		}
+		if (table === collectionAuthors) {
+			return { values: insertAuthorValues } as never;
+		}
+		if (table === collectionTags) {
+			return { values: insertTagsValues } as never;
+		}
+		throw new Error(`Unexpected table: ${table}`);
+	});
+
+	const deleteCollectionAuthorsWhere = vi.fn();
+	const deleteCollectionTagsWhere = vi.fn();
+	vi.mocked(db.delete).mockImplementation((table) => {
+		if (table === collectionAuthors) {
+			return { where: deleteCollectionAuthorsWhere } as never;
+		}
+		if (table === collectionTags) {
+			return { where: deleteCollectionTagsWhere } as never;
+		}
+		throw new Error(`Unexpected table: ${table}`);
+	});
+
+	// Return folder listing with both index.md and index.es.md
+	vi.mocked(github.getContents).mockImplementation(((params: {
+		path: string;
+	}) => {
+		if (
+			params.path ===
+			"/content/example-author/collections/multilang-tags-collection/"
+		) {
+			return Promise.resolve({
+				data: {
+					entries: [
+						{
+							name: "index.md",
+							path: "content/example-author/collections/multilang-tags-collection/index.md",
+						},
+						{
+							name: "index.es.md",
+							path: "content/example-author/collections/multilang-tags-collection/index.es.md",
+						},
+					],
+				},
+				status: 200,
+			});
+		}
+		return Promise.reject();
+	}) as never);
+
+	vi.mocked(github.getContentsRaw).mockImplementation((params) => {
+		if (
+			params.path ===
+			"/content/example-author/collections/multilang-tags-collection/index.md"
+		) {
+			return Promise.resolve({
+				data: `---
+title: "English Collection"
+description: "A test collection"
+coverImg: "./cover.png"
+published: "2023-01-01T00:00:00Z"
+tags:
+  - javascript
+  - tutorial
+---
+`,
+				status: 200,
+			});
+		}
+		if (
+			params.path ===
+			"/content/example-author/collections/multilang-tags-collection/index.es.md"
+		) {
+			return Promise.resolve({
+				data: `---
+title: "Colección en Español"
+description: "A test collection"
+coverImg: "./cover.png"
+published: "2023-01-01T00:00:00Z"
+tags:
+  - espanol
+---
+`,
+				status: 200,
+			});
+		}
+		return Promise.reject();
+	});
+
+	vi.mocked(github.getContentsRawStream).mockImplementation((params) => {
+		if (
+			params.path ===
+			"/content/example-author/collections/multilang-tags-collection/cover.png"
+		) {
+			const buffer = Buffer.from(mockImage, "base64");
+			return Promise.resolve({
+				data: Readable.toWeb(Readable.from(buffer)) as never,
+				status: 200,
+			});
+		}
+		return Promise.reject();
+	});
+
+	await processor({
+		data: {
+			author: "example-author",
+			collection: "multilang-tags-collection",
+			ref: "main",
+		},
+	} as unknown as Job<TaskInputs["sync-collection"]>);
+
+	// Assert: tags from both locales are unioned and deduped in a single insert
+	expect(insertTagsValues).toBeCalledTimes(1);
+	expect(insertTagsValues).toBeCalledWith([
+		{
+			collectionSlug: "multilang-tags-collection",
 			tag: "javascript",
 		},
 		{
-			collectionSlug: "example-collection",
+			collectionSlug: "multilang-tags-collection",
 			tag: "tutorial",
 		},
+		{
+			collectionSlug: "multilang-tags-collection",
+			tag: "espanol",
+		},
 	]);
+
+	// Assert: the tags delete ran once (not once per locale, unlike author associations)
+	expect(deleteCollectionTagsWhere).toBeCalledTimes(1);
+	expect(deleteCollectionTagsWhere).toBeCalledWith(
+		eq(collectionTags.collectionSlug, "multilang-tags-collection"),
+	);
+	expect(deleteCollectionAuthorsWhere).toBeCalledTimes(2);
 });

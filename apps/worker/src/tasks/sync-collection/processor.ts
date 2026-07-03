@@ -97,6 +97,8 @@ export default createProcessor(
 			[] as Array<{ entry: Entry; locale: string }>,
 		);
 
+		const allTags = new Set<string>();
+
 		// Check if coverImg or socialImg have changed since last edit, if so upload to S3
 		for (const { entry, locale } of collectionEntries) {
 			const contentUrl = new URL(entry.path, "http://localhost");
@@ -117,6 +119,10 @@ export default createProcessor(
 
 			const { data } = matter(contentResponse.data);
 			const collectionParsedData = Value.Parse(CollectionMetaSchema, data);
+
+			if (collectionParsedData.tags) {
+				collectionParsedData.tags.forEach((tag) => allTags.add(tag));
+			}
 
 			let coverImgKey: string | null = null;
 			let socialImgKey: string | null = null;
@@ -216,22 +222,26 @@ export default createProcessor(
 						})),
 					);
 				}
-
-				// Delete existing tag associations for this collection
-				await tx
-					.delete(collectionTags)
-					.where(eq(collectionTags.collectionSlug, collectionId));
-
-				// Insert new tag associations
-				if (collectionParsedData.tags && collectionParsedData.tags.length > 0) {
-					await tx.insert(collectionTags).values(
-						collectionParsedData.tags.map((tag) => ({
-							collectionSlug: collectionId,
-							tag,
-						})),
-					);
-				}
 			});
 		}
+
+		const tags = [...allTags];
+
+		await db.transaction(async (tx) => {
+			// Delete existing tag associations for this collection
+			await tx
+				.delete(collectionTags)
+				.where(eq(collectionTags.collectionSlug, collectionId));
+
+			// Insert new tag associations
+			if (tags.length > 0) {
+				await tx.insert(collectionTags).values(
+					tags.map((tag) => ({
+						collectionSlug: collectionId,
+						tag,
+					})),
+				);
+			}
+		});
 	},
 );
