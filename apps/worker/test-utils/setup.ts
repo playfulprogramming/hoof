@@ -59,6 +59,10 @@ vi.mock("@playfulprogramming/db", () => {
 		profiles: {
 			slug: {},
 		},
+		profileAchievements: {
+			profileSlug: {},
+			achievementId: {},
+		},
 		posts: {
 			slug: {},
 		},
@@ -102,11 +106,14 @@ vi.mock("@playfulprogramming/db", () => {
 	};
 });
 
-vi.mock("@playfulprogramming/github-api", () => {
+vi.mock("@playfulprogramming/github-api", async (importOriginal) => {
+	const actual = await importOriginal();
 	return {
+		...(actual as object),
 		getContents: vi.fn(),
 		getContentsRaw: vi.fn(),
 		getContentsRawStream: vi.fn(),
 		getGistById: vi.fn(),
+		getAuthorGitHubStats: vi.fn().mockResolvedValue(undefined),
 	};
 });

@@ -5,6 +5,7 @@ import swagger from "./plugins/swagger.ts";
 import { healthRoutes } from "./routes/health.ts";
 import postImagesRoutes from "./routes/tasks/post-images.ts";
 import urlMetadataRoutes from "./routes/tasks/url-metadata.ts";
+import authorsRoutes from "./routes/content/authors.ts";
 import collectionsRoutes from "./routes/content/collections.ts";
 import profilesRoutes from "./routes/content/profiles.ts";
 import fastify from "fastify";
@@ -21,6 +22,7 @@ export const createApp = () => {
 	app.register(healthRoutes);
 	app.register(postImagesRoutes);
 	app.register(urlMetadataRoutes);
+	app.register(authorsRoutes);
 	app.register(collectionsRoutes);
 	app.register(profilesRoutes);
 
