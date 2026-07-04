@@ -34,6 +34,9 @@ vi.mock("@playfulprogramming/db", () => {
 				},
 				posts: {
 					findFirst: vi.fn(),
+        },
+				profiles: {
+					findMany: vi.fn(),
 				},
 			},
 		},
