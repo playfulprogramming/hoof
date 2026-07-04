@@ -1,5 +1,5 @@
 import { env } from "@playfulprogramming/common";
-import { Tasks } from "@playfulprogramming/bullmq";
+import { Tasks, createJob } from "@playfulprogramming/bullmq";
 import { db, posts, postData, postAuthors } from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
 import { s3 } from "@playfulprogramming/s3";
@@ -40,7 +40,20 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 				`Post ${post} (${basePath}) returned 404 - removing from database.`,
 			);
 
+			const removedAuthorRows = await db
+				.select({ authorSlug: postAuthors.authorSlug })
+				.from(postAuthors)
+				.where(eq(postAuthors.postSlug, post));
+
 			await db.delete(posts).where(eq(posts.slug, post));
+
+			for (const { authorSlug } of removedAuthorRows) {
+				await createJob(
+					Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
+					`grant-author-achievements:${authorSlug}`,
+					{ profileSlug: authorSlug },
+				);
+			}
 
 			return;
 		}
@@ -131,6 +144,12 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	// =========================================================================
 	// Phase 3: Perform all database operations in a single transaction
 	// =========================================================================
+	const previousAuthorRows = await db
+		.select({ authorSlug: postAuthors.authorSlug })
+		.from(postAuthors)
+		.where(eq(postAuthors.postSlug, post));
+	const previousAuthorSlugs = previousAuthorRows.map((r) => r.authorSlug);
+
 	await db.transaction(async (tx) => {
 		await tx
 			.insert(posts)
@@ -182,4 +201,20 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			})),
 		);
 	});
+
+	// Re-evaluate achievements for every author touched by this post, including
+	// authors removed from the frontmatter so their stats are recomputed too.
+	// createJob deduplicates by key, so concurrent post syncs for the same
+	// author collapse into a single achievements job.
+	const affectedAuthorSlugs = [
+		...new Set([...authorSlugs, ...previousAuthorSlugs]),
+	];
+
+	for (const authorSlug of affectedAuthorSlugs) {
+		await createJob(
+			Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
+			`grant-author-achievements:${authorSlug}`,
+			{ profileSlug: authorSlug },
+		);
+	}
 });
