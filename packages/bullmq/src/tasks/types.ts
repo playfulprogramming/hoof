@@ -7,6 +7,10 @@ import type {
 } from "./sync-collection.ts";
 import type { SyncPostInput, SyncPostOutput } from "./sync-post.ts";
 import type { SyncAllInput } from "./sync-all.ts";
+import type {
+	GrantAuthorAchievementsInput,
+	GrantAuthorAchievementsOutput,
+} from "./grant-author-achievements.ts";
 
 export const Tasks = {
 	SYNC_ALL: "sync-all",
@@ -15,6 +19,7 @@ export const Tasks = {
 	SYNC_POST: "sync-post",
 	URL_METADATA: "url-metadata",
 	POST_IMAGES: "post-images",
+	GRANT_AUTHOR_ACHIEVEMENTS: "grant-author-achievements",
 } as const;
 
 export type TasksKeys = keyof typeof Tasks;
@@ -27,6 +32,7 @@ export interface TaskInputs {
 	[Tasks.SYNC_POST]: SyncPostInput;
 	[Tasks.URL_METADATA]: UrlMetadataInput;
 	[Tasks.POST_IMAGES]: PostImageInput;
+	[Tasks.GRANT_AUTHOR_ACHIEVEMENTS]: GrantAuthorAchievementsInput;
 }
 
 export type TaskInputsValues = TaskInputs[TasksValues];
@@ -38,6 +44,7 @@ export interface TaskOutputs {
 	[Tasks.SYNC_POST]: SyncPostOutput;
 	[Tasks.URL_METADATA]: UrlMetadataOutput;
 	[Tasks.POST_IMAGES]: PostImageOutput;
+	[Tasks.GRANT_AUTHOR_ACHIEVEMENTS]: GrantAuthorAchievementsOutput;
 }
 
 export type TaskOutputsValues = TaskOutputs[TasksValues];

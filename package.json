@@ -5,7 +5,6 @@
 	"type": "module",
 	"scripts": {
 		"prepare": "husky",
-		"preinstall": "node -e \"if(process.env.CI == 'true') {console.log('Skipping preinstall...')} else {process.exit(1)}\" || npx -y only-allow pnpm",
 		"test": "pnpm test:unit && pnpm test:e2e",
 		"test:unit": "nx run-many --targets=test:sherif,test:knip,test:eslint,test:publint,test --exclude=e2e",
 		"test:e2e": "nx run e2e:test",
@@ -30,7 +29,7 @@
 	"engines": {
 		"node": ">=24.0.0"
 	},
-	"packageManager": "pnpm@10.28.2",
+	"packageManager": "pnpm@11.4.0+sha512.f0febc7e37552ab485494a914241b338e0b3580b93d54ce31f00933015880863129038a1b4ae4e414a0ee63ac35bf21197e990172c4a68256450b5636310968f",
 	"devDependencies": {
 		"@eslint/js": "^9.37.0",
 		"@nx/vite": "22.5.4",
@@ -51,10 +50,5 @@
 		"typescript-eslint": "^8.57.0",
 		"vite": "catalog:",
 		"vitest": "catalog:"
-	},
-	"pnpm": {
-		"overrides": {
-			"ioredis": "catalog:"
-		}
 	}
 }

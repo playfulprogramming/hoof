@@ -1,9 +1,10 @@
 import { env } from "@playfulprogramming/common";
-import { Tasks } from "@playfulprogramming/bullmq";
+import { Tasks, createJob } from "@playfulprogramming/bullmq";
 import {
 	collectionAuthors,
 	collectionData,
 	collections,
+	collectionTags,
 	db,
 } from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
@@ -96,6 +97,12 @@ export default createProcessor(
 			[] as Array<{ entry: Entry; locale: string }>,
 		);
 
+		const allTags = new Set<string>();
+
+		// Accumulate all unique author slugs touched across locale iterations
+		// so we can enqueue achievements for each of them after the loop.
+		const touchedAuthorSlugs = new Set<string>();
+
 		// Check if coverImg or socialImg have changed since last edit, if so upload to S3
 		for (const { entry, locale } of collectionEntries) {
 			const contentUrl = new URL(entry.path, "http://localhost");
@@ -116,6 +123,10 @@ export default createProcessor(
 
 			const { data } = matter(contentResponse.data);
 			const collectionParsedData = Value.Parse(CollectionMetaSchema, data);
+
+			if (collectionParsedData.tags) {
+				collectionParsedData.tags.forEach((tag) => allTags.add(tag));
+			}
 
 			let coverImgKey: string | null = null;
 			let socialImgKey: string | null = null;
@@ -187,6 +198,8 @@ export default createProcessor(
 				? [...new Set([...collectionParsedData.authors, authorId])]
 				: [authorId];
 
+			authorSlugs.forEach((s) => touchedAuthorSlugs.add(s));
+
 			await db.transaction(async (tx) => {
 				await tx
 					.insert(collections)
@@ -216,6 +229,33 @@ export default createProcessor(
 					);
 				}
 			});
+		}
+
+		const tags = [...allTags];
+
+		await db.transaction(async (tx) => {
+			// Delete existing tag associations for this collection
+			await tx
+				.delete(collectionTags)
+				.where(eq(collectionTags.collectionSlug, collectionId));
+
+			// Insert new tag associations
+			if (tags.length > 0) {
+				await tx.insert(collectionTags).values(
+					tags.map((tag) => ({
+						collectionSlug: collectionId,
+						tag,
+					})),
+				);
+			}
+		});
+
+		for (const authorSlug of touchedAuthorSlugs) {
+			await createJob(
+				Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
+				`grant-author-achievements:${authorSlug}`,
+				{ profileSlug: authorSlug },
+			);
 		}
 	},
 );

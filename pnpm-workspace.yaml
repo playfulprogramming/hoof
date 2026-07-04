@@ -27,3 +27,12 @@ onlyBuiltDependencies:
   - sharp
 
 minimumReleaseAge: 10080 # 7 days
+
+overrides:
+  "ioredis": "catalog:"
+
+allowBuilds:
+  esbuild: true
+  msgpackr-extract: true
+  nx: true
+  sharp: true
