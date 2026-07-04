@@ -4,6 +4,7 @@ import {
 	collectionAuthors,
 	collectionData,
 	collections,
+	collectionTags,
 	db,
 } from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
@@ -96,6 +97,8 @@ export default createProcessor(
 			[] as Array<{ entry: Entry; locale: string }>,
 		);
 
+		const allTags = new Set<string>();
+
 		// Accumulate all unique author slugs touched across locale iterations
 		// so we can enqueue achievements for each of them after the loop.
 		const touchedAuthorSlugs = new Set<string>();
@@ -120,6 +123,10 @@ export default createProcessor(
 
 			const { data } = matter(contentResponse.data);
 			const collectionParsedData = Value.Parse(CollectionMetaSchema, data);
+
+			if (collectionParsedData.tags) {
+				collectionParsedData.tags.forEach((tag) => allTags.add(tag));
+			}
 
 			let coverImgKey: string | null = null;
 			let socialImgKey: string | null = null;
@@ -223,6 +230,25 @@ export default createProcessor(
 				}
 			});
 		}
+
+		const tags = [...allTags];
+
+		await db.transaction(async (tx) => {
+			// Delete existing tag associations for this collection
+			await tx
+				.delete(collectionTags)
+				.where(eq(collectionTags.collectionSlug, collectionId));
+
+			// Insert new tag associations
+			if (tags.length > 0) {
+				await tx.insert(collectionTags).values(
+					tags.map((tag) => ({
+						collectionSlug: collectionId,
+						tag,
+					})),
+				);
+			}
+		});
 
 		for (const authorSlug of touchedAuthorSlugs) {
 			await createJob(
