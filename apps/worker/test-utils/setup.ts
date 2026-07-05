@@ -23,6 +23,8 @@ vi.mock("@playfulprogramming/s3", () => {
 			ensureBucket: vi.fn(() => "example-bucket"),
 			upload: vi.fn(),
 			remove: vi.fn(),
+			exists: vi.fn(() => false),
+			matchesEtag: vi.fn(() => false),
 		},
 	};
 });
@@ -93,6 +95,10 @@ vi.mock("@playfulprogramming/db", () => {
 		postTags: {
 			postSlug: {},
 			tag: {},
+		},
+		postAttachments: {
+			postSlug: {},
+			attachmentName: {},
 		},
 		collectionChapters: {
 			postSlug: {},

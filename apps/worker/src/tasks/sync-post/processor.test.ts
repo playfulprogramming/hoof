@@ -6,11 +6,16 @@ import {
 	postData,
 	postAuthors,
 	postTags,
+	postAttachments,
 	db,
 } from "@playfulprogramming/db";
 import { s3 } from "@playfulprogramming/s3";
 import * as github from "@playfulprogramming/github-api";
 import { eq } from "drizzle-orm";
+import { Readable } from "node:stream";
+
+const ONE_PIXEL_PNG_BASE64 =
+	"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR42mMAAQAABQABoIJXOQAAAABJRU5ErkJggg==";
 
 test("Syncs a standalone post successfully", async () => {
 	const insertPostsValues = vi.fn().mockReturnValue({
@@ -242,16 +247,25 @@ test("Deletes a post record if it no longer exists", async () => {
 		where: deleteWhere,
 	} as never);
 
-	vi.mocked(db.select).mockReturnValue({
-		from: vi.fn().mockReturnValue({
-			where: vi
-				.fn()
-				.mockResolvedValue([
-					{ authorSlug: "example-author" },
-					{ authorSlug: "co-author" },
-				]),
-		}),
-	} as never);
+	vi.mocked(db.select).mockImplementation(
+		() =>
+			({
+				from: vi.fn((table: unknown) => ({
+					where: vi.fn().mockResolvedValue(
+						table === postAttachments
+							? [
+									{
+										attachmentKey: "posts/example-post/attachments/notes.pdf",
+									},
+									{
+										attachmentKey: "posts/example-post/attachments/banner.jpeg",
+									},
+								]
+							: [{ authorSlug: "example-author" }, { authorSlug: "co-author" }],
+					),
+				})),
+			}) as never,
+	);
 
 	// Mock GitHub: return 404
 	vi.mocked(github.getContents).mockImplementation(((params: {
@@ -274,6 +288,16 @@ test("Deletes a post record if it no longer exists", async () => {
 			ref: "main",
 		},
 	} as unknown as Job<TaskInputs["sync-post"]>);
+
+	// Assert: Post's attachments were removed from S3 before the cascading delete
+	expect(s3.remove).toBeCalledWith(
+		"example-bucket",
+		"posts/example-post/attachments/notes.pdf",
+	);
+	expect(s3.remove).toBeCalledWith(
+		"example-bucket",
+		"posts/example-post/attachments/banner.jpeg",
+	);
 
 	// Assert: Post was deleted from posts table (cascade handles related tables)
 	expect(db.delete).toBeCalledWith(posts);
@@ -712,6 +736,381 @@ tags:
 		{
 			postSlug: "multilang-tags-post",
 			tag: "espanol",
+		},
+	]);
+});
+
+test("Uploads post attachments, resizing images and recursing into subfolders", async () => {
+	const insertPostsValues = vi.fn().mockReturnValue({
+		onConflictDoNothing: vi.fn(),
+	});
+	const insertPostDataValues = vi.fn().mockReturnValue({
+		onConflictDoUpdate: vi.fn(),
+	});
+	const insertPostAuthorsValues = vi.fn();
+	const insertPostAttachmentsValues = vi.fn();
+
+	vi.mocked(db.insert).mockImplementation((table) => {
+		if (table === posts) {
+			return { values: insertPostsValues } as never;
+		}
+		if (table === postData) {
+			return { values: insertPostDataValues } as never;
+		}
+		if (table === postAuthors) {
+			return { values: insertPostAuthorsValues } as never;
+		}
+		if (table === postAttachments) {
+			return { values: insertPostAttachmentsValues } as never;
+		}
+		throw new Error(`Unexpected table: ${table}`);
+	});
+
+	const deleteWhere = vi.fn();
+	vi.mocked(db.delete).mockReturnValue({
+		where: deleteWhere,
+	} as never);
+
+	vi.mocked(db.select).mockReturnValue({
+		from: vi.fn().mockReturnValue({
+			where: vi.fn().mockResolvedValue([]),
+		}),
+	} as never);
+
+	const basePath = "/content/example-author/posts/attachment-post/";
+	const baseFolderPath = "content/example-author/posts/attachment-post/";
+
+	vi.mocked(github.getContents).mockImplementation(((params: {
+		path: string;
+	}) => {
+		if (params.path === basePath) {
+			return Promise.resolve({
+				data: {
+					entries: [
+						{
+							name: "index.md",
+							path: `${baseFolderPath}index.md`,
+							type: "file",
+						},
+						{
+							name: "notes.pdf",
+							path: `${baseFolderPath}notes.pdf`,
+							type: "file",
+						},
+						{
+							name: "banner.png",
+							path: `${baseFolderPath}banner.png`,
+							type: "file",
+						},
+						{
+							name: "diagrams",
+							path: `${baseFolderPath}diagrams`,
+							type: "dir",
+						},
+					],
+				},
+				status: 200,
+			});
+		}
+		if (params.path === `/${baseFolderPath}diagrams/`) {
+			return Promise.resolve({
+				data: {
+					entries: [
+						{
+							name: "chart.png",
+							path: `${baseFolderPath}diagrams/chart.png`,
+							type: "file",
+						},
+					],
+				},
+				status: 200,
+			});
+		}
+		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
+	}) as never);
+
+	vi.mocked(github.getContentsRaw).mockImplementation((params) => {
+		if (params.path === `/${baseFolderPath}index.md`) {
+			return Promise.resolve({
+				data: `---
+title: "Attachment Post"
+published: "2024-01-15T00:00:00Z"
+---
+`,
+				status: 200,
+			});
+		}
+		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
+	});
+
+	vi.mocked(github.getContentsRawStream).mockImplementation((params) => {
+		if (params.path === `/${baseFolderPath}notes.pdf`) {
+			return Promise.resolve({
+				data: Readable.toWeb(Readable.from(Buffer.from("PDF-DATA"))) as never,
+				status: 200,
+			});
+		}
+		if (
+			params.path === `/${baseFolderPath}banner.png` ||
+			params.path === `/${baseFolderPath}diagrams/chart.png`
+		) {
+			return Promise.resolve({
+				data: Readable.toWeb(
+					Readable.from(Buffer.from(ONE_PIXEL_PNG_BASE64, "base64")),
+				) as never,
+				status: 200,
+			});
+		}
+		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
+	});
+
+	await processor({
+		data: {
+			author: "example-author",
+			post: "attachment-post",
+			ref: "main",
+		},
+	} as unknown as Job<TaskInputs["sync-post"]>);
+
+	// Assert: Non-image attachment uploaded as-is under its original extension
+	expect(s3.upload).toBeCalledWith(
+		"example-bucket",
+		"posts/attachment-post/attachments/notes.pdf",
+		undefined,
+		expect.anything(),
+		"application/pdf",
+	);
+
+	// Assert: Top-level image attachment resized and converted, key normalized to .jpeg
+	expect(s3.upload).toBeCalledWith(
+		"example-bucket",
+		"posts/attachment-post/attachments/banner.jpeg",
+		undefined,
+		expect.anything(),
+		"image/jpeg",
+	);
+
+	// Assert: Image nested in a subfolder was discovered via recursion
+	expect(s3.upload).toBeCalledWith(
+		"example-bucket",
+		"posts/attachment-post/attachments/diagrams/chart.jpeg",
+		undefined,
+		expect.anything(),
+		"image/jpeg",
+	);
+
+	// Assert: Attachment rows saved with resized image dimensions, null for non-images
+	expect(insertPostAttachmentsValues).toBeCalledWith([
+		{
+			postSlug: "attachment-post",
+			attachmentName: "notes.pdf",
+			attachmentKey: "posts/attachment-post/attachments/notes.pdf",
+			width: null,
+			height: null,
+		},
+		{
+			postSlug: "attachment-post",
+			attachmentName: "banner.png",
+			attachmentKey: "posts/attachment-post/attachments/banner.jpeg",
+			width: 2048,
+			height: 2048,
+		},
+		{
+			postSlug: "attachment-post",
+			attachmentName: "diagrams/chart.png",
+			attachmentKey: "posts/attachment-post/attachments/diagrams/chart.jpeg",
+			width: 2048,
+			height: 2048,
+		},
+	]);
+});
+
+test("Diffs post attachments: skips unchanged, re-uploads changed, removes deleted", async () => {
+	const insertPostsValues = vi.fn().mockReturnValue({
+		onConflictDoNothing: vi.fn(),
+	});
+	const insertPostDataValues = vi.fn().mockReturnValue({
+		onConflictDoUpdate: vi.fn(),
+	});
+	const insertPostAuthorsValues = vi.fn();
+	const insertPostAttachmentsValues = vi.fn();
+
+	vi.mocked(db.insert).mockImplementation((table) => {
+		if (table === posts) {
+			return { values: insertPostsValues } as never;
+		}
+		if (table === postData) {
+			return { values: insertPostDataValues } as never;
+		}
+		if (table === postAuthors) {
+			return { values: insertPostAuthorsValues } as never;
+		}
+		if (table === postAttachments) {
+			return { values: insertPostAttachmentsValues } as never;
+		}
+		throw new Error(`Unexpected table: ${table}`);
+	});
+
+	const deleteWhere = vi.fn();
+	vi.mocked(db.delete).mockReturnValue({
+		where: deleteWhere,
+	} as never);
+
+	vi.mocked(db.select).mockImplementation(
+		() =>
+			({
+				from: vi.fn((table: unknown) => ({
+					where: vi.fn().mockResolvedValue(
+						table === postAttachments
+							? [
+									{
+										attachmentName: "old-file.txt",
+										attachmentKey:
+											"posts/diffing-post/attachments/old-file.txt",
+									},
+									{
+										attachmentName: "unchanged.txt",
+										attachmentKey:
+											"posts/diffing-post/attachments/unchanged.txt",
+									},
+									{
+										attachmentName: "changed.txt",
+										attachmentKey: "posts/diffing-post/attachments/changed.txt",
+									},
+								]
+							: [],
+					),
+				})),
+			}) as never,
+	);
+
+	vi.mocked(s3.matchesEtag).mockImplementation(((
+		_bucket: string,
+		key: string,
+	) => Promise.resolve(key.endsWith("unchanged.txt"))) as never);
+	vi.mocked(s3.exists).mockImplementation(((_bucket: string, key: string) =>
+		Promise.resolve(key.endsWith("changed.txt"))) as never);
+
+	const basePath = "/content/example-author/posts/diffing-post/";
+	const baseFolderPath = "content/example-author/posts/diffing-post/";
+
+	vi.mocked(github.getContents).mockImplementation(((params: {
+		path: string;
+	}) => {
+		if (params.path === basePath) {
+			return Promise.resolve({
+				data: {
+					entries: [
+						{
+							name: "index.md",
+							path: `${baseFolderPath}index.md`,
+							type: "file",
+						},
+						{
+							name: "unchanged.txt",
+							path: `${baseFolderPath}unchanged.txt`,
+							type: "file",
+						},
+						{
+							name: "changed.txt",
+							path: `${baseFolderPath}changed.txt`,
+							type: "file",
+						},
+					],
+				},
+				status: 200,
+			});
+		}
+		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
+	}) as never);
+
+	vi.mocked(github.getContentsRaw).mockImplementation((params) => {
+		if (params.path === `/${baseFolderPath}index.md`) {
+			return Promise.resolve({
+				data: `---
+title: "Diffing Post"
+published: "2024-01-15T00:00:00Z"
+---
+`,
+				status: 200,
+			});
+		}
+		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
+	});
+
+	vi.mocked(github.getContentsRawStream).mockImplementation((params) => {
+		if (params.path === `/${baseFolderPath}unchanged.txt`) {
+			return Promise.resolve({
+				data: Readable.toWeb(
+					Readable.from(Buffer.from("same content")),
+				) as never,
+				status: 200,
+			});
+		}
+		if (params.path === `/${baseFolderPath}changed.txt`) {
+			return Promise.resolve({
+				data: Readable.toWeb(
+					Readable.from(Buffer.from("new content")),
+				) as never,
+				status: 200,
+			});
+		}
+		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
+	});
+
+	await processor({
+		data: {
+			author: "example-author",
+			post: "diffing-post",
+			ref: "main",
+		},
+	} as unknown as Job<TaskInputs["sync-post"]>);
+
+	// Assert: attachment no longer in the repo was removed from S3
+	expect(s3.remove).toBeCalledWith(
+		"example-bucket",
+		"posts/diffing-post/attachments/old-file.txt",
+	);
+
+	// Assert: changed attachment's old object was removed before re-upload
+	expect(s3.remove).toBeCalledWith(
+		"example-bucket",
+		"posts/diffing-post/attachments/changed.txt",
+	);
+
+	// Assert: changed attachment was re-uploaded
+	expect(s3.upload).toBeCalledWith(
+		"example-bucket",
+		"posts/diffing-post/attachments/changed.txt",
+		undefined,
+		expect.anything(),
+		"text/plain",
+	);
+
+	// Assert: unchanged attachment was NOT re-uploaded
+	expect(s3.upload).not.toBeCalledWith(
+		"example-bucket",
+		"posts/diffing-post/attachments/unchanged.txt",
+		expect.anything(),
+		expect.anything(),
+		expect.anything(),
+	);
+
+	// Assert: only the two attachments still present in the repo are saved
+	expect(insertPostAttachmentsValues).toBeCalledWith([
+		{
+			postSlug: "diffing-post",
+			attachmentName: "unchanged.txt",
+			attachmentKey: "posts/diffing-post/attachments/unchanged.txt",
+			width: null,
+			height: null,
+		},
+		{
+			postSlug: "diffing-post",
+			attachmentName: "changed.txt",
+			attachmentKey: "posts/diffing-post/attachments/changed.txt",
+			width: null,
+			height: null,
 		},
 	]);
 });

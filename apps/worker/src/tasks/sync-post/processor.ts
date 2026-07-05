@@ -6,6 +6,7 @@ import {
 	postData,
 	postAuthors,
 	postTags,
+	postAttachments,
 } from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
 import { s3 } from "@playfulprogramming/s3";
@@ -13,9 +14,131 @@ import { createProcessor } from "../../createProcessor.ts";
 import { eq } from "drizzle-orm";
 import matter from "gray-matter";
 import { Value } from "typebox/value";
+import sharp from "sharp";
+import { Readable } from "node:stream";
+import { createHash } from "node:crypto";
+import { basename, dirname, extname } from "node:path/posix";
+import { Response } from "undici";
 import { PostMetaSchema } from "./types.ts";
 import { extractLocale } from "../../utils/extractLocale.ts";
 import { extractMarkdownExcerpt } from "../../utils/extractMarkdownExcerpt.ts";
+
+const ATTACHMENT_IMAGE_SIZE_MAX = 2048;
+
+const IMAGE_EXTENSIONS = new Set([
+	".jpg",
+	".jpeg",
+	".png",
+	".gif",
+	".webp",
+	".avif",
+	".bmp",
+	".tiff",
+]);
+
+const MIME_TYPES: Record<string, string> = {
+	".pdf": "application/pdf",
+	".ppt": "application/vnd.ms-powerpoint",
+	".pptx":
+		"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+	".doc": "application/msword",
+	".docx":
+		"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+	".xls": "application/vnd.ms-excel",
+	".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+	".zip": "application/zip",
+	".txt": "text/plain",
+	".csv": "text/csv",
+	".mp4": "video/mp4",
+	".webm": "video/webm",
+	".svg": "image/svg+xml",
+};
+
+function isImageAttachment(relativePath: string): boolean {
+	return IMAGE_EXTENSIONS.has(extname(relativePath).toLowerCase());
+}
+
+function mimeTypeForAttachment(relativePath: string): string {
+	return (
+		MIME_TYPES[extname(relativePath).toLowerCase()] ??
+		"application/octet-stream"
+	);
+}
+
+function withExtension(relativePath: string, newExt: string): string {
+	const dir = dirname(relativePath);
+	const base = basename(relativePath, extname(relativePath));
+	return dir === "." ? `${base}${newExt}` : `${dir}/${base}${newExt}`;
+}
+
+async function resizeAttachmentImage(stream: ReadableStream<Uint8Array>) {
+	const pipeline = sharp()
+		.resize({
+			width: ATTACHMENT_IMAGE_SIZE_MAX,
+			height: ATTACHMENT_IMAGE_SIZE_MAX,
+			fit: "inside",
+		})
+		.jpeg({ mozjpeg: true });
+
+	Readable.fromWeb(stream as never).pipe(pipeline);
+
+	const { data, info } = await pipeline.toBuffer({ resolveWithObject: true });
+
+	return { buffer: data, width: info.width, height: info.height };
+}
+
+interface AttachmentSourceEntry {
+	relativePath: string;
+	path: string;
+}
+
+async function collectAttachmentEntries(
+	entries: Array<{ name: string; path: string; type?: string }>,
+	baseFolderPath: string,
+	ref: string,
+	signal: AbortSignal | undefined,
+): Promise<AttachmentSourceEntry[]> {
+	const results: AttachmentSourceEntry[] = [];
+
+	for (const entry of entries) {
+		if (entry.name.startsWith("index") && entry.name.endsWith(".md")) {
+			continue;
+		}
+
+		if (entry.type === "dir") {
+			const dirPath = new URL(`${entry.path}/`, "http://localhost").pathname;
+			const dirResponse = await github.getContents({
+				ref,
+				path: dirPath,
+				repoOwner: env.GITHUB_REPO_OWNER,
+				repoName: env.GITHUB_REPO_NAME,
+				signal,
+			});
+
+			if (
+				dirResponse.data !== undefined &&
+				Array.isArray(dirResponse.data.entries)
+			) {
+				results.push(
+					...(await collectAttachmentEntries(
+						dirResponse.data.entries,
+						baseFolderPath,
+						ref,
+						signal,
+					)),
+				);
+			}
+			continue;
+		}
+
+		results.push({
+			relativePath: entry.path.slice(baseFolderPath.length),
+			path: entry.path,
+		});
+	}
+
+	return results;
+}
 
 export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	const { author, post, collection, ref } = job.data;
@@ -45,6 +168,19 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			console.log(
 				`Post ${post} (${basePath}) returned 404 - removing from database.`,
 			);
+
+			const removedAttachmentRows = await db
+				.select({ attachmentKey: postAttachments.attachmentKey })
+				.from(postAttachments)
+				.where(eq(postAttachments.postSlug, post));
+
+			if (removedAttachmentRows.length > 0) {
+				const bucket = await s3.ensureBucket(env.S3_BUCKET);
+				for (const { attachmentKey } of removedAttachmentRows) {
+					await s3.remove(bucket, attachmentKey);
+					console.log(`Removed attachment ${attachmentKey} from S3`);
+				}
+			}
 
 			const removedAuthorRows = await db
 				.select({ authorSlug: postAuthors.authorSlug })
@@ -154,7 +290,107 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	);
 
 	// =========================================================================
-	// Phase 3: Perform all database operations in a single transaction
+	// Phase 3: Discover, resize, diff, and upload post attachments
+	// =========================================================================
+	const baseFolderPath = basePath.replace(/^\//, "");
+	const attachmentEntries = await collectAttachmentEntries(
+		folderResponse.data.entries,
+		baseFolderPath,
+		ref,
+		signal,
+	);
+
+	const previousAttachmentRows = await db
+		.select({
+			attachmentName: postAttachments.attachmentName,
+			attachmentKey: postAttachments.attachmentKey,
+		})
+		.from(postAttachments)
+		.where(eq(postAttachments.postSlug, post));
+	const previousAttachmentsByName = new Map(
+		previousAttachmentRows.map((row) => [row.attachmentName, row]),
+	);
+
+	const discoveredAttachmentNames = new Set(
+		attachmentEntries.map((entry) => entry.relativePath),
+	);
+
+	for (const [attachmentName, row] of previousAttachmentsByName) {
+		if (!discoveredAttachmentNames.has(attachmentName)) {
+			await s3.remove(bucket, row.attachmentKey);
+			console.log(
+				`Removed attachment ${row.attachmentKey} from S3 (no longer in repo)`,
+			);
+		}
+	}
+
+	const attachmentRows = await Promise.all(
+		attachmentEntries.map(async ({ relativePath, path }) => {
+			const fileUrl = new URL(path, "http://localhost");
+			const { data: fileStream } = await github.getContentsRawStream({
+				ref,
+				path: fileUrl.pathname,
+				repoOwner: env.GITHUB_REPO_OWNER,
+				repoName: env.GITHUB_REPO_NAME,
+				signal,
+			});
+
+			if (fileStream === undefined) {
+				throw new Error(
+					`Unable to fetch attachment ${relativePath} for ${post}`,
+				);
+			}
+
+			const isImage = isImageAttachment(relativePath);
+			let buffer: Buffer;
+			let width: number | null = null;
+			let height: number | null = null;
+			let keyRelativePath = relativePath;
+
+			if (isImage) {
+				const resized = await resizeAttachmentImage(fileStream);
+				buffer = resized.buffer;
+				width = resized.width;
+				height = resized.height;
+				keyRelativePath = withExtension(relativePath, ".jpeg");
+			} else {
+				buffer = Buffer.from(await new Response(fileStream).arrayBuffer());
+			}
+
+			const attachmentKey = `posts/${post}/attachments/${keyRelativePath}`;
+			const etag = `"${createHash("md5").update(buffer).digest("hex")}"`;
+
+			const previous = previousAttachmentsByName.get(relativePath);
+			const unchanged =
+				previous?.attachmentKey === attachmentKey &&
+				(await s3.matchesEtag(bucket, attachmentKey, etag));
+
+			if (!unchanged) {
+				if (previous && (await s3.exists(bucket, previous.attachmentKey))) {
+					await s3.remove(bucket, previous.attachmentKey);
+				}
+				await s3.upload(
+					bucket,
+					attachmentKey,
+					undefined,
+					buffer,
+					isImage ? "image/jpeg" : mimeTypeForAttachment(relativePath),
+				);
+				console.log(`Uploaded attachment ${attachmentKey} to S3`);
+			}
+
+			return {
+				postSlug: post,
+				attachmentName: relativePath,
+				attachmentKey,
+				width,
+				height,
+			};
+		}),
+	);
+
+	// =========================================================================
+	// Phase 4: Perform all database operations in a single transaction
 	// =========================================================================
 	const previousAuthorRows = await db
 		.select({ authorSlug: postAuthors.authorSlug })
@@ -222,6 +458,12 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 					tag,
 				})),
 			);
+		}
+
+		await tx.delete(postAttachments).where(eq(postAttachments.postSlug, post));
+
+		if (attachmentRows.length > 0) {
+			await tx.insert(postAttachments).values(attachmentRows);
 		}
 	});
 
