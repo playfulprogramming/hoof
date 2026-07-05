@@ -17,7 +17,7 @@ import { Value } from "typebox/value";
 import sharp from "sharp";
 import { Readable } from "node:stream";
 import { createHash } from "node:crypto";
-import { basename, dirname, extname } from "node:path/posix";
+import { extname } from "node:path/posix";
 import { Response } from "undici";
 import { PostMetaSchema } from "./types.ts";
 import { extractLocale } from "../../utils/extractLocale.ts";
@@ -65,18 +65,13 @@ function mimeTypeForAttachment(relativePath: string): string {
 	);
 }
 
-function withExtension(relativePath: string, newExt: string): string {
-	const dir = dirname(relativePath);
-	const base = basename(relativePath, extname(relativePath));
-	return dir === "." ? `${base}${newExt}` : `${dir}/${base}${newExt}`;
-}
-
 async function resizeAttachmentImage(stream: ReadableStream<Uint8Array>) {
 	const pipeline = sharp()
 		.resize({
 			width: ATTACHMENT_IMAGE_SIZE_MAX,
 			height: ATTACHMENT_IMAGE_SIZE_MAX,
 			fit: "inside",
+			withoutEnlargement: true,
 		})
 		.jpeg({ mozjpeg: true });
 
@@ -140,6 +135,23 @@ async function collectAttachmentEntries(
 	return results;
 }
 
+const ATTACHMENT_UPLOAD_CONCURRENCY = 4;
+
+async function processInBatches<T, R>(
+	items: T[],
+	concurrency: number,
+	fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+	const results: R[] = [];
+
+	for (let i = 0; i < items.length; i += concurrency) {
+		const chunk = items.slice(i, i + concurrency);
+		results.push(...(await Promise.all(chunk.map(fn))));
+	}
+
+	return results;
+}
+
 export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	const { author, post, collection, ref } = job.data;
 
@@ -176,9 +188,20 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 
 			if (removedAttachmentRows.length > 0) {
 				const bucket = await s3.ensureBucket(env.S3_BUCKET);
-				for (const { attachmentKey } of removedAttachmentRows) {
-					await s3.remove(bucket, attachmentKey);
-					console.log(`Removed attachment ${attachmentKey} from S3`);
+				const results = await Promise.allSettled(
+					removedAttachmentRows.map(async ({ attachmentKey }) => {
+						await s3.remove(bucket, attachmentKey);
+						console.log(`Removed attachment ${attachmentKey} from S3`);
+					}),
+				);
+
+				for (const result of results) {
+					if (result.status === "rejected") {
+						console.error(
+							result.reason,
+							`Failed to remove an attachment from S3 for ${post}`,
+						);
+					}
 				}
 			}
 
@@ -324,8 +347,10 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		}
 	}
 
-	const attachmentRows = await Promise.all(
-		attachmentEntries.map(async ({ relativePath, path }) => {
+	const attachmentRows = await processInBatches(
+		attachmentEntries,
+		ATTACHMENT_UPLOAD_CONCURRENCY,
+		async ({ relativePath, path }) => {
 			const fileUrl = new URL(path, "http://localhost");
 			const { data: fileStream } = await github.getContentsRawStream({
 				ref,
@@ -345,6 +370,11 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			let buffer: Buffer;
 			let width: number | null = null;
 			let height: number | null = null;
+			// Images are converted to JPEG, so ".jpeg" is appended after the full
+			// original filename (rather than replacing its extension) to keep the
+			// key's extension honest about the stored format without colliding on
+			// same-basename files with different source extensions (e.g. banner.png
+			// and banner.jpg would otherwise both become banner.jpeg).
 			let keyRelativePath = relativePath;
 
 			if (isImage) {
@@ -352,7 +382,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 				buffer = resized.buffer;
 				width = resized.width;
 				height = resized.height;
-				keyRelativePath = withExtension(relativePath, ".jpeg");
+				keyRelativePath = `${relativePath}.jpeg`;
 			} else {
 				buffer = Buffer.from(await new Response(fileStream).arrayBuffer());
 			}
@@ -361,12 +391,22 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			const etag = `"${createHash("md5").update(buffer).digest("hex")}"`;
 
 			const previous = previousAttachmentsByName.get(relativePath);
+			const sameKeyAsPrevious =
+				previous !== undefined && previous.attachmentKey === attachmentKey;
 			const unchanged =
-				previous?.attachmentKey === attachmentKey &&
+				sameKeyAsPrevious &&
 				(await s3.matchesEtag(bucket, attachmentKey, etag));
 
 			if (!unchanged) {
-				if (previous && (await s3.exists(bucket, previous.attachmentKey))) {
+				if (
+					previous !== undefined &&
+					!sameKeyAsPrevious &&
+					(await s3.exists(bucket, previous.attachmentKey))
+				) {
+					// Only pre-emptively delete when the key itself changed; when the
+					// key is unchanged, s3.upload below overwrites it directly, so
+					// deleting first would just create a needless gap where the
+					// object briefly doesn't exist.
 					await s3.remove(bucket, previous.attachmentKey);
 				}
 				await s3.upload(
@@ -386,7 +426,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 				width,
 				height,
 			};
-		}),
+		},
 	);
 
 	// =========================================================================

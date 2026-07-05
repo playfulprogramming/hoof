@@ -881,10 +881,12 @@ published: "2024-01-15T00:00:00Z"
 		"application/pdf",
 	);
 
-	// Assert: Top-level image attachment resized and converted, key normalized to .jpeg
+	// Assert: Top-level image attachment resized and converted; ".jpeg" is appended
+	// after the original filename (not replacing its extension) to avoid same-basename
+	// collisions between files with different source extensions
 	expect(s3.upload).toBeCalledWith(
 		"example-bucket",
-		"posts/attachment-post/attachments/banner.jpeg",
+		"posts/attachment-post/attachments/banner.png.jpeg",
 		undefined,
 		expect.anything(),
 		"image/jpeg",
@@ -893,13 +895,15 @@ published: "2024-01-15T00:00:00Z"
 	// Assert: Image nested in a subfolder was discovered via recursion
 	expect(s3.upload).toBeCalledWith(
 		"example-bucket",
-		"posts/attachment-post/attachments/diagrams/chart.jpeg",
+		"posts/attachment-post/attachments/diagrams/chart.png.jpeg",
 		undefined,
 		expect.anything(),
 		"image/jpeg",
 	);
 
-	// Assert: Attachment rows saved with resized image dimensions, null for non-images
+	// Assert: Attachment rows saved with resized image dimensions, null for non-images.
+	// The 1x1 fixture is already smaller than the max size, so withoutEnlargement
+	// keeps it at 1x1 instead of upscaling it.
 	expect(insertPostAttachmentsValues).toBeCalledWith([
 		{
 			postSlug: "attachment-post",
@@ -911,16 +915,17 @@ published: "2024-01-15T00:00:00Z"
 		{
 			postSlug: "attachment-post",
 			attachmentName: "banner.png",
-			attachmentKey: "posts/attachment-post/attachments/banner.jpeg",
-			width: 2048,
-			height: 2048,
+			attachmentKey: "posts/attachment-post/attachments/banner.png.jpeg",
+			width: 1,
+			height: 1,
 		},
 		{
 			postSlug: "attachment-post",
 			attachmentName: "diagrams/chart.png",
-			attachmentKey: "posts/attachment-post/attachments/diagrams/chart.jpeg",
-			width: 2048,
-			height: 2048,
+			attachmentKey:
+				"posts/attachment-post/attachments/diagrams/chart.png.jpeg",
+			width: 1,
+			height: 1,
 		},
 	]);
 });
@@ -977,6 +982,15 @@ test("Diffs post attachments: skips unchanged, re-uploads changed, removes delet
 										attachmentName: "changed.txt",
 										attachmentKey: "posts/diffing-post/attachments/changed.txt",
 									},
+									{
+										// Simulates an attachment whose stored key no longer matches
+										// what the current key-naming scheme would produce (e.g. a
+										// prior scheme version) - exercises the "delete old key
+										// before uploading under the new key" path.
+										attachmentName: "moved.txt",
+										attachmentKey:
+											"posts/diffing-post/attachments/legacy/moved.txt",
+									},
 								]
 							: [],
 					),
@@ -984,12 +998,17 @@ test("Diffs post attachments: skips unchanged, re-uploads changed, removes delet
 			}) as never,
 	);
 
+	// Only "unchanged.txt" reports as matching in S3 - everything else is treated
+	// as changed content.
 	vi.mocked(s3.matchesEtag).mockImplementation(((
 		_bucket: string,
 		key: string,
 	) => Promise.resolve(key.endsWith("unchanged.txt"))) as never);
+	// Only the stale "moved.txt" key still exists in S3 under its old path.
 	vi.mocked(s3.exists).mockImplementation(((_bucket: string, key: string) =>
-		Promise.resolve(key.endsWith("changed.txt"))) as never);
+		Promise.resolve(
+			key === "posts/diffing-post/attachments/legacy/moved.txt",
+		)) as never);
 
 	const basePath = "/content/example-author/posts/diffing-post/";
 	const baseFolderPath = "content/example-author/posts/diffing-post/";
@@ -1014,6 +1033,11 @@ test("Diffs post attachments: skips unchanged, re-uploads changed, removes delet
 						{
 							name: "changed.txt",
 							path: `${baseFolderPath}changed.txt`,
+							type: "file",
+						},
+						{
+							name: "moved.txt",
+							path: `${baseFolderPath}moved.txt`,
 							type: "file",
 						},
 					],
@@ -1055,6 +1079,14 @@ published: "2024-01-15T00:00:00Z"
 				status: 200,
 			});
 		}
+		if (params.path === `/${baseFolderPath}moved.txt`) {
+			return Promise.resolve({
+				data: Readable.toWeb(
+					Readable.from(Buffer.from("moved content")),
+				) as never,
+				status: 200,
+			});
+		}
 		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
 	});
 
@@ -1072,16 +1104,28 @@ published: "2024-01-15T00:00:00Z"
 		"posts/diffing-post/attachments/old-file.txt",
 	);
 
-	// Assert: changed attachment's old object was removed before re-upload
-	expect(s3.remove).toBeCalledWith(
+	// Assert: changed attachment keeps the same key, so it's overwritten directly
+	// by s3.upload rather than deleted first
+	expect(s3.remove).not.toBeCalledWith(
 		"example-bucket",
 		"posts/diffing-post/attachments/changed.txt",
 	);
-
-	// Assert: changed attachment was re-uploaded
 	expect(s3.upload).toBeCalledWith(
 		"example-bucket",
 		"posts/diffing-post/attachments/changed.txt",
+		undefined,
+		expect.anything(),
+		"text/plain",
+	);
+
+	// Assert: moved attachment's stale key was removed before uploading under the new key
+	expect(s3.remove).toBeCalledWith(
+		"example-bucket",
+		"posts/diffing-post/attachments/legacy/moved.txt",
+	);
+	expect(s3.upload).toBeCalledWith(
+		"example-bucket",
+		"posts/diffing-post/attachments/moved.txt",
 		undefined,
 		expect.anything(),
 		"text/plain",
@@ -1091,12 +1135,12 @@ published: "2024-01-15T00:00:00Z"
 	expect(s3.upload).not.toBeCalledWith(
 		"example-bucket",
 		"posts/diffing-post/attachments/unchanged.txt",
-		expect.anything(),
+		undefined,
 		expect.anything(),
 		expect.anything(),
 	);
 
-	// Assert: only the two attachments still present in the repo are saved
+	// Assert: only the three attachments still present in the repo are saved
 	expect(insertPostAttachmentsValues).toBeCalledWith([
 		{
 			postSlug: "diffing-post",
@@ -1109,6 +1153,13 @@ published: "2024-01-15T00:00:00Z"
 			postSlug: "diffing-post",
 			attachmentName: "changed.txt",
 			attachmentKey: "posts/diffing-post/attachments/changed.txt",
+			width: null,
+			height: null,
+		},
+		{
+			postSlug: "diffing-post",
+			attachmentName: "moved.txt",
+			attachmentKey: "posts/diffing-post/attachments/moved.txt",
 			width: null,
 			height: null,
 		},
