@@ -95,9 +95,9 @@ const profilesRoutes: FastifyPluginAsync = async (fastify) => {
 					profiles.profileImage,
 				)
 				.orderBy(
-					sortBy === "posts"
-						? desc(countDistinct(postData.slug))
-						: asc(profiles.slug),
+					...(sortBy === "posts"
+						? [desc(countDistinct(postData.slug)), asc(profiles.slug)]
+						: [asc(profiles.slug)]),
 				)
 				.limit(queryParams.limit)
 				.offset(queryParams.page * queryParams.limit);

@@ -148,10 +148,29 @@ describe("Profiles Routes Tests", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			expect(chain.orderBy).toBeCalledWith(desc(countDistinct(postData.slug)));
+			expect(chain.orderBy).toBeCalledWith(
+				desc(countDistinct(postData.slug)),
+				asc(profiles.slug),
+			);
 			expect(
 				response.json().map((profile: { id: string }) => profile.id),
 			).toEqual(["crutchcorn", "fennifith"]);
+		});
+
+		test("joins postAuthors on the profile's slug", async () => {
+			const chain = mockSelectChain([]);
+
+			const response = await app.inject({
+				method: "GET",
+				url: "/content/profiles",
+				query: { page: "0", limit: "10" },
+			});
+
+			expect(response.statusCode).toBe(200);
+			expect(chain.leftJoinPostAuthors).toBeCalledWith(
+				postAuthors,
+				eq(postAuthors.authorSlug, profiles.slug),
+			);
 		});
 
 		test("only counts posts with a publishedAt date and noindex false", async () => {
