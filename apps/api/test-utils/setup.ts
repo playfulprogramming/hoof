@@ -21,6 +21,33 @@ vi.mock("@playfulprogramming/redis", () => {
 
 vi.mock("@playfulprogramming/db", () => {
 	return {
+		posts: {
+			slug: {},
+			collectionSlug: {},
+		},
+		postData: {
+			slug: {},
+			locale: {},
+			title: {},
+			bannerImage: {},
+			wordCount: {},
+			publishedAt: {},
+			noindex: {},
+		},
+		postTags: {
+			postSlug: {},
+			tag: {},
+		},
+		postAuthors: {
+			postSlug: {},
+			authorSlug: {},
+		},
+		profiles: {
+			slug: {},
+			name: {},
+			description: {},
+			profileImage: {},
+		},
 		db: {
 			query: {
 				postImages: {
@@ -39,6 +66,7 @@ vi.mock("@playfulprogramming/db", () => {
 					findMany: vi.fn(),
 				},
 			},
+			select: vi.fn(),
 		},
 	};
 });
