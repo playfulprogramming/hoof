@@ -14,8 +14,8 @@ import { PostBaseSchema } from "./postBaseSchema.ts";
 
 const PostsQueryParamsSchema = Type.Object({
 	locale: Type.String({ default: "en" }),
-	page: Type.Number({ minimum: 0 }),
-	limit: Type.Number({ minimum: 1 }),
+	page: Type.Number({ minimum: 0, default: 0 }),
+	limit: Type.Number({ minimum: 1, maximum: 100, default: 20 }),
 	sort: Type.Union([Type.Literal("newest"), Type.Literal("oldest")], {
 		default: "newest",
 	}),
@@ -79,7 +79,9 @@ const postsRoutes: FastifyPluginAsync = async (fastify) => {
 				eq(postData.noindex, false),
 			];
 			if (author) {
-				conditions.push(eq(postAuthors.authorSlug, author));
+				conditions.push(
+					sql`exists (select 1 from ${postAuthors} where ${postAuthors.postSlug} = ${posts.slug} and ${postAuthors.authorSlug} = ${author})`,
+				);
 			}
 
 			const rows = await db
@@ -96,10 +98,17 @@ const postsRoutes: FastifyPluginAsync = async (fastify) => {
 				.from(posts)
 				.innerJoin(
 					postData,
-					and(eq(postData.slug, posts.slug), eq(postData.locale, locale)),
+					and(
+						eq(postData.slug, posts.slug),
+						eq(postData.locale, locale),
+						// No documented "current version" convention exists anywhere else in
+						// the query layer (post.ts doesn't filter by version either); this
+						// pins to the schema's default empty-string version to avoid
+						// returning duplicate rows per slug/locale until one is established.
+						eq(postData.version, ""),
+					),
 				)
 				.leftJoin(postTags, eq(postTags.postSlug, posts.slug))
-				.leftJoin(postAuthors, eq(postAuthors.postSlug, posts.slug))
 				.where(and(...conditions))
 				.groupBy(
 					posts.slug,

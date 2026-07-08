@@ -1,7 +1,7 @@
 import fastify, { type FastifyInstance } from "fastify";
 import postsRoutes from "./posts.ts";
-import { db, postAuthors, postData } from "@playfulprogramming/db";
-import { and, asc, desc, eq, isNotNull } from "drizzle-orm";
+import { db, postAuthors, postData, posts } from "@playfulprogramming/db";
+import { and, asc, desc, eq, isNotNull, sql } from "drizzle-orm";
 
 function mockPostsSelectChain(rows: unknown[]) {
 	const offset = vi.fn().mockResolvedValue(rows);
@@ -9,10 +9,7 @@ function mockPostsSelectChain(rows: unknown[]) {
 	const orderBy = vi.fn().mockReturnValue({ limit });
 	const groupBy = vi.fn().mockReturnValue({ orderBy });
 	const where = vi.fn().mockReturnValue({ groupBy });
-	const leftJoinPostAuthors = vi.fn().mockReturnValue({ where });
-	const leftJoinPostTags = vi
-		.fn()
-		.mockReturnValue({ leftJoin: leftJoinPostAuthors });
+	const leftJoinPostTags = vi.fn().mockReturnValue({ where });
 	const innerJoinPostData = vi
 		.fn()
 		.mockReturnValue({ leftJoin: leftJoinPostTags });
@@ -22,7 +19,6 @@ function mockPostsSelectChain(rows: unknown[]) {
 		from,
 		innerJoinPostData,
 		leftJoinPostTags,
-		leftJoinPostAuthors,
 		where,
 		groupBy,
 		orderBy,
@@ -249,7 +245,7 @@ describe("Posts Routes Tests", () => {
 			);
 		});
 
-		test("author filter matches co-authors via the postAuthors join", async () => {
+		test("author filter adds an EXISTS clause matching co-authors, not just a primary author", async () => {
 			const { postsChain } = mockDbSelect([]);
 
 			const response = await app.inject({
@@ -263,7 +259,7 @@ describe("Posts Routes Tests", () => {
 				and(
 					isNotNull(postData.publishedAt),
 					eq(postData.noindex, false),
-					eq(postAuthors.authorSlug, "crutchcorn"),
+					sql`exists (select 1 from ${postAuthors} where ${postAuthors.postSlug} = ${posts.slug} and ${postAuthors.authorSlug} = ${"crutchcorn"})`,
 				),
 			);
 		});
