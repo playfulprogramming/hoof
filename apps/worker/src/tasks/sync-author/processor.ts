@@ -31,7 +31,9 @@ async function processProfileImg(
 		})
 		.jpeg({ mozjpeg: true });
 
-	Readable.fromWeb(stream as never).pipe(pipeline);
+	const source = Readable.fromWeb(stream as never);
+	source.on("error", (err) => pipeline.destroy(err));
+	source.pipe(pipeline);
 
 	const bucket = await s3.ensureBucket(env.S3_BUCKET);
 	await s3.upload(bucket, uploadKey, undefined, pipeline, "image/jpeg");
