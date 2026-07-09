@@ -1,18 +1,31 @@
 import processor from "./processor.ts";
 import type { TaskInputs } from "@playfulprogramming/bullmq";
 import type { Job } from "bullmq";
-import { db, profiles } from "@playfulprogramming/db";
+import { db, profiles, authorRoles } from "@playfulprogramming/db";
 import { s3 } from "@playfulprogramming/s3";
 import * as github from "@playfulprogramming/github-api";
 import { Readable } from "node:stream";
 import { eq } from "drizzle-orm";
 
 test("Creates an example profile successfully", async () => {
-	const insertValues = vi.fn().mockReturnValue({
+	const insertProfilesValues = vi.fn().mockReturnValue({
 		onConflictDoUpdate: vi.fn(),
 	});
-	vi.mocked(db.insert).mockReturnValue({
-		values: insertValues,
+	const insertAuthorRolesValues = vi.fn();
+
+	vi.mocked(db.insert).mockImplementation((table) => {
+		if (table === profiles) {
+			return { values: insertProfilesValues } as never;
+		}
+		if (table === authorRoles) {
+			return { values: insertAuthorRolesValues } as never;
+		}
+		throw new Error(`Unexpected table: ${table}`);
+	});
+
+	const deleteWhere = vi.fn();
+	vi.mocked(db.delete).mockReturnValue({
+		where: deleteWhere,
 	} as never);
 
 	vi.mocked(github.getContentsRaw).mockImplementation((params) => {
@@ -22,7 +35,8 @@ test("Creates an example profile successfully", async () => {
 {
   name: "Example Person",
   description: "Hello",
-  profileImg: "./profile.png"
+  profileImg: "./profile.png",
+  roles: ["author", "editor"]
 }
 ---
 `,
@@ -62,17 +76,153 @@ test("Creates an example profile successfully", async () => {
 		"image/jpeg",
 	);
 
-	// The profile was inserted into the database
-	expect(insertValues).toBeCalledWith({
+	// The profile was inserted into the database, without roles in meta
+	expect(insertProfilesValues).toBeCalledWith({
 		slug: "example",
 		name: "Example Person",
 		description: "Hello",
 		profileImage: "profiles/example.jpeg",
 		meta: {
 			socials: {},
-			roles: [],
 		},
 	});
+
+	// Old roles were deleted, new roles were inserted
+	expect(deleteWhere).toBeCalledWith(eq(authorRoles.profileSlug, "example"));
+	expect(insertAuthorRolesValues).toBeCalledWith([
+		{ profileSlug: "example", role: "author" },
+		{ profileSlug: "example", role: "editor" },
+	]);
+});
+
+test("Replaces an existing author's roles on a subsequent sync with a different role set", async () => {
+	const insertProfilesValues = vi.fn().mockReturnValue({
+		onConflictDoUpdate: vi.fn(),
+	});
+	const insertAuthorRolesValues = vi.fn();
+
+	vi.mocked(db.insert).mockImplementation((table) => {
+		if (table === profiles) {
+			return { values: insertProfilesValues } as never;
+		}
+		if (table === authorRoles) {
+			return { values: insertAuthorRolesValues } as never;
+		}
+		throw new Error(`Unexpected table: ${table}`);
+	});
+
+	const deleteWhere = vi.fn();
+	vi.mocked(db.delete).mockReturnValue({
+		where: deleteWhere,
+	} as never);
+
+	vi.mocked(github.getContentsRaw).mockImplementationOnce((params) => {
+		if (params.path === "/content/example/index.md") {
+			return Promise.resolve({
+				data: `---
+{
+  name: "Example Person",
+  description: "Hello",
+  roles: ["author"]
+}
+---
+`,
+				status: 200,
+			});
+		}
+		return Promise.reject();
+	});
+
+	await processor({
+		data: {
+			author: "example",
+			ref: "main",
+		},
+	} as unknown as Job<TaskInputs["sync-author"]>);
+
+	expect(insertAuthorRolesValues).toBeCalledWith([
+		{ profileSlug: "example", role: "author" },
+	]);
+
+	vi.mocked(github.getContentsRaw).mockImplementationOnce((params) => {
+		if (params.path === "/content/example/index.md") {
+			return Promise.resolve({
+				data: `---
+{
+  name: "Example Person",
+  description: "Hello",
+  roles: ["editor", "reviewer"]
+}
+---
+`,
+				status: 200,
+			});
+		}
+		return Promise.reject();
+	});
+
+	await processor({
+		data: {
+			author: "example",
+			ref: "main",
+		},
+	} as unknown as Job<TaskInputs["sync-author"]>);
+
+	// Old roles were deleted again, and only the new role set was inserted
+	expect(deleteWhere).toBeCalledWith(eq(authorRoles.profileSlug, "example"));
+	expect(insertAuthorRolesValues).toHaveBeenLastCalledWith([
+		{ profileSlug: "example", role: "editor" },
+		{ profileSlug: "example", role: "reviewer" },
+	]);
+});
+
+test("Inserts no rows for an author with an empty roles array", async () => {
+	const insertProfilesValues = vi.fn().mockReturnValue({
+		onConflictDoUpdate: vi.fn(),
+	});
+	const insertAuthorRolesValues = vi.fn();
+
+	vi.mocked(db.insert).mockImplementation((table) => {
+		if (table === profiles) {
+			return { values: insertProfilesValues } as never;
+		}
+		if (table === authorRoles) {
+			return { values: insertAuthorRolesValues } as never;
+		}
+		throw new Error(`Unexpected table: ${table}`);
+	});
+
+	const deleteWhere = vi.fn();
+	vi.mocked(db.delete).mockReturnValue({
+		where: deleteWhere,
+	} as never);
+
+	vi.mocked(github.getContentsRaw).mockImplementation((params) => {
+		if (params.path === "/content/example/index.md") {
+			return Promise.resolve({
+				data: `---
+{
+  name: "Example Person",
+  description: "Hello"
+}
+---
+`,
+				status: 200,
+			});
+		}
+		return Promise.reject();
+	});
+
+	await processor({
+		data: {
+			author: "example",
+			ref: "main",
+		},
+	} as unknown as Job<TaskInputs["sync-author"]>);
+
+	// Roles were still deleted (in case any existed previously), but nothing was inserted
+	expect(deleteWhere).toBeCalledWith(eq(authorRoles.profileSlug, "example"));
+	expect(insertAuthorRolesValues).not.toBeCalled();
 });
 
 test("Deletes a profile record if it no longer exists", async () => {
