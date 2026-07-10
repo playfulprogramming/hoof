@@ -1,3 +1,4 @@
+export * from "./grant-author-achievements.ts";
 export * from "./post-image.ts";
 export * from "./sync-all.ts";
 export * from "./types.ts";

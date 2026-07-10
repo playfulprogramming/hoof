@@ -65,5 +65,17 @@ export const relations = defineRelations(schema, (r) => ({
 			from: r.profiles.slug.through(r.collectionAuthors.authorSlug),
 			to: r.collections.slug.through(r.collectionAuthors.collectionSlug),
 		}),
+		achievements: r.many.profileAchievements({
+			from: r.profiles.slug,
+			to: r.profileAchievements.profileSlug,
+		}),
+	},
+
+	// Profile achievements relation
+	profileAchievements: {
+		profile: r.one.profiles({
+			from: r.profileAchievements.profileSlug,
+			to: r.profiles.slug,
+		}),
 	},
 }));
