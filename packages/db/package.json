@@ -14,11 +14,11 @@
 	"dependencies": {
 		"@playfulprogramming/common": "workspace:*",
 		"drizzle-orm": "catalog:",
-		"pg": "^8.16.3"
+		"pg": "^8.21.0"
 	},
 	"devDependencies": {
-		"@types/pg": "^8.15.5",
-		"dotenv": "^17.3.1",
+		"@types/pg": "^8.20.0",
+		"dotenv": "^17.4.2",
 		"drizzle-kit": "catalog:"
 	}
 }

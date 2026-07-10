@@ -23,7 +23,7 @@
 		"drizzle-orm": "catalog:",
 		"gray-matter": "catalog:",
 		"hast-util-from-html": "^2.0.3",
-		"lru-cache": "^11.2.2",
+		"lru-cache": "^11.5.0",
 		"mdast-util-to-string": "^4.0.0",
 		"remark-gfm": "^4.0.1",
 		"remark-parse": "^11.0.0",
