@@ -32,3 +32,14 @@ export const profileAchievements = pgTable(
 		primaryKey({ columns: [table.profileSlug, table.achievementId] }),
 	],
 );
+
+export const authorRoles = pgTable(
+	"author_roles",
+	{
+		profileSlug: text("profile_slug")
+			.notNull()
+			.references(() => profiles.slug, { onDelete: "cascade" }),
+		role: text("role").notNull(),
+	},
+	(table) => [primaryKey({ columns: [table.profileSlug, table.role] })],
+);

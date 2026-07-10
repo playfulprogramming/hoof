@@ -1,6 +1,11 @@
 import { env } from "@playfulprogramming/common";
 import { Tasks, createJob } from "@playfulprogramming/bullmq";
-import { db, profiles, profileAchievements } from "@playfulprogramming/db";
+import {
+	db,
+	profiles,
+	profileAchievements,
+	authorRoles,
+} from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
 import { s3 } from "@playfulprogramming/s3";
 import { createProcessor } from "../../createProcessor.ts";
@@ -26,7 +31,9 @@ async function processProfileImg(
 		})
 		.jpeg({ mozjpeg: true });
 
-	Readable.fromWeb(stream as never).pipe(pipeline);
+	const source = Readable.fromWeb(stream as never);
+	source.on("error", (err) => pipeline.destroy(err));
+	source.pipe(pipeline);
 
 	const bucket = await s3.ensureBucket(env.S3_BUCKET);
 	await s3.upload(bucket, uploadKey, undefined, pipeline, "image/jpeg");
@@ -90,7 +97,6 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 		profileImage: profileImgKey,
 		meta: {
 			socials: authorData.socials,
-			roles: authorData.roles,
 		},
 	};
 
@@ -122,6 +128,17 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 				earnedManualIds.map((achievementId) => ({
 					profileSlug: authorId,
 					achievementId,
+				})),
+			);
+		}
+
+		await tx.delete(authorRoles).where(eq(authorRoles.profileSlug, authorId));
+
+		if (authorData.roles.length > 0) {
+			await tx.insert(authorRoles).values(
+				authorData.roles.map((role) => ({
+					profileSlug: authorId,
+					role,
 				})),
 			);
 		}
