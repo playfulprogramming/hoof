@@ -94,6 +94,10 @@ vi.mock("@playfulprogramming/db", () => {
 			postSlug: {},
 			tag: {},
 		},
+		postAttachments: {
+			postSlug: {},
+			attachmentName: {},
+		},
 		collectionChapters: {
 			postSlug: {},
 			locale: {},
