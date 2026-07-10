@@ -1,4 +1,4 @@
-import { CollectionMetaSchema } from "../../../../worker/src/tasks/sync-collection/types.ts";
+import { CollectionMetaSchema } from "@playfulprogramming/common";
 import { createSchemaRoute } from "./createSchemaRoute.ts";
 
 const schemaCollectionRoutes = createSchemaRoute(

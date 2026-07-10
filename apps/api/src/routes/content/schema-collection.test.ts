@@ -1,6 +1,6 @@
 import fastify, { type FastifyInstance } from "fastify";
 import schemaCollectionRoutes from "./schema-collection.ts";
-import { CollectionMetaSchema } from "../../../../worker/src/tasks/sync-collection/types.ts";
+import { CollectionMetaSchema } from "@playfulprogramming/common";
 
 describe("Schema Collection Routes Tests", () => {
 	let app: FastifyInstance;

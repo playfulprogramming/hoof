@@ -1,4 +1,4 @@
-import { PostMetaSchema } from "../../../../worker/src/tasks/sync-post/types.ts";
+import { PostMetaSchema } from "@playfulprogramming/common";
 import { createSchemaRoute } from "./createSchemaRoute.ts";
 
 const schemaPostRoutes = createSchemaRoute(

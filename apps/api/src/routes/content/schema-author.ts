@@ -1,4 +1,4 @@
-import { AuthorMetaSchema } from "../../../../worker/src/tasks/sync-author/types.ts";
+import { AuthorMetaSchema } from "@playfulprogramming/common";
 import { createSchemaRoute } from "./createSchemaRoute.ts";
 
 const schemaAuthorRoutes = createSchemaRoute(

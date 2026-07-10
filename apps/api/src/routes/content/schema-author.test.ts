@@ -1,6 +1,6 @@
 import fastify, { type FastifyInstance } from "fastify";
 import schemaAuthorRoutes from "./schema-author.ts";
-import { AuthorMetaSchema } from "../../../../worker/src/tasks/sync-author/types.ts";
+import { AuthorMetaSchema } from "@playfulprogramming/common";
 
 describe("Schema Author Routes Tests", () => {
 	let app: FastifyInstance;

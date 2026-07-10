@@ -1,11 +1,10 @@
-import { env } from "@playfulprogramming/common";
+import { env, AuthorMetaSchema } from "@playfulprogramming/common";
 import { Tasks, createJob } from "@playfulprogramming/bullmq";
 import { db, profiles, profileAchievements } from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
 import { s3 } from "@playfulprogramming/s3";
 import { createProcessor } from "../../createProcessor.ts";
 import matter from "gray-matter";
-import { AuthorMetaSchema } from "./types.ts";
 import { Value } from "typebox/value";
 import sharp from "sharp";
 import { Readable } from "node:stream";

@@ -1,6 +1,6 @@
 import fastify, { type FastifyInstance } from "fastify";
 import schemaPostRoutes from "./schema-post.ts";
-import { PostMetaSchema } from "../../../../worker/src/tasks/sync-post/types.ts";
+import { PostMetaSchema } from "@playfulprogramming/common";
 
 describe("Schema Post Routes Tests", () => {
 	let app: FastifyInstance;
