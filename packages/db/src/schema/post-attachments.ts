@@ -11,6 +11,7 @@ export const postAttachments = pgTable(
 			}),
 		attachmentName: text("attachment_name").notNull(),
 		attachmentKey: text("attachment_key").notNull(),
+		sha: text("sha").notNull(),
 		width: integer("width"),
 		height: integer("height"),
 	},

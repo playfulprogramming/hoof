@@ -16,7 +16,6 @@ import matter from "gray-matter";
 import { Value } from "typebox/value";
 import sharp from "sharp";
 import { Readable } from "node:stream";
-import { createHash } from "node:crypto";
 import { extname } from "node:path/posix";
 import { Response } from "undici";
 import { PostMetaSchema } from "./types.ts";
@@ -52,6 +51,7 @@ const MIME_TYPES: Record<string, string> = {
 	".mp4": "video/mp4",
 	".webm": "video/webm",
 	".svg": "image/svg+xml",
+	".jpeg": "image/jpeg",
 };
 
 function isImageAttachment(relativePath: string): boolean {
@@ -83,73 +83,30 @@ async function resizeAttachmentImage(stream: ReadableStream<Uint8Array>) {
 }
 
 interface AttachmentSourceEntry {
-	relativePath: string;
+	name: string;
 	path: string;
+	sha: string;
 }
 
-async function collectAttachmentEntries(
-	entries: Array<{ name: string; path: string; type?: string }>,
-	baseFolderPath: string,
-	ref: string,
-	signal: AbortSignal | undefined,
-): Promise<AttachmentSourceEntry[]> {
-	const results: AttachmentSourceEntry[] = [];
-
-	for (const entry of entries) {
-		if (entry.name.startsWith("index") && entry.name.endsWith(".md")) {
-			continue;
-		}
-
-		if (entry.type === "dir") {
-			const dirPath = new URL(`${entry.path}/`, "http://localhost").pathname;
-			const dirResponse = await github.getContents({
-				ref,
-				path: dirPath,
-				repoOwner: env.GITHUB_REPO_OWNER,
-				repoName: env.GITHUB_REPO_NAME,
-				signal,
-			});
-
-			if (
-				dirResponse.data !== undefined &&
-				Array.isArray(dirResponse.data.entries)
-			) {
-				results.push(
-					...(await collectAttachmentEntries(
-						dirResponse.data.entries,
-						baseFolderPath,
-						ref,
-						signal,
-					)),
-				);
-			}
-			continue;
-		}
-
-		results.push({
-			relativePath: entry.path.slice(baseFolderPath.length),
-			path: entry.path,
-		});
-	}
-
-	return results;
+function collectAttachmentEntries(
+	entries: Array<{ name: string; path: string; type?: string; sha: string }>,
+): AttachmentSourceEntry[] {
+	return entries
+		.filter((entry) => entry.type !== "dir")
+		.filter(
+			(entry) =>
+				!(entry.name.startsWith("index") && entry.name.endsWith(".md")),
+		)
+		.map((entry) => ({ name: entry.name, path: entry.path, sha: entry.sha }));
 }
 
-const ATTACHMENT_UPLOAD_CONCURRENCY = 4;
-
-async function processInBatches<T, R>(
-	items: T[],
-	concurrency: number,
-	fn: (item: T) => Promise<R>,
-): Promise<R[]> {
-	const results: R[] = [];
-
-	for (let i = 0; i < items.length; i += concurrency) {
-		const chunk = items.slice(i, i + concurrency);
-		results.push(...(await Promise.all(chunk.map(fn))));
-	}
-
-	return results;
+interface AttachmentRow {
+	postSlug: string;
+	attachmentName: string;
+	attachmentKey: string;
+	sha: string;
+	width: number | null;
+	height: number | null;
 }
 
 export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
@@ -188,21 +145,12 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 
 			if (removedAttachmentRows.length > 0) {
 				const bucket = await s3.ensureBucket(env.S3_BUCKET);
-				const results = await Promise.allSettled(
+				await Promise.all(
 					removedAttachmentRows.map(async ({ attachmentKey }) => {
 						await s3.remove(bucket, attachmentKey);
 						console.log(`Removed attachment ${attachmentKey} from S3`);
 					}),
 				);
-
-				for (const result of results) {
-					if (result.status === "rejected") {
-						console.error(
-							result.reason,
-							`Failed to remove an attachment from S3 for ${post}`,
-						);
-					}
-				}
 			}
 
 			const removedAuthorRows = await db
@@ -315,18 +263,17 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	// =========================================================================
 	// Phase 3: Discover, resize, diff, and upload post attachments
 	// =========================================================================
-	const baseFolderPath = basePath.replace(/^\//, "");
-	const attachmentEntries = await collectAttachmentEntries(
+	const attachmentEntries = collectAttachmentEntries(
 		folderResponse.data.entries,
-		baseFolderPath,
-		ref,
-		signal,
 	);
 
 	const previousAttachmentRows = await db
 		.select({
 			attachmentName: postAttachments.attachmentName,
 			attachmentKey: postAttachments.attachmentKey,
+			sha: postAttachments.sha,
+			width: postAttachments.width,
+			height: postAttachments.height,
 		})
 		.from(postAttachments)
 		.where(eq(postAttachments.postSlug, post));
@@ -335,7 +282,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	);
 
 	const discoveredAttachmentNames = new Set(
-		attachmentEntries.map((entry) => entry.relativePath),
+		attachmentEntries.map((entry) => entry.name),
 	);
 
 	for (const [attachmentName, row] of previousAttachmentsByName) {
@@ -347,87 +294,81 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		}
 	}
 
-	const attachmentRows = await processInBatches(
-		attachmentEntries,
-		ATTACHMENT_UPLOAD_CONCURRENCY,
-		async ({ relativePath, path }) => {
-			const fileUrl = new URL(path, "http://localhost");
-			const { data: fileStream } = await github.getContentsRawStream({
-				ref,
-				path: fileUrl.pathname,
-				repoOwner: env.GITHUB_REPO_OWNER,
-				repoName: env.GITHUB_REPO_NAME,
-				signal,
-			});
+	const attachmentRows: AttachmentRow[] = [];
 
-			if (fileStream === undefined) {
-				throw new Error(
-					`Unable to fetch attachment ${relativePath} for ${post}`,
-				);
-			}
+	for (const { name, path, sha } of attachmentEntries) {
+		const previous = previousAttachmentsByName.get(name);
 
-			const isImage = isImageAttachment(relativePath);
-			let buffer: Buffer;
-			let width: number | null = null;
-			let height: number | null = null;
-			// Images are converted to JPEG, so ".jpeg" is appended after the full
-			// original filename (rather than replacing its extension) to keep the
-			// key's extension honest about the stored format without colliding on
-			// same-basename files with different source extensions (e.g. banner.png
-			// and banner.jpg would otherwise both become banner.jpeg).
-			let keyRelativePath = relativePath;
-
-			if (isImage) {
-				const resized = await resizeAttachmentImage(fileStream);
-				buffer = resized.buffer;
-				width = resized.width;
-				height = resized.height;
-				keyRelativePath = `${relativePath}.jpeg`;
-			} else {
-				buffer = Buffer.from(await new Response(fileStream).arrayBuffer());
-			}
-
-			const attachmentKey = `posts/${post}/attachments/${keyRelativePath}`;
-			const etag = `"${createHash("md5").update(buffer).digest("hex")}"`;
-
-			const previous = previousAttachmentsByName.get(relativePath);
-			const sameKeyAsPrevious =
-				previous !== undefined && previous.attachmentKey === attachmentKey;
-			const unchanged =
-				sameKeyAsPrevious &&
-				(await s3.matchesEtag(bucket, attachmentKey, etag));
-
-			if (!unchanged) {
-				if (
-					previous !== undefined &&
-					!sameKeyAsPrevious &&
-					(await s3.exists(bucket, previous.attachmentKey))
-				) {
-					// Only pre-emptively delete when the key itself changed; when the
-					// key is unchanged, s3.upload below overwrites it directly, so
-					// deleting first would just create a needless gap where the
-					// object briefly doesn't exist.
-					await s3.remove(bucket, previous.attachmentKey);
-				}
-				await s3.upload(
-					bucket,
-					attachmentKey,
-					undefined,
-					buffer,
-					isImage ? "image/jpeg" : mimeTypeForAttachment(relativePath),
-				);
-				console.log(`Uploaded attachment ${attachmentKey} to S3`);
-			}
-
-			return {
+		// Content-addressed keys mean an unchanged sha implies an unchanged
+		// object in S3 - carry the existing row forward without touching GitHub
+		// or S3 at all.
+		if (previous !== undefined && previous.sha === sha) {
+			attachmentRows.push({
 				postSlug: post,
-				attachmentName: relativePath,
-				attachmentKey,
-				width,
-				height,
-			};
-		},
-	);
+				attachmentName: name,
+				attachmentKey: previous.attachmentKey,
+				sha,
+				width: previous.width,
+				height: previous.height,
+			});
+			continue;
+		}
+
+		const fileUrl = new URL(path, "http://localhost");
+		const { data: fileStream } = await github.getContentsRawStream({
+			ref,
+			path: fileUrl.pathname,
+			repoOwner: env.GITHUB_REPO_OWNER,
+			repoName: env.GITHUB_REPO_NAME,
+			signal,
+		});
+
+		if (fileStream === undefined) {
+			throw new Error(`Unable to fetch attachment ${name} for ${post}`);
+		}
+
+		const isImage = isImageAttachment(name);
+		let buffer: Buffer;
+		let width: number | null = null;
+		let height: number | null = null;
+
+		if (isImage) {
+			const resized = await resizeAttachmentImage(fileStream);
+			buffer = resized.buffer;
+			width = resized.width;
+			height = resized.height;
+		} else {
+			buffer = Buffer.from(await new Response(fileStream).arrayBuffer());
+		}
+
+		// The key is derived from the file's sha, so a changed file always gets
+		// a brand-new key - no risk of collision, and no need to reason about
+		// whether the key itself changed before deleting the old object.
+		const extension = isImage ? ".jpeg" : extname(name);
+		const attachmentKey = `posts/${post}/attachments/${sha}${extension}`;
+
+		if (previous !== undefined) {
+			await s3.remove(bucket, previous.attachmentKey);
+		}
+
+		await s3.upload(
+			bucket,
+			attachmentKey,
+			undefined,
+			buffer,
+			mimeTypeForAttachment(attachmentKey),
+		);
+		console.log(`Uploaded attachment ${attachmentKey} to S3`);
+
+		attachmentRows.push({
+			postSlug: post,
+			attachmentName: name,
+			attachmentKey,
+			sha,
+			width,
+			height,
+		});
+	}
 
 	// =========================================================================
 	// Phase 4: Perform all database operations in a single transaction

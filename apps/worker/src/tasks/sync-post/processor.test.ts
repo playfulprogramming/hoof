@@ -740,7 +740,7 @@ tags:
 	]);
 });
 
-test("Uploads post attachments, resizing images and recursing into subfolders", async () => {
+test("Uploads post attachments, resizing images and content-addressing their keys by sha", async () => {
 	const insertPostsValues = vi.fn().mockReturnValue({
 		onConflictDoNothing: vi.fn(),
 	});
@@ -791,35 +791,19 @@ test("Uploads post attachments, resizing images and recursing into subfolders", 
 							name: "index.md",
 							path: `${baseFolderPath}index.md`,
 							type: "file",
+							sha: "index-sha",
 						},
 						{
 							name: "notes.pdf",
 							path: `${baseFolderPath}notes.pdf`,
 							type: "file",
+							sha: "notes-sha",
 						},
 						{
 							name: "banner.png",
 							path: `${baseFolderPath}banner.png`,
 							type: "file",
-						},
-						{
-							name: "diagrams",
-							path: `${baseFolderPath}diagrams`,
-							type: "dir",
-						},
-					],
-				},
-				status: 200,
-			});
-		}
-		if (params.path === `/${baseFolderPath}diagrams/`) {
-			return Promise.resolve({
-				data: {
-					entries: [
-						{
-							name: "chart.png",
-							path: `${baseFolderPath}diagrams/chart.png`,
-							type: "file",
+							sha: "banner-sha",
 						},
 					],
 				},
@@ -850,10 +834,7 @@ published: "2024-01-15T00:00:00Z"
 				status: 200,
 			});
 		}
-		if (
-			params.path === `/${baseFolderPath}banner.png` ||
-			params.path === `/${baseFolderPath}diagrams/chart.png`
-		) {
+		if (params.path === `/${baseFolderPath}banner.png`) {
 			return Promise.resolve({
 				data: Readable.toWeb(
 					Readable.from(Buffer.from(ONE_PIXEL_PNG_BASE64, "base64")),
@@ -872,30 +853,19 @@ published: "2024-01-15T00:00:00Z"
 		},
 	} as unknown as Job<TaskInputs["sync-post"]>);
 
-	// Assert: Non-image attachment uploaded as-is under its original extension
+	// Assert: Non-image attachment uploaded as-is, keyed by its sha and original extension
 	expect(s3.upload).toBeCalledWith(
 		"example-bucket",
-		"posts/attachment-post/attachments/notes.pdf",
+		"posts/attachment-post/attachments/notes-sha.pdf",
 		undefined,
 		expect.anything(),
 		"application/pdf",
 	);
 
-	// Assert: Top-level image attachment resized and converted; ".jpeg" is appended
-	// after the original filename (not replacing its extension) to avoid same-basename
-	// collisions between files with different source extensions
+	// Assert: Image attachment resized and converted; key is the sha with a ".jpeg" extension
 	expect(s3.upload).toBeCalledWith(
 		"example-bucket",
-		"posts/attachment-post/attachments/banner.png.jpeg",
-		undefined,
-		expect.anything(),
-		"image/jpeg",
-	);
-
-	// Assert: Image nested in a subfolder was discovered via recursion
-	expect(s3.upload).toBeCalledWith(
-		"example-bucket",
-		"posts/attachment-post/attachments/diagrams/chart.png.jpeg",
+		"posts/attachment-post/attachments/banner-sha.jpeg",
 		undefined,
 		expect.anything(),
 		"image/jpeg",
@@ -908,29 +878,23 @@ published: "2024-01-15T00:00:00Z"
 		{
 			postSlug: "attachment-post",
 			attachmentName: "notes.pdf",
-			attachmentKey: "posts/attachment-post/attachments/notes.pdf",
+			attachmentKey: "posts/attachment-post/attachments/notes-sha.pdf",
+			sha: "notes-sha",
 			width: null,
 			height: null,
 		},
 		{
 			postSlug: "attachment-post",
 			attachmentName: "banner.png",
-			attachmentKey: "posts/attachment-post/attachments/banner.png.jpeg",
-			width: 1,
-			height: 1,
-		},
-		{
-			postSlug: "attachment-post",
-			attachmentName: "diagrams/chart.png",
-			attachmentKey:
-				"posts/attachment-post/attachments/diagrams/chart.png.jpeg",
+			attachmentKey: "posts/attachment-post/attachments/banner-sha.jpeg",
+			sha: "banner-sha",
 			width: 1,
 			height: 1,
 		},
 	]);
 });
 
-test("Diffs post attachments: skips unchanged, re-uploads changed, removes deleted", async () => {
+test("Diffs post attachments: skips unchanged sha, re-uploads changed sha under a new key, removes deleted", async () => {
 	const insertPostsValues = vi.fn().mockReturnValue({
 		onConflictDoNothing: vi.fn(),
 	});
@@ -971,25 +935,26 @@ test("Diffs post attachments: skips unchanged, re-uploads changed, removes delet
 									{
 										attachmentName: "old-file.txt",
 										attachmentKey:
-											"posts/diffing-post/attachments/old-file.txt",
+											"posts/diffing-post/attachments/old-file-sha.txt",
+										sha: "old-file-sha",
+										width: null,
+										height: null,
 									},
 									{
 										attachmentName: "unchanged.txt",
 										attachmentKey:
-											"posts/diffing-post/attachments/unchanged.txt",
+											"posts/diffing-post/attachments/unchanged-sha.txt",
+										sha: "unchanged-sha",
+										width: null,
+										height: null,
 									},
 									{
 										attachmentName: "changed.txt",
-										attachmentKey: "posts/diffing-post/attachments/changed.txt",
-									},
-									{
-										// Simulates an attachment whose stored key no longer matches
-										// what the current key-naming scheme would produce (e.g. a
-										// prior scheme version) - exercises the "delete old key
-										// before uploading under the new key" path.
-										attachmentName: "moved.txt",
 										attachmentKey:
-											"posts/diffing-post/attachments/legacy/moved.txt",
+											"posts/diffing-post/attachments/old-changed-sha.txt",
+										sha: "old-changed-sha",
+										width: null,
+										height: null,
 									},
 								]
 							: [],
@@ -997,18 +962,6 @@ test("Diffs post attachments: skips unchanged, re-uploads changed, removes delet
 				})),
 			}) as never,
 	);
-
-	// Only "unchanged.txt" reports as matching in S3 - everything else is treated
-	// as changed content.
-	vi.mocked(s3.matchesEtag).mockImplementation(((
-		_bucket: string,
-		key: string,
-	) => Promise.resolve(key.endsWith("unchanged.txt"))) as never);
-	// Only the stale "moved.txt" key still exists in S3 under its old path.
-	vi.mocked(s3.exists).mockImplementation(((_bucket: string, key: string) =>
-		Promise.resolve(
-			key === "posts/diffing-post/attachments/legacy/moved.txt",
-		)) as never);
 
 	const basePath = "/content/example-author/posts/diffing-post/";
 	const baseFolderPath = "content/example-author/posts/diffing-post/";
@@ -1024,21 +977,19 @@ test("Diffs post attachments: skips unchanged, re-uploads changed, removes delet
 							name: "index.md",
 							path: `${baseFolderPath}index.md`,
 							type: "file",
+							sha: "index-sha",
 						},
 						{
 							name: "unchanged.txt",
 							path: `${baseFolderPath}unchanged.txt`,
 							type: "file",
+							sha: "unchanged-sha",
 						},
 						{
 							name: "changed.txt",
 							path: `${baseFolderPath}changed.txt`,
 							type: "file",
-						},
-						{
-							name: "moved.txt",
-							path: `${baseFolderPath}moved.txt`,
-							type: "file",
+							sha: "new-changed-sha",
 						},
 					],
 				},
@@ -1063,26 +1014,10 @@ published: "2024-01-15T00:00:00Z"
 	});
 
 	vi.mocked(github.getContentsRawStream).mockImplementation((params) => {
-		if (params.path === `/${baseFolderPath}unchanged.txt`) {
-			return Promise.resolve({
-				data: Readable.toWeb(
-					Readable.from(Buffer.from("same content")),
-				) as never,
-				status: 200,
-			});
-		}
 		if (params.path === `/${baseFolderPath}changed.txt`) {
 			return Promise.resolve({
 				data: Readable.toWeb(
 					Readable.from(Buffer.from("new content")),
-				) as never,
-				status: 200,
-			});
-		}
-		if (params.path === `/${baseFolderPath}moved.txt`) {
-			return Promise.resolve({
-				data: Readable.toWeb(
-					Readable.from(Buffer.from("moved content")),
 				) as never,
 				status: 200,
 			});
@@ -1101,65 +1036,186 @@ published: "2024-01-15T00:00:00Z"
 	// Assert: attachment no longer in the repo was removed from S3
 	expect(s3.remove).toBeCalledWith(
 		"example-bucket",
-		"posts/diffing-post/attachments/old-file.txt",
+		"posts/diffing-post/attachments/old-file-sha.txt",
 	);
 
-	// Assert: changed attachment keeps the same key, so it's overwritten directly
-	// by s3.upload rather than deleted first
-	expect(s3.remove).not.toBeCalledWith(
-		"example-bucket",
-		"posts/diffing-post/attachments/changed.txt",
-	);
-	expect(s3.upload).toBeCalledWith(
-		"example-bucket",
-		"posts/diffing-post/attachments/changed.txt",
-		undefined,
-		expect.anything(),
-		"text/plain",
-	);
-
-	// Assert: moved attachment's stale key was removed before uploading under the new key
+	// Assert: changed attachment's old sha-keyed object was removed, and the
+	// new sha-keyed object was uploaded in its place
 	expect(s3.remove).toBeCalledWith(
 		"example-bucket",
-		"posts/diffing-post/attachments/legacy/moved.txt",
+		"posts/diffing-post/attachments/old-changed-sha.txt",
 	);
 	expect(s3.upload).toBeCalledWith(
 		"example-bucket",
-		"posts/diffing-post/attachments/moved.txt",
+		"posts/diffing-post/attachments/new-changed-sha.txt",
 		undefined,
 		expect.anything(),
 		"text/plain",
 	);
 
-	// Assert: unchanged attachment was NOT re-uploaded
+	// Assert: unchanged attachment was NOT re-uploaded or removed
 	expect(s3.upload).not.toBeCalledWith(
 		"example-bucket",
-		"posts/diffing-post/attachments/unchanged.txt",
+		"posts/diffing-post/attachments/unchanged-sha.txt",
 		undefined,
 		expect.anything(),
 		expect.anything(),
 	);
+	expect(s3.remove).not.toBeCalledWith(
+		"example-bucket",
+		"posts/diffing-post/attachments/unchanged-sha.txt",
+	);
 
-	// Assert: only the three attachments still present in the repo are saved
+	// Assert: only the two attachments still present in the repo are saved
 	expect(insertPostAttachmentsValues).toBeCalledWith([
 		{
 			postSlug: "diffing-post",
 			attachmentName: "unchanged.txt",
-			attachmentKey: "posts/diffing-post/attachments/unchanged.txt",
+			attachmentKey: "posts/diffing-post/attachments/unchanged-sha.txt",
+			sha: "unchanged-sha",
 			width: null,
 			height: null,
 		},
 		{
 			postSlug: "diffing-post",
 			attachmentName: "changed.txt",
-			attachmentKey: "posts/diffing-post/attachments/changed.txt",
+			attachmentKey: "posts/diffing-post/attachments/new-changed-sha.txt",
+			sha: "new-changed-sha",
 			width: null,
 			height: null,
 		},
+	]);
+});
+
+test("Skips an attachment entirely when its sha matches the stored value", async () => {
+	const insertPostsValues = vi.fn().mockReturnValue({
+		onConflictDoNothing: vi.fn(),
+	});
+	const insertPostDataValues = vi.fn().mockReturnValue({
+		onConflictDoUpdate: vi.fn(),
+	});
+	const insertPostAuthorsValues = vi.fn();
+	const insertPostAttachmentsValues = vi.fn();
+
+	vi.mocked(db.insert).mockImplementation((table) => {
+		if (table === posts) {
+			return { values: insertPostsValues } as never;
+		}
+		if (table === postData) {
+			return { values: insertPostDataValues } as never;
+		}
+		if (table === postAuthors) {
+			return { values: insertPostAuthorsValues } as never;
+		}
+		if (table === postAttachments) {
+			return { values: insertPostAttachmentsValues } as never;
+		}
+		throw new Error(`Unexpected table: ${table}`);
+	});
+
+	const deleteWhere = vi.fn();
+	vi.mocked(db.delete).mockReturnValue({
+		where: deleteWhere,
+	} as never);
+
+	vi.mocked(db.select).mockImplementation(
+		() =>
+			({
+				from: vi.fn((table: unknown) => ({
+					where: vi.fn().mockResolvedValue(
+						table === postAttachments
+							? [
+									{
+										attachmentName: "unchanged.txt",
+										attachmentKey:
+											"posts/skip-post/attachments/unchanged-sha.txt",
+										sha: "unchanged-sha",
+										width: null,
+										height: null,
+									},
+								]
+							: [],
+					),
+				})),
+			}) as never,
+	);
+
+	const basePath = "/content/example-author/posts/skip-post/";
+	const baseFolderPath = "content/example-author/posts/skip-post/";
+
+	vi.mocked(github.getContents).mockImplementation(((params: {
+		path: string;
+	}) => {
+		if (params.path === basePath) {
+			return Promise.resolve({
+				data: {
+					entries: [
+						{
+							name: "index.md",
+							path: `${baseFolderPath}index.md`,
+							type: "file",
+							sha: "index-sha",
+						},
+						{
+							name: "unchanged.txt",
+							path: `${baseFolderPath}unchanged.txt`,
+							type: "file",
+							sha: "unchanged-sha",
+						},
+					],
+				},
+				status: 200,
+			});
+		}
+		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
+	}) as never);
+
+	vi.mocked(github.getContentsRaw).mockImplementation((params) => {
+		if (params.path === `/${baseFolderPath}index.md`) {
+			return Promise.resolve({
+				data: `---
+title: "Skip Post"
+published: "2024-01-15T00:00:00Z"
+---
+`,
+				status: 200,
+			});
+		}
+		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
+	});
+
+	await processor({
+		data: {
+			author: "example-author",
+			post: "skip-post",
+			ref: "main",
+		},
+	} as unknown as Job<TaskInputs["sync-post"]>);
+
+	// Assert: the attachment's content was never fetched from GitHub, since its
+	// sha already matched the stored row
+	expect(github.getContentsRawStream).not.toBeCalledWith(
+		expect.objectContaining({ path: `/${baseFolderPath}unchanged.txt` }),
+	);
+
+	// Assert: no S3 interaction happened for the attachment itself (content.md
+	// is still uploaded separately as part of every sync)
+	expect(s3.upload).not.toBeCalledWith(
+		"example-bucket",
+		"posts/skip-post/attachments/unchanged-sha.txt",
+		expect.anything(),
+		expect.anything(),
+		expect.anything(),
+	);
+	expect(s3.remove).not.toBeCalled();
+
+	// Assert: the existing row was carried forward unchanged
+	expect(insertPostAttachmentsValues).toBeCalledWith([
 		{
-			postSlug: "diffing-post",
-			attachmentName: "moved.txt",
-			attachmentKey: "posts/diffing-post/attachments/moved.txt",
+			postSlug: "skip-post",
+			attachmentName: "unchanged.txt",
+			attachmentKey: "posts/skip-post/attachments/unchanged-sha.txt",
+			sha: "unchanged-sha",
 			width: null,
 			height: null,
 		},
