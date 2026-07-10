@@ -314,10 +314,9 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			continue;
 		}
 
-		const fileUrl = new URL(path, "http://localhost");
 		const { data: fileStream } = await github.getContentsRawStream({
 			ref,
-			path: fileUrl.pathname,
+			path,
 			repoOwner: env.GITHUB_REPO_OWNER,
 			repoName: env.GITHUB_REPO_NAME,
 			signal,
@@ -342,14 +341,11 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		}
 
 		// The key is derived from the file's sha, so a changed file always gets
-		// a brand-new key - no risk of collision, and no need to reason about
-		// whether the key itself changed before deleting the old object.
+		// a brand-new key - no risk of collision. Upload the new object before
+		// removing the old one, so a failed upload doesn't leave the persisted
+		// row pointing at a key that no longer exists in S3.
 		const extension = isImage ? ".jpeg" : extname(name);
 		const attachmentKey = `posts/${post}/attachments/${sha}${extension}`;
-
-		if (previous !== undefined) {
-			await s3.remove(bucket, previous.attachmentKey);
-		}
 
 		await s3.upload(
 			bucket,
@@ -359,6 +355,10 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			mimeTypeForAttachment(attachmentKey),
 		);
 		console.log(`Uploaded attachment ${attachmentKey} to S3`);
+
+		if (previous !== undefined) {
+			await s3.remove(bucket, previous.attachmentKey);
+		}
 
 		attachmentRows.push({
 			postSlug: post,

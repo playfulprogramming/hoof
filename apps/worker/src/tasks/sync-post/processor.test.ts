@@ -828,13 +828,13 @@ published: "2024-01-15T00:00:00Z"
 	});
 
 	vi.mocked(github.getContentsRawStream).mockImplementation((params) => {
-		if (params.path === `/${baseFolderPath}notes.pdf`) {
+		if (params.path === `${baseFolderPath}notes.pdf`) {
 			return Promise.resolve({
 				data: Readable.toWeb(Readable.from(Buffer.from("PDF-DATA"))) as never,
 				status: 200,
 			});
 		}
-		if (params.path === `/${baseFolderPath}banner.png`) {
+		if (params.path === `${baseFolderPath}banner.png`) {
 			return Promise.resolve({
 				data: Readable.toWeb(
 					Readable.from(Buffer.from(ONE_PIXEL_PNG_BASE64, "base64")),
@@ -892,6 +892,116 @@ published: "2024-01-15T00:00:00Z"
 			height: 1,
 		},
 	]);
+});
+
+test("Passes attachment paths to GitHub unchanged, without URL-encoding special characters", async () => {
+	const insertPostsValues = vi.fn().mockReturnValue({
+		onConflictDoNothing: vi.fn(),
+	});
+	const insertPostDataValues = vi.fn().mockReturnValue({
+		onConflictDoUpdate: vi.fn(),
+	});
+	const insertPostAuthorsValues = vi.fn();
+	const insertPostAttachmentsValues = vi.fn();
+
+	vi.mocked(db.insert).mockImplementation((table) => {
+		if (table === posts) {
+			return { values: insertPostsValues } as never;
+		}
+		if (table === postData) {
+			return { values: insertPostDataValues } as never;
+		}
+		if (table === postAuthors) {
+			return { values: insertPostAuthorsValues } as never;
+		}
+		if (table === postAttachments) {
+			return { values: insertPostAttachmentsValues } as never;
+		}
+		throw new Error(`Unexpected table: ${table}`);
+	});
+
+	const deleteWhere = vi.fn();
+	vi.mocked(db.delete).mockReturnValue({
+		where: deleteWhere,
+	} as never);
+
+	vi.mocked(db.select).mockReturnValue({
+		from: vi.fn().mockReturnValue({
+			where: vi.fn().mockResolvedValue([]),
+		}),
+	} as never);
+
+	const basePath = "/content/example-author/posts/special-chars-post/";
+	const baseFolderPath = "content/example-author/posts/special-chars-post/";
+	// A filename with a space and a "#" - naively round-tripping this through
+	// `new URL()` would percent-encode the space and treat "#" as a fragment
+	// delimiter, truncating the path GitHub actually receives.
+	const attachmentName = "my notes #1.txt";
+
+	vi.mocked(github.getContents).mockImplementation(((params: {
+		path: string;
+	}) => {
+		if (params.path === basePath) {
+			return Promise.resolve({
+				data: {
+					entries: [
+						{
+							name: "index.md",
+							path: `${baseFolderPath}index.md`,
+							type: "file",
+							sha: "index-sha",
+						},
+						{
+							name: attachmentName,
+							path: `${baseFolderPath}${attachmentName}`,
+							type: "file",
+							sha: "notes-sha",
+						},
+					],
+				},
+				status: 200,
+			});
+		}
+		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
+	}) as never);
+
+	vi.mocked(github.getContentsRaw).mockImplementation((params) => {
+		if (params.path === `/${baseFolderPath}index.md`) {
+			return Promise.resolve({
+				data: `---
+title: "Special Chars Post"
+published: "2024-01-15T00:00:00Z"
+---
+`,
+				status: 200,
+			});
+		}
+		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
+	});
+
+	vi.mocked(github.getContentsRawStream).mockImplementation((params) => {
+		if (params.path === `${baseFolderPath}${attachmentName}`) {
+			return Promise.resolve({
+				data: Readable.toWeb(Readable.from(Buffer.from("notes"))) as never,
+				status: 200,
+			});
+		}
+		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
+	});
+
+	await processor({
+		data: {
+			author: "example-author",
+			post: "special-chars-post",
+			ref: "main",
+		},
+	} as unknown as Job<TaskInputs["sync-post"]>);
+
+	// Assert: the raw entry path (with its space and "#" intact) was passed
+	// straight through to getContentsRawStream, unencoded
+	expect(github.getContentsRawStream).toBeCalledWith(
+		expect.objectContaining({ path: `${baseFolderPath}${attachmentName}` }),
+	);
 });
 
 test("Diffs post attachments: skips unchanged sha, re-uploads changed sha under a new key, removes deleted", async () => {
@@ -1014,7 +1124,7 @@ published: "2024-01-15T00:00:00Z"
 	});
 
 	vi.mocked(github.getContentsRawStream).mockImplementation((params) => {
-		if (params.path === `/${baseFolderPath}changed.txt`) {
+		if (params.path === `${baseFolderPath}changed.txt`) {
 			return Promise.resolve({
 				data: Readable.toWeb(
 					Readable.from(Buffer.from("new content")),
@@ -1051,6 +1161,26 @@ published: "2024-01-15T00:00:00Z"
 		undefined,
 		expect.anything(),
 		"text/plain",
+	);
+
+	// Assert: the new object is uploaded before the old one is removed, so a
+	// failed upload can't leave the persisted row pointing at a deleted key
+	const newKeyUploadOrder = vi
+		.mocked(s3.upload)
+		.mock.calls.findIndex(
+			(call) =>
+				call[1] === "posts/diffing-post/attachments/new-changed-sha.txt",
+		);
+	const oldKeyRemoveOrder = vi
+		.mocked(s3.remove)
+		.mock.calls.findIndex(
+			(call) =>
+				call[1] === "posts/diffing-post/attachments/old-changed-sha.txt",
+		);
+	expect(
+		vi.mocked(s3.upload).mock.invocationCallOrder[newKeyUploadOrder],
+	).toBeLessThan(
+		vi.mocked(s3.remove).mock.invocationCallOrder[oldKeyRemoveOrder],
 	);
 
 	// Assert: unchanged attachment was NOT re-uploaded or removed
@@ -1195,7 +1325,7 @@ published: "2024-01-15T00:00:00Z"
 	// Assert: the attachment's content was never fetched from GitHub, since its
 	// sha already matched the stored row
 	expect(github.getContentsRawStream).not.toBeCalledWith(
-		expect.objectContaining({ path: `/${baseFolderPath}unchanged.txt` }),
+		expect.objectContaining({ path: `${baseFolderPath}unchanged.txt` }),
 	);
 
 	// Assert: no S3 interaction happened for the attachment itself (content.md
