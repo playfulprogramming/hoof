@@ -8,9 +8,7 @@ function mockSelectChain(rows: unknown[]) {
 	const limit = vi.fn().mockReturnValue({ offset });
 	const orderBy = vi.fn().mockReturnValue({ limit });
 	const groupBy = vi.fn().mockReturnValue({ orderBy });
-	const leftJoinPosts = vi
-		.fn()
-		.mockReturnValue({ groupBy });
+	const leftJoinPosts = vi.fn().mockReturnValue({ groupBy });
 	const leftJoinPostAuthors = vi
 		.fn()
 		.mockReturnValue({ leftJoin: leftJoinPosts });
