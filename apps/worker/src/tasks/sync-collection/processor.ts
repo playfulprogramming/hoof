@@ -15,16 +15,18 @@ import { CollectionMetaSchema } from "./types.ts";
 import { Value } from "typebox/value";
 import sharp from "sharp";
 import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { s3 } from "@playfulprogramming/s3";
 import { extractLocale } from "../../utils/extractLocale.ts";
 
 const IMAGE_SIZE_MAX = 2048;
 
-async function processImg(
+export async function processImg(
 	stream: ReadableStream<Uint8Array>,
 	uploadKey: string,
+	signal: AbortSignal,
 ) {
-	const pipeline = sharp()
+	const transform = sharp()
 		.resize({
 			width: IMAGE_SIZE_MAX,
 			height: IMAGE_SIZE_MAX,
@@ -32,10 +34,13 @@ async function processImg(
 		})
 		.jpeg({ mozjpeg: true });
 
-	Readable.fromWeb(stream as never).pipe(pipeline);
+	const source = Readable.fromWeb(stream as never);
 
 	const bucket = await s3.ensureBucket(env.S3_BUCKET);
-	await s3.upload(bucket, uploadKey, undefined, pipeline, "image/jpeg");
+	await Promise.all([
+		pipeline(source, transform, { signal }),
+		s3.upload(bucket, uploadKey, undefined, transform, "image/jpeg"),
+	]);
 }
 
 export default createProcessor(
@@ -150,7 +155,7 @@ export default createProcessor(
 				}
 
 				coverImgKey = `collections/${collectionId}/${locale}/cover.jpg`;
-				await processImg(coverImgStream, coverImgKey);
+				await processImg(coverImgStream, coverImgKey, signal);
 			}
 
 			if (collectionParsedData.socialImg) {
@@ -176,7 +181,7 @@ export default createProcessor(
 				}
 
 				socialImgKey = `collections/${collectionId}/${locale}/social.jpg`;
-				await processImg(socialImgStream, socialImgKey);
+				await processImg(socialImgStream, socialImgKey, signal);
 			}
 
 			const result = {

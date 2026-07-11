@@ -14,16 +14,18 @@ import { AuthorMetaSchema } from "./types.ts";
 import { Value } from "typebox/value";
 import sharp from "sharp";
 import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { and, eq, inArray } from "drizzle-orm";
 import { MANUAL_ACHIEVEMENT_IDS } from "../grant-author-achievements/achievement-ids.ts";
 
 const PROFILE_IMAGE_SIZE_MAX = 2048;
 
-async function processProfileImg(
+export async function processProfileImg(
 	stream: ReadableStream<Uint8Array>,
 	uploadKey: string,
+	signal: AbortSignal,
 ) {
-	const pipeline = sharp()
+	const transform = sharp()
 		.resize({
 			width: PROFILE_IMAGE_SIZE_MAX,
 			height: PROFILE_IMAGE_SIZE_MAX,
@@ -32,11 +34,12 @@ async function processProfileImg(
 		.jpeg({ mozjpeg: true });
 
 	const source = Readable.fromWeb(stream as never);
-	source.on("error", (err) => pipeline.destroy(err));
-	source.pipe(pipeline);
 
 	const bucket = await s3.ensureBucket(env.S3_BUCKET);
-	await s3.upload(bucket, uploadKey, undefined, pipeline, "image/jpeg");
+	await Promise.all([
+		pipeline(source, transform, { signal }),
+		s3.upload(bucket, uploadKey, undefined, transform, "image/jpeg"),
+	]);
 }
 
 export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
@@ -87,7 +90,7 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 		}
 
 		profileImgKey = `profiles/${authorId}.jpeg`;
-		await processProfileImg(profileImgStream, profileImgKey);
+		await processProfileImg(profileImgStream, profileImgKey, signal);
 	}
 
 	const result = {

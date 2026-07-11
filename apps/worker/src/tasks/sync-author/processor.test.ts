@@ -1,4 +1,4 @@
-import processor from "./processor.ts";
+import processor, { processProfileImg } from "./processor.ts";
 import type { TaskInputs } from "@playfulprogramming/bullmq";
 import type { Job } from "bullmq";
 import { db, profiles, authorRoles } from "@playfulprogramming/db";
@@ -6,6 +6,17 @@ import { s3 } from "@playfulprogramming/s3";
 import * as github from "@playfulprogramming/github-api";
 import { Readable } from "node:stream";
 import { eq } from "drizzle-orm";
+
+beforeEach(() => {
+	// pipeline() won't resolve until the transform's readable side is drained
+	vi.mocked(s3.upload).mockImplementation(async (_bucket, _key, _tag, file) => {
+		if (file instanceof Readable) {
+			for await (const _chunk of file) {
+				// drain
+			}
+		}
+	});
+});
 
 test("Creates an example profile successfully", async () => {
 	const insertProfilesValues = vi.fn().mockReturnValue({
@@ -250,4 +261,21 @@ test("Deletes a profile record if it no longer exists", async () => {
 
 	// The profile was deleted from the database
 	expect(deleteWhere).toBeCalledWith(eq(profiles.slug, "example"));
+});
+
+test("Rejects the profile image upload when the signal is already aborted", async () => {
+	const controller = new AbortController();
+	controller.abort();
+
+	const buffer = Buffer.from(
+		"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR42mMAAQAABQABoIJXOQAAAABJRU5ErkJggg==",
+		"base64",
+	);
+	const stream = Readable.toWeb(
+		Readable.from(buffer),
+	) as ReadableStream<Uint8Array>;
+
+	await expect(
+		processProfileImg(stream, "profiles/example.jpeg", controller.signal),
+	).rejects.toThrow();
 });
