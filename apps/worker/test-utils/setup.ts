@@ -63,6 +63,10 @@ vi.mock("@playfulprogramming/db", () => {
 			profileSlug: {},
 			achievementId: {},
 		},
+		authorRoles: {
+			profileSlug: {},
+			role: {},
+		},
 		posts: {
 			slug: {},
 		},
@@ -93,6 +97,10 @@ vi.mock("@playfulprogramming/db", () => {
 		postTags: {
 			postSlug: {},
 			tag: {},
+		},
+		postAttachments: {
+			postSlug: {},
+			attachmentName: {},
 		},
 		collectionChapters: {
 			postSlug: {},
