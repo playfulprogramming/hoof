@@ -1,4 +1,4 @@
-import { env } from "@playfulprogramming/common";
+import { env, PostMetaSchema } from "@playfulprogramming/common";
 import { Tasks, createJob } from "@playfulprogramming/bullmq";
 import {
 	db,
@@ -19,7 +19,6 @@ import sharp from "sharp";
 import { Readable } from "node:stream";
 import { extname } from "node:path/posix";
 import { Response } from "undici";
-import { PostMetaSchema } from "./types.ts";
 import { extractLocale } from "../../utils/extractLocale.ts";
 import { extractMarkdownExcerpt } from "../../utils/extractMarkdownExcerpt.ts";
 

@@ -1,4 +1,4 @@
-import { env } from "@playfulprogramming/common";
+import { env, CollectionMetaSchema } from "@playfulprogramming/common";
 import { Tasks, createJob } from "@playfulprogramming/bullmq";
 import {
 	collectionAuthors,
@@ -11,7 +11,6 @@ import * as github from "@playfulprogramming/github-api";
 import { createProcessor } from "../../createProcessor.ts";
 import { eq } from "drizzle-orm";
 import matter from "gray-matter";
-import { CollectionMetaSchema } from "./types.ts";
 import { Value } from "typebox/value";
 import sharp from "sharp";
 import { Readable } from "node:stream";
