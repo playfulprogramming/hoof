@@ -308,12 +308,15 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		);
 		console.log(`Uploaded attachment ${attachmentKey} to S3`);
 
-		await db.insert(attachments).values({
-			attachmentKey,
-			sha,
-			width,
-			height,
-		});
+		await db
+			.insert(attachments)
+			.values({
+				attachmentKey,
+				sha,
+				width,
+				height,
+			})
+			.onConflictDoNothing();
 
 		attachmentRows.push({
 			attachmentKey,
@@ -357,7 +360,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			}
 
 			// Remove the existing post record (relations are removed by cascading deletes)
-			await db
+			await tx
 				.delete(posts)
 				.where(
 					and(

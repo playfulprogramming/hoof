@@ -31,8 +31,15 @@ vi.mock("@playfulprogramming/db", () => {
 	const insertMap = new Map<unknown, unknown>();
 	const insertMockResponse = () => {
 		const returning = vi.fn();
+		const onConflictDoNothing = vi.fn(() => ({ returning }));
 		const onConflictDoUpdate = vi.fn(() => ({ returning }));
-		return { values: vi.fn(() => ({ returning, onConflictDoUpdate })) };
+		return {
+			values: vi.fn(() => ({
+				returning,
+				onConflictDoNothing,
+				onConflictDoUpdate,
+			})),
+		};
 	};
 
 	const deleteMap = new Map<unknown, unknown>();
