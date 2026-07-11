@@ -1,4 +1,4 @@
-import processor, { processProfileImg } from "./processor.ts";
+import processor from "./processor.ts";
 import type { TaskInputs } from "@playfulprogramming/bullmq";
 import type { Job } from "bullmq";
 import { db, profiles, authorRoles } from "@playfulprogramming/db";
@@ -6,6 +6,7 @@ import { s3 } from "@playfulprogramming/s3";
 import * as github from "@playfulprogramming/github-api";
 import { Readable } from "node:stream";
 import { eq } from "drizzle-orm";
+import { uploadProcessedImage } from "../../utils/uploadProcessedImage.ts";
 
 beforeEach(() => {
 	// pipeline() won't resolve until the transform's readable side is drained
@@ -276,6 +277,37 @@ test("Rejects the profile image upload when the signal is already aborted", asyn
 	) as ReadableStream<Uint8Array>;
 
 	await expect(
-		processProfileImg(stream, "profiles/example.jpeg", controller.signal),
+		uploadProcessedImage(
+			stream,
+			"profiles/example.jpeg",
+			2048,
+			controller.signal,
+		),
 	).rejects.toThrow();
+});
+
+test("Aborts the in-flight pipeline when the s3 upload rejects first", async () => {
+	vi.mocked(s3.upload).mockImplementation(async () => {
+		throw new Error("Upload failed");
+	});
+
+	const buffer = Buffer.from(
+		"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR42mMAAQAABQABoIJXOQAAAABJRU5ErkJggg==",
+		"base64",
+	);
+	const nodeSource = Readable.from(buffer);
+	const stream = Readable.toWeb(nodeSource) as ReadableStream<Uint8Array>;
+
+	await expect(
+		uploadProcessedImage(
+			stream,
+			"profiles/example.jpeg",
+			2048,
+			new AbortController().signal,
+		),
+	).rejects.toThrow("Upload failed");
+
+	// The upload rejecting should also unwind the pipeline reading from it,
+	// rather than leaving it hanging with nothing left to consume the stream
+	await vi.waitFor(() => expect(nodeSource.destroyed).toBe(true));
 });

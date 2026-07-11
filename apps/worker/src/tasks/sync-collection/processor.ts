@@ -13,35 +13,10 @@ import { eq } from "drizzle-orm";
 import matter from "gray-matter";
 import { CollectionMetaSchema } from "./types.ts";
 import { Value } from "typebox/value";
-import sharp from "sharp";
-import { Readable } from "node:stream";
-import { pipeline } from "node:stream/promises";
-import { s3 } from "@playfulprogramming/s3";
 import { extractLocale } from "../../utils/extractLocale.ts";
+import { uploadProcessedImage } from "../../utils/uploadProcessedImage.ts";
 
 const IMAGE_SIZE_MAX = 2048;
-
-export async function processImg(
-	stream: ReadableStream<Uint8Array>,
-	uploadKey: string,
-	signal: AbortSignal,
-) {
-	const transform = sharp()
-		.resize({
-			width: IMAGE_SIZE_MAX,
-			height: IMAGE_SIZE_MAX,
-			fit: "inside",
-		})
-		.jpeg({ mozjpeg: true });
-
-	const source = Readable.fromWeb(stream as never);
-
-	const bucket = await s3.ensureBucket(env.S3_BUCKET);
-	await Promise.all([
-		pipeline(source, transform, { signal }),
-		s3.upload(bucket, uploadKey, undefined, transform, "image/jpeg"),
-	]);
-}
 
 export default createProcessor(
 	Tasks.SYNC_COLLECTION,
@@ -155,7 +130,12 @@ export default createProcessor(
 				}
 
 				coverImgKey = `collections/${collectionId}/${locale}/cover.jpg`;
-				await processImg(coverImgStream, coverImgKey, signal);
+				await uploadProcessedImage(
+					coverImgStream,
+					coverImgKey,
+					IMAGE_SIZE_MAX,
+					signal,
+				);
 			}
 
 			if (collectionParsedData.socialImg) {
@@ -181,7 +161,12 @@ export default createProcessor(
 				}
 
 				socialImgKey = `collections/${collectionId}/${locale}/social.jpg`;
-				await processImg(socialImgStream, socialImgKey, signal);
+				await uploadProcessedImage(
+					socialImgStream,
+					socialImgKey,
+					IMAGE_SIZE_MAX,
+					signal,
+				);
 			}
 
 			const result = {
