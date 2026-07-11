@@ -9,16 +9,7 @@ import {
 } from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
 import { createProcessor } from "../../createProcessor.ts";
-import {
-	and,
-	eq,
-	inArray,
-	max,
-	count,
-	ne,
-	isNotNull,
-	exists,
-} from "drizzle-orm";
+import { and, eq, inArray, count, ne, isNotNull } from "drizzle-orm";
 import { ACHIEVEMENT_RULES, ALL_POSSIBLE_AUTO_IDS } from "./achievement-ids.ts";
 
 export default createProcessor(Tasks.GRANT_AUTHOR_ACHIEVEMENTS, async (job) => {
