@@ -18,7 +18,6 @@ import sharp from "sharp";
 import { Readable } from "node:stream";
 import { extname } from "node:path/posix";
 import { Response } from "undici";
-import { PostMetaSchema } from "./types.ts";
 import { extractLocale } from "../../utils/extractLocale.ts";
 import { extractMarkdownExcerpt } from "../../utils/extractMarkdownExcerpt.ts";
 
