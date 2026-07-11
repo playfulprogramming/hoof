@@ -45,20 +45,17 @@ export const collectionAuthors = pgTable(
 	],
 );
 
-/**
- * Query via:
- * @example
- * const collectionWithAuthors = await db.query.collections.findFirst({
- *   where: (collections, { and, eq }) => and(
- *     eq(collections.slug, "my-collection-slug"),
- *     eq(collections.locale, "en")
- *   ),
- *   with: {
- *     authors: {
- *       with: {
- *         author: true,
- *       },
- *     },
- *   },
- * });
- */
+export const collectionTags = pgTable(
+	"collection_tags",
+	{
+		collectionSlug: text("collection_slug")
+			.notNull()
+			.references(() => collections.slug, { onDelete: "cascade" }),
+		tag: text("tag").notNull(),
+	},
+	(table) => [
+		primaryKey({
+			columns: [table.collectionSlug, table.tag],
+		}),
+	],
+);

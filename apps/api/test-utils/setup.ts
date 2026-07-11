@@ -31,7 +31,8 @@ vi.mock("@playfulprogramming/db", () => {
 			postSlug: {},
 			authorSlug: {},
 		},
-		postData: {
+		posts: {
+			id: {},
 			slug: {},
 			publishedAt: {},
 			noindex: {},

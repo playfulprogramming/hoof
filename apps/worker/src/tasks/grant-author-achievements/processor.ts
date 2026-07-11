@@ -3,13 +3,22 @@ import {
 	db,
 	profileAchievements,
 	postAuthors,
-	postData,
 	collectionAuthors,
 	collectionData,
+	posts,
 } from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
 import { createProcessor } from "../../createProcessor.ts";
-import { and, eq, inArray, max, count, ne, isNotNull } from "drizzle-orm";
+import {
+	and,
+	eq,
+	inArray,
+	max,
+	count,
+	ne,
+	isNotNull,
+	exists,
+} from "drizzle-orm";
 import { ACHIEVEMENT_RULES, ALL_POSSIBLE_AUTO_IDS } from "./achievement-ids.ts";
 
 export default createProcessor(Tasks.GRANT_AUTHOR_ACHIEVEMENTS, async (job) => {
@@ -39,21 +48,24 @@ export default createProcessor(Tasks.GRANT_AUTHOR_ACHIEVEMENTS, async (job) => {
 	// (slug, locale, version).
 	const wordCountRows = await db
 		.select({
-			postSlug: postAuthors.postSlug,
-			wordCount: max(postData.wordCount),
+			postId: posts.id,
+			wordCount: posts.wordCount,
 		})
-		.from(postAuthors)
+		.from(posts)
 		.innerJoin(
-			postData,
-			and(eq(postData.slug, postAuthors.postSlug), eq(postData.locale, "en")),
+			postAuthors,
+			and(
+				eq(postAuthors.postId, posts.id),
+				eq(postAuthors.authorSlug, profileSlug),
+			),
 		)
 		.where(
 			and(
-				eq(postAuthors.authorSlug, profileSlug),
-				isNotNull(postData.publishedAt),
+				eq(posts.locale, "en"),
+				eq(posts.branch, "main"),
+				isNotNull(posts.publishedAt),
 			),
-		)
-		.groupBy(postAuthors.postSlug);
+		);
 
 	const postCount = wordCountRows.length;
 	const maxPostWordCount = wordCountRows.reduce(
@@ -69,13 +81,13 @@ export default createProcessor(Tasks.GRANT_AUTHOR_ACHIEVEMENTS, async (job) => {
 	// We already have the post slugs, so just look for rows with a different authorSlug.
 	let hasCoAuthoredPost = false;
 	if (wordCountRows.length > 0) {
-		const postSlugs = wordCountRows.map((r) => r.postSlug);
+		const postIds = wordCountRows.map((r) => r.postId);
 		const coAuthorRows = await db
 			.select({ value: count() })
 			.from(postAuthors)
 			.where(
 				and(
-					inArray(postAuthors.postSlug, postSlugs),
+					inArray(postAuthors.postId, postIds),
 					ne(postAuthors.authorSlug, profileSlug),
 				),
 			);

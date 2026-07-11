@@ -17,16 +17,12 @@ describe("Post Routes Tests", () => {
 		test("returns a post with its authors and a chapter list sorted by collectionOrder", async () => {
 			vi.mocked(db.query.posts.findFirst).mockResolvedValue({
 				slug: "chapter-two",
-				data: [
-					{
-						title: "Chapter Two",
-						description: "The second chapter",
-						bannerImage: "content/banner.png",
-						socialImage: "content/social.png",
-						wordCount: 500,
-						publishedAt: new Date("2024-01-15T00:00:00Z"),
-					},
-				],
+				title: "Chapter Two",
+				description: "The second chapter",
+				bannerImage: "content/banner.png",
+				socialImage: "content/social.png",
+				wordCount: 500,
+				publishedAt: new Date("2024-01-15T00:00:00Z"),
 				authors: [
 					{
 						slug: "crutchcorn",
@@ -41,12 +37,12 @@ describe("Post Routes Tests", () => {
 						{
 							slug: "chapter-two",
 							collectionOrder: 1,
-							data: [{ title: "Chapter Two" }],
+							title: "Chapter Two",
 						},
 						{
 							slug: "chapter-one",
 							collectionOrder: 0,
-							data: [{ title: "Chapter One" }],
+							title: "Chapter One",
 						},
 					],
 				},
@@ -96,16 +92,12 @@ describe("Post Routes Tests", () => {
 		test("omits collection when the post is not part of a collection", async () => {
 			vi.mocked(db.query.posts.findFirst).mockResolvedValue({
 				slug: "standalone-post",
-				data: [
-					{
-						title: "Standalone Post",
-						description: "A post with no collection",
-						bannerImage: null,
-						socialImage: null,
-						wordCount: 200,
-						publishedAt: new Date("2024-01-15T00:00:00Z"),
-					},
-				],
+				title: "Standalone Post",
+				description: "A post with no collection",
+				bannerImage: null,
+				socialImage: null,
+				wordCount: 200,
+				publishedAt: new Date("2024-01-15T00:00:00Z"),
 				authors: [
 					{ slug: "crutchcorn", name: "Corbin Crutchley", profileImage: null },
 				],
@@ -139,16 +131,12 @@ describe("Post Routes Tests", () => {
 		test("returns 404 when the requested post is unpublished for the locale", async () => {
 			vi.mocked(db.query.posts.findFirst).mockResolvedValue({
 				slug: "draft-post",
-				data: [
-					{
-						title: "Draft Post",
-						description: "Not yet published",
-						bannerImage: null,
-						socialImage: null,
-						wordCount: 100,
-						publishedAt: null,
-					},
-				],
+				title: "Draft Post",
+				description: "Not yet published",
+				bannerImage: null,
+				socialImage: null,
+				wordCount: 100,
+				publishedAt: null,
 				authors: [],
 				collection: null,
 			} as never);
@@ -170,16 +158,12 @@ describe("Post Routes Tests", () => {
 		test("excludes unpublished sibling chapters from the chapter list", async () => {
 			vi.mocked(db.query.posts.findFirst).mockResolvedValue({
 				slug: "chapter-one",
-				data: [
-					{
-						title: "Chapter One",
-						description: "The first chapter",
-						bannerImage: null,
-						socialImage: null,
-						wordCount: 300,
-						publishedAt: new Date("2024-01-15T00:00:00Z"),
-					},
-				],
+				title: "Chapter One",
+				description: "The first chapter",
+				bannerImage: null,
+				socialImage: null,
+				wordCount: 300,
+				publishedAt: new Date("2024-01-15T00:00:00Z"),
 				authors: [],
 				collection: {
 					slug: "example-collection",
@@ -188,27 +172,20 @@ describe("Post Routes Tests", () => {
 						{
 							slug: "chapter-one",
 							collectionOrder: 0,
-							data: [
-								{
-									title: "Chapter One",
-									publishedAt: new Date("2024-01-15T00:00:00Z"),
-								},
-							],
+							title: "Chapter One",
+							publishedAt: new Date("2024-01-15T00:00:00Z"),
 						},
 						{
 							slug: "chapter-two-draft",
 							collectionOrder: 1,
-							data: [{ title: "Chapter Two (Draft)", publishedAt: null }],
+							title: "Chapter Two (Draft)",
+							publishedAt: null,
 						},
 						{
 							slug: "chapter-three",
 							collectionOrder: 2,
-							data: [
-								{
-									title: "Chapter Three",
-									publishedAt: new Date("2024-01-20T00:00:00Z"),
-								},
-							],
+							title: "Chapter Three",
+							publishedAt: new Date("2024-01-20T00:00:00Z"),
 						},
 					],
 				},
@@ -264,13 +241,8 @@ describe("Post Routes Tests", () => {
 			`);
 		});
 
-		test("returns 404 when the post has no post_data row for the requested locale", async () => {
-			vi.mocked(db.query.posts.findFirst).mockResolvedValue({
-				slug: "spanish-only-post",
-				data: [],
-				authors: [],
-				collection: null,
-			} as never);
+		test("returns 404 when the post does not exist", async () => {
+			vi.mocked(db.query.posts.findFirst).mockResolvedValue(undefined as never);
 
 			const response = await app.inject({
 				method: "GET",
