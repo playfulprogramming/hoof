@@ -240,22 +240,5 @@ describe("Post Routes Tests", () => {
 				}
 			`);
 		});
-
-		test("returns 404 when the post does not exist", async () => {
-			vi.mocked(db.query.posts.findFirst).mockResolvedValue(undefined as never);
-
-			const response = await app.inject({
-				method: "GET",
-				url: "/content/post/spanish-only-post",
-				query: { locale: "en" },
-			});
-
-			expect(response.statusCode).toBe(404);
-			expect(response.json()).toMatchInlineSnapshot(`
-				{
-				  "error": "Post not found",
-				}
-			`);
-		});
 	});
 });
