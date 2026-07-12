@@ -8,17 +8,6 @@ import { Readable } from "node:stream";
 import { eq } from "drizzle-orm";
 import { uploadProcessedImage } from "../../utils/uploadProcessedImage.ts";
 
-beforeEach(() => {
-	// pipeline() won't resolve until the transform's readable side is drained
-	vi.mocked(s3.upload).mockImplementation(async (_bucket, _key, _tag, file) => {
-		if (file instanceof Readable) {
-			for await (const _chunk of file) {
-				// drain
-			}
-		}
-	});
-});
-
 test("Creates an example profile successfully", async () => {
 	const insertProfilesValues = vi.fn().mockReturnValue({
 		onConflictDoUpdate: vi.fn(),
