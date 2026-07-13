@@ -5,6 +5,7 @@ import {
 	DeleteObjectCommand,
 	GetObjectCommand,
 	HeadObjectCommand,
+	ListObjectsV2Command,
 	NoSuchKey,
 	PutBucketPolicyCommand,
 } from "@aws-sdk/client-s3";
@@ -68,6 +69,31 @@ export async function exists(bucket: string, key: string) {
 
 export async function remove(bucket: string, key: string) {
 	await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+}
+
+export async function list(bucket: string, prefix: string): Promise<string[]> {
+	const keys: string[] = [];
+	let continuationToken: string | undefined;
+
+	do {
+		const response = await client.send(
+			new ListObjectsV2Command({
+				Bucket: bucket,
+				Prefix: prefix,
+				ContinuationToken: continuationToken,
+			}),
+		);
+
+		for (const object of response.Contents ?? []) {
+			if (object.Key) keys.push(object.Key);
+		}
+
+		continuationToken = response.IsTruncated
+			? response.NextContinuationToken
+			: undefined;
+	} while (continuationToken);
+
+	return keys;
 }
 
 export async function matchesEtag(
