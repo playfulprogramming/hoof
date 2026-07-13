@@ -71,8 +71,16 @@ export async function remove(bucket: string, key: string) {
 	await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
 }
 
-export async function list(bucket: string, prefix: string): Promise<string[]> {
-	const keys: string[] = [];
+export interface S3Object {
+	key: string;
+	lastModified: Date;
+}
+
+export async function list(
+	bucket: string,
+	prefix: string,
+): Promise<S3Object[]> {
+	const objects: S3Object[] = [];
 	let continuationToken: string | undefined;
 
 	do {
@@ -85,7 +93,9 @@ export async function list(bucket: string, prefix: string): Promise<string[]> {
 		);
 
 		for (const object of response.Contents ?? []) {
-			if (object.Key) keys.push(object.Key);
+			if (object.Key && object.LastModified) {
+				objects.push({ key: object.Key, lastModified: object.LastModified });
+			}
 		}
 
 		continuationToken = response.IsTruncated
@@ -93,7 +103,7 @@ export async function list(bucket: string, prefix: string): Promise<string[]> {
 			: undefined;
 	} while (continuationToken);
 
-	return keys;
+	return objects;
 }
 
 export async function matchesEtag(
