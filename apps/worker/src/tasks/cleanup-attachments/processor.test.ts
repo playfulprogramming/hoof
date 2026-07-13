@@ -103,6 +103,26 @@ test("Queries the full attachment table with no per-post filter", async () => {
 	);
 });
 
+test("Fails the job when an S3 removal rejects, rather than continuing past the error", async () => {
+	vi.setSystemTime(NOW);
+
+	vi.mocked(s3.list).mockResolvedValue([
+		{
+			key: "posts/example-post/attachments/orphaned-sha.jpeg",
+			lastModified: OUTSIDE_GRACE_PERIOD,
+		},
+	]);
+
+	vi.mocked(db.select).mockReturnValue({
+		from: vi.fn().mockResolvedValue([]),
+	} as never);
+
+	const s3Error = new Error("S3 removal failed");
+	vi.mocked(s3.remove).mockRejectedValue(s3Error);
+
+	await expect(processor({} as never)).rejects.toThrow(s3Error);
+});
+
 test("Leaves an unreferenced attachment alone when it's within the grace period", async () => {
 	vi.setSystemTime(NOW);
 

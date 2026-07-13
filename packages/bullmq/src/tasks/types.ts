@@ -47,7 +47,7 @@ export interface TaskOutputs {
 	[Tasks.URL_METADATA]: UrlMetadataOutput;
 	[Tasks.POST_IMAGES]: PostImageOutput;
 	[Tasks.GRANT_AUTHOR_ACHIEVEMENTS]: GrantAuthorAchievementsOutput;
-	[Tasks.CLEANUP_ATTACHMENTS]: object;
+	[Tasks.CLEANUP_ATTACHMENTS]: void;
 }
 
 export type TaskOutputsValues = TaskOutputs[TasksValues];
