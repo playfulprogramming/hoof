@@ -37,6 +37,10 @@ export const relations = defineRelations(schema, (r) => ({
 			from: r.posts.collectionSlug,
 			to: r.collections.slug,
 		}),
+		tags: r.many.postTags({
+			from: r.posts.id,
+			to: r.postTags.postId,
+		}),
 	},
 
 	// Posts authors junction
