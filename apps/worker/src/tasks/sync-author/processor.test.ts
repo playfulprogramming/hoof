@@ -6,6 +6,7 @@ import { s3 } from "@playfulprogramming/s3";
 import * as github from "@playfulprogramming/github-api";
 import { Readable } from "node:stream";
 import { eq } from "drizzle-orm";
+import { uploadProcessedImage } from "../../utils/uploadProcessedImage.ts";
 
 test("Creates an example profile successfully", async () => {
 	const insertProfilesValues = vi.fn().mockReturnValue({
@@ -250,4 +251,52 @@ test("Deletes a profile record if it no longer exists", async () => {
 
 	// The profile was deleted from the database
 	expect(deleteWhere).toBeCalledWith(eq(profiles.slug, "example"));
+});
+
+test("Rejects the profile image upload when the signal is already aborted", async () => {
+	const controller = new AbortController();
+	controller.abort();
+
+	const buffer = Buffer.from(
+		"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR42mMAAQAABQABoIJXOQAAAABJRU5ErkJggg==",
+		"base64",
+	);
+	const stream = Readable.toWeb(
+		Readable.from(buffer),
+	) as ReadableStream<Uint8Array>;
+
+	await expect(
+		uploadProcessedImage(
+			stream,
+			"profiles/example.jpeg",
+			2048,
+			controller.signal,
+		),
+	).rejects.toThrow();
+});
+
+test("Aborts the in-flight pipeline when the s3 upload rejects first", async () => {
+	vi.mocked(s3.upload).mockImplementation(async () => {
+		throw new Error("Upload failed");
+	});
+
+	const buffer = Buffer.from(
+		"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR42mMAAQAABQABoIJXOQAAAABJRU5ErkJggg==",
+		"base64",
+	);
+	const nodeSource = Readable.from(buffer);
+	const stream = Readable.toWeb(nodeSource) as ReadableStream<Uint8Array>;
+
+	await expect(
+		uploadProcessedImage(
+			stream,
+			"profiles/example.jpeg",
+			2048,
+			new AbortController().signal,
+		),
+	).rejects.toThrow("Upload failed");
+
+	// The upload rejecting should also unwind the pipeline reading from it,
+	// rather than leaving it hanging with nothing left to consume the stream
+	await vi.waitFor(() => expect(nodeSource.destroyed).toBe(true));
 });
