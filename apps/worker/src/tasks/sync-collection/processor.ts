@@ -1,4 +1,4 @@
-import { env } from "@playfulprogramming/common";
+import { env, CollectionMetaSchema } from "@playfulprogramming/common";
 import { Tasks, createJob } from "@playfulprogramming/bullmq";
 import {
 	collectionAuthors,
@@ -11,32 +11,11 @@ import * as github from "@playfulprogramming/github-api";
 import { createProcessor } from "../../createProcessor.ts";
 import { eq } from "drizzle-orm";
 import matter from "gray-matter";
-import { CollectionMetaSchema } from "./types.ts";
 import { Value } from "typebox/value";
-import sharp from "sharp";
-import { Readable } from "node:stream";
-import { s3 } from "@playfulprogramming/s3";
 import { extractLocale } from "../../utils/extractLocale.ts";
+import { uploadProcessedImage } from "../../utils/uploadProcessedImage.ts";
 
 const IMAGE_SIZE_MAX = 2048;
-
-async function processImg(
-	stream: ReadableStream<Uint8Array>,
-	uploadKey: string,
-) {
-	const pipeline = sharp()
-		.resize({
-			width: IMAGE_SIZE_MAX,
-			height: IMAGE_SIZE_MAX,
-			fit: "inside",
-		})
-		.jpeg({ mozjpeg: true });
-
-	Readable.fromWeb(stream as never).pipe(pipeline);
-
-	const bucket = await s3.ensureBucket(env.S3_BUCKET);
-	await s3.upload(bucket, uploadKey, undefined, pipeline, "image/jpeg");
-}
 
 export default createProcessor(
 	Tasks.SYNC_COLLECTION,
@@ -150,7 +129,12 @@ export default createProcessor(
 				}
 
 				coverImgKey = `collections/${collectionId}/${locale}/cover.jpg`;
-				await processImg(coverImgStream, coverImgKey);
+				await uploadProcessedImage(
+					coverImgStream,
+					coverImgKey,
+					IMAGE_SIZE_MAX,
+					signal,
+				);
 			}
 
 			if (collectionParsedData.socialImg) {
@@ -176,7 +160,12 @@ export default createProcessor(
 				}
 
 				socialImgKey = `collections/${collectionId}/${locale}/social.jpg`;
-				await processImg(socialImgStream, socialImgKey);
+				await uploadProcessedImage(
+					socialImgStream,
+					socialImgKey,
+					IMAGE_SIZE_MAX,
+					signal,
+				);
 			}
 
 			const result = {

@@ -10,6 +10,9 @@ import collectionsRoutes from "./routes/content/collections.ts";
 import postRoutes from "./routes/content/post.ts";
 import postsRoutes from "./routes/content/posts.ts";
 import profilesRoutes from "./routes/content/profiles.ts";
+import schemaPostRoutes from "./routes/content/schema-post.ts";
+import schemaCollectionRoutes from "./routes/content/schema-collection.ts";
+import schemaAuthorRoutes from "./routes/content/schema-author.ts";
 import fastify from "fastify";
 import devRoutes from "./routes/dev/index.ts";
 
@@ -29,6 +32,9 @@ export const createApp = () => {
 	app.register(postRoutes);
 	app.register(postsRoutes);
 	app.register(profilesRoutes);
+	app.register(schemaPostRoutes);
+	app.register(schemaCollectionRoutes);
+	app.register(schemaAuthorRoutes);
 
 	if (env.ENVIRONMENT === "development") {
 		app.register(devRoutes);

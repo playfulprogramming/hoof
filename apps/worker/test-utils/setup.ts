@@ -1,10 +1,23 @@
 import "./server.ts";
-import { vi, afterEach } from "vitest";
+import { vi, afterEach, beforeEach } from "vitest";
 import "@playfulprogramming/test-fixtures";
+import { s3 } from "@playfulprogramming/s3";
+import { Readable } from "node:stream";
 
 afterEach(() => {
 	vi.clearAllMocks();
 	vi.setSystemTime(new Date("2025-05-05"));
+});
+
+beforeEach(() => {
+	// pipeline() won't resolve until the transform's readable side is drained
+	vi.mocked(s3.upload).mockImplementation(async (_bucket, _key, _tag, file) => {
+		if (file instanceof Readable) {
+			for await (const _chunk of file) {
+				// drain
+			}
+		}
+	});
 });
 
 vi.mock("@playfulprogramming/bullmq", async () => {
@@ -63,6 +76,10 @@ vi.mock("@playfulprogramming/db", () => {
 			profileSlug: {},
 			achievementId: {},
 		},
+		authorRoles: {
+			profileSlug: {},
+			role: {},
+		},
 		posts: {
 			slug: {},
 		},
@@ -93,6 +110,10 @@ vi.mock("@playfulprogramming/db", () => {
 		postTags: {
 			postSlug: {},
 			tag: {},
+		},
+		postAttachments: {
+			postSlug: {},
+			attachmentName: {},
 		},
 		collectionChapters: {
 			postSlug: {},

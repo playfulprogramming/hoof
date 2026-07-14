@@ -503,7 +503,7 @@ export type TwitterApiMedia = {
 	media_info: TwitterApiImage | TwitterApiVideo;
 };
 
-export type TwitterApiImage = {
+type TwitterApiImage = {
 	__typename: "ApiImage";
 	original_img_height: number;
 	original_img_width: number;
@@ -516,7 +516,7 @@ export type TwitterApiImage = {
 	};
 };
 
-export type TwitterApiVideo = {
+type TwitterApiVideo = {
 	__typename: "ApiVideo" | "ApiGif";
 	type: "video" | "animated_gif";
 	id: string;
@@ -560,7 +560,7 @@ export type TwitterArticleContentState = {
 	entityMap: TwitterArticleEntityMapEntry[];
 };
 
-export type TwitterArticleContentBlock = {
+type TwitterArticleContentBlock = {
 	key: string;
 	data: Record<string, unknown>;
 	entityRanges: Array<{

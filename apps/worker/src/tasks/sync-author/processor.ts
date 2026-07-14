@@ -1,36 +1,20 @@
-import { env } from "@playfulprogramming/common";
+import { env, AuthorMetaSchema } from "@playfulprogramming/common";
 import { Tasks, createJob } from "@playfulprogramming/bullmq";
-import { db, profiles, profileAchievements } from "@playfulprogramming/db";
+import {
+	db,
+	profiles,
+	profileAchievements,
+	authorRoles,
+} from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
-import { s3 } from "@playfulprogramming/s3";
 import { createProcessor } from "../../createProcessor.ts";
 import matter from "gray-matter";
-import { AuthorMetaSchema } from "./types.ts";
 import { Value } from "typebox/value";
-import sharp from "sharp";
-import { Readable } from "node:stream";
 import { and, eq, inArray } from "drizzle-orm";
 import { MANUAL_ACHIEVEMENT_IDS } from "../grant-author-achievements/achievement-ids.ts";
+import { uploadProcessedImage } from "../../utils/uploadProcessedImage.ts";
 
 const PROFILE_IMAGE_SIZE_MAX = 2048;
-
-async function processProfileImg(
-	stream: ReadableStream<Uint8Array>,
-	uploadKey: string,
-) {
-	const pipeline = sharp()
-		.resize({
-			width: PROFILE_IMAGE_SIZE_MAX,
-			height: PROFILE_IMAGE_SIZE_MAX,
-			fit: "inside",
-		})
-		.jpeg({ mozjpeg: true });
-
-	Readable.fromWeb(stream as never).pipe(pipeline);
-
-	const bucket = await s3.ensureBucket(env.S3_BUCKET);
-	await s3.upload(bucket, uploadKey, undefined, pipeline, "image/jpeg");
-}
 
 export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 	const authorId = job.data.author;
@@ -80,7 +64,12 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 		}
 
 		profileImgKey = `profiles/${authorId}.jpeg`;
-		await processProfileImg(profileImgStream, profileImgKey);
+		await uploadProcessedImage(
+			profileImgStream,
+			profileImgKey,
+			PROFILE_IMAGE_SIZE_MAX,
+			signal,
+		);
 	}
 
 	const result = {
@@ -90,7 +79,6 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 		profileImage: profileImgKey,
 		meta: {
 			socials: authorData.socials,
-			roles: authorData.roles,
 		},
 	};
 
@@ -122,6 +110,17 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 				earnedManualIds.map((achievementId) => ({
 					profileSlug: authorId,
 					achievementId,
+				})),
+			);
+		}
+
+		await tx.delete(authorRoles).where(eq(authorRoles.profileSlug, authorId));
+
+		if (authorData.roles.length > 0) {
+			await tx.insert(authorRoles).values(
+				authorData.roles.map((role) => ({
+					profileSlug: authorId,
+					role,
 				})),
 			);
 		}
