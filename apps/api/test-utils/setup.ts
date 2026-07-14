@@ -1,5 +1,5 @@
 import { vi, afterEach } from "vitest";
-import "@playfulprogramming/test-fixtures";
+import { createDbMock } from "@playfulprogramming/test-fixtures";
 
 afterEach(() => {
 	vi.clearAllMocks();
@@ -19,54 +19,4 @@ vi.mock("@playfulprogramming/redis", () => {
 	return { redis: undefined };
 });
 
-vi.mock("@playfulprogramming/db", () => {
-	return {
-		posts: {
-			slug: {},
-			collectionSlug: {},
-		},
-		postData: {
-			slug: {},
-			locale: {},
-			title: {},
-			bannerImage: {},
-			wordCount: {},
-			publishedAt: {},
-			noindex: {},
-		},
-		postTags: {
-			postSlug: {},
-			tag: {},
-		},
-		profiles: {
-			slug: {},
-			name: {},
-			description: {},
-			profileImage: {},
-		},
-		postAuthors: {
-			postSlug: {},
-			authorSlug: {},
-		},
-		db: {
-			query: {
-				postImages: {
-					findFirst: vi.fn(),
-				},
-				urlMetadata: {
-					findFirst: vi.fn(),
-				},
-				collections: {
-					findMany: vi.fn(),
-				},
-				posts: {
-					findFirst: vi.fn(),
-				},
-				profiles: {
-					findMany: vi.fn(),
-				},
-			},
-			select: vi.fn(),
-		},
-	};
-});
+vi.mock("@playfulprogramming/db", () => createDbMock());
