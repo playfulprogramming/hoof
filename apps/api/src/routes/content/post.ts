@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { db } from "@playfulprogramming/db";
 import { Type, type Static } from "typebox";
 import { createImageUrl } from "../../utils.ts";
+import { PostBaseSchema } from "./postBaseSchema.ts";
 
 const PostParamsSchema = Type.Object({
 	slug: Type.String(),
@@ -12,35 +13,26 @@ const PostQueryParamsSchema = Type.Object({
 	branch: Type.String({ default: "main" }),
 });
 
-const PostResponseSchema = Type.Object(
-	{
-		slug: Type.String(),
-		title: Type.String(),
-		description: Type.String(),
-		bannerUrl: Type.Optional(Type.String()),
-		socialImageUrl: Type.Optional(Type.String()),
-		wordCount: Type.Number(),
-		publishedAt: Type.Optional(Type.String({ format: "date-time" })),
-		authors: Type.Array(
-			Type.Object({
-				id: Type.String(),
-				name: Type.String(),
-				profileImageUrl: Type.Optional(Type.String()),
-			}),
-		),
-		collection: Type.Optional(
-			Type.Object({
-				slug: Type.String(),
-				title: Type.String(),
-				chapters: Type.Array(
-					Type.Object({
-						slug: Type.String(),
-						title: Type.String(),
-					}),
-				),
-			}),
-		),
-	},
+const PostResponseSchema = Type.Intersect(
+	[
+		PostBaseSchema,
+		Type.Object({
+			description: Type.String(),
+			socialImageUrl: Type.Optional(Type.String()),
+			collection: Type.Optional(
+				Type.Object({
+					slug: Type.String(),
+					title: Type.String(),
+					chapters: Type.Array(
+						Type.Object({
+							slug: Type.String(),
+							title: Type.String(),
+						}),
+					),
+				}),
+			),
+		}),
+	],
 	{
 		examples: [
 			{

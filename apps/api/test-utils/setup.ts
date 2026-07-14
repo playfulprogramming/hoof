@@ -21,6 +21,22 @@ vi.mock("@playfulprogramming/redis", () => {
 
 vi.mock("@playfulprogramming/db", () => {
 	return {
+		posts: {
+			id: {},
+			slug: {},
+			locale: {},
+			branch: {},
+			collectionSlug: {},
+			title: {},
+			bannerImage: {},
+			wordCount: {},
+			publishedAt: {},
+			noindex: {},
+		},
+		postTags: {
+			postSlug: {},
+			tag: {},
+		},
 		profiles: {
 			slug: {},
 			name: {},
@@ -30,12 +46,6 @@ vi.mock("@playfulprogramming/db", () => {
 		postAuthors: {
 			postSlug: {},
 			authorSlug: {},
-		},
-		posts: {
-			id: {},
-			slug: {},
-			publishedAt: {},
-			noindex: {},
 		},
 		db: {
 			query: {
