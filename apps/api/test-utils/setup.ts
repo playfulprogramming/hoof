@@ -37,7 +37,7 @@ vi.mock("@playfulprogramming/db", () => {
 		postTags: {
 			postSlug: {},
 			tag: {},
-    },
+		},
 		profiles: {
 			slug: {},
 			name: {},
