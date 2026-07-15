@@ -12,4 +12,5 @@ createWorker(
 	Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
 	"./tasks/grant-author-achievements/processor.ts",
 );
+createWorker(Tasks.DELETE_S3_OBJECT, "./tasks/delete-s3-object/processor.ts");
 createHealthcheck();

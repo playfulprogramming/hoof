@@ -27,6 +27,10 @@ vi.mock("@playfulprogramming/bullmq", async () => {
 		flowProducer: { add: vi.fn() },
 		createQueue: vi.fn(),
 		createJob: vi.fn(),
+		// scheduleS3ObjectDeletion calls the real createJob internally via a
+		// relative import, which bypasses the createJob mock above - it needs
+		// its own override so tests don't hit a real BullMQ queue/Redis.
+		scheduleS3ObjectDeletion: vi.fn(),
 	};
 });
 
@@ -36,6 +40,8 @@ vi.mock("@playfulprogramming/s3", () => {
 			ensureBucket: vi.fn(() => "example-bucket"),
 			upload: vi.fn(),
 			remove: vi.fn(),
+			getLastModified: vi.fn(),
+			unmodifiedSince: vi.fn(() => true),
 		},
 	};
 });

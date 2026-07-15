@@ -266,12 +266,19 @@ importers:
       '@playfulprogramming/redis':
         specifier: workspace:*
         version: link:../redis
+      '@playfulprogramming/s3':
+        specifier: workspace:*
+        version: link:../s3
       bullmq:
         specifier: 'catalog:'
         version: 5.76.10
       typebox:
         specifier: 'catalog:'
         version: 1.1.38
+    devDependencies:
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.7(@types/node@25.9.1)(@vitest/coverage-v8@4.1.7)(vite@8.0.13(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0))
 
   packages/common:
     dependencies:

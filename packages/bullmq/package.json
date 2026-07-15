@@ -7,11 +7,16 @@
 	"scripts": {
 		"test:eslint": "eslint ./src",
 		"test:build": "publint --strict",
+		"test": "vitest run",
 		"build": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@playfulprogramming/redis": "workspace:*",
+		"@playfulprogramming/s3": "workspace:*",
 		"bullmq": "catalog:",
 		"typebox": "catalog:"
+	},
+	"devDependencies": {
+		"vitest": "catalog:"
 	}
 }

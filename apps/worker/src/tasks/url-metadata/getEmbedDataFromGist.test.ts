@@ -7,6 +7,7 @@ import {
 	urlMetadataGist,
 	urlMetadataGistFile,
 } from "@playfulprogramming/db";
+import { scheduleS3ObjectDeletion } from "@playfulprogramming/bullmq";
 
 test("fetches the expected information for a successful gist response", async () => {
 	const gistUrl = new URL(
@@ -58,4 +59,37 @@ test("fetches the expected information for a successful gist response", async ()
 		gistId: "36fe5553219c05ea38bacf1c7396085b",
 		language: "text",
 	});
+});
+
+test("schedules S3 removal for gist files that were deleted from the gist", async () => {
+	const gistUrl = new URL(
+		"https://gist.github.com/crutchcorn/36fe5553219c05ea38bacf1c7396085b",
+	);
+
+	(getGistById as Mock).mockReturnValueOnce(
+		Promise.resolve({
+			description: "This is a description of the gist.",
+			files: {},
+		}),
+	);
+
+	(
+		db.delete(urlMetadataGistFile).where(undefined).returning as Mock
+	).mockReturnValueOnce(Promise.resolve([{ filename: "old-file.txt" }]));
+
+	const result = await getEmbedDataFromGist(
+		gistUrl,
+		new AbortController().signal,
+	);
+	expect(result).toEqual({
+		error: false,
+		gistId: "36fe5553219c05ea38bacf1c7396085b",
+	});
+
+	// Assert: S3 removal was scheduled (not performed immediately), keyed the
+	// same way getFileKey derives it - a hash of the filename under the gist's ID
+	expect(scheduleS3ObjectDeletion).toBeCalledWith(
+		"example-bucket",
+		"remote-gist/36fe5553219c05ea38bacf1c7396085b/775d94f3d7c5ee0d18ee08d4b65152b5",
+	);
 });
