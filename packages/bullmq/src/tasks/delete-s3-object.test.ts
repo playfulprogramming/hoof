@@ -45,11 +45,10 @@ test("uses a different job id when lastModified changes between calls", async ()
 	expect(jobIdFromCall(0)).not.toEqual(jobIdFromCall(1));
 });
 
-test("always uses a unique job id when lastModified can't be determined", async () => {
+test("does not schedule a deletion when lastModified can't be determined", async () => {
 	vi.mocked(s3.getLastModified).mockResolvedValue(undefined);
 
 	await scheduleS3ObjectDeletion("example-bucket", "posts/example/notes.pdf");
-	await scheduleS3ObjectDeletion("example-bucket", "posts/example/notes.pdf");
 
-	expect(jobIdFromCall(0)).not.toEqual(jobIdFromCall(1));
+	expect(createJob).not.toBeCalled();
 });

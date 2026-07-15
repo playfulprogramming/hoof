@@ -9,7 +9,7 @@ export interface DeleteS3ObjectInput {
 	// processor re-checks this before deleting, so a key that gets rewritten
 	// in the meantime (even with byte-identical content, which leaves its
 	// ETag unchanged) doesn't get deleted out from under its new reference.
-	lastModified?: string;
+	lastModified: string;
 }
 
 export type DeleteS3ObjectOutput = void;
@@ -23,16 +23,31 @@ export async function scheduleS3ObjectDeletion(
 	key: string,
 ): Promise<void> {
 	const lastModified = await s3.getLastModified(bucket, key);
-	const lastModifiedIso = lastModified?.toISOString();
 
-	// The job ID includes a generation marker (the object's LastModified, or
-	// a random ID when that couldn't be read) so that scheduling a deletion
-	// for a key that's since been rewritten gets its own job instead of
-	// silently deduplicating against - and being dropped in favor of - a
-	// still-pending job for the previous generation of that key.
+	if (lastModified === undefined) {
+		// Without a LastModified to check at execution time, the processor
+		// would have no way to detect a rewrite during the grace period and
+		// would unconditionally delete whatever's at this key 24h from now -
+		// including a legitimate new upload. Bail out instead of scheduling
+		// an unsafe deletion, but log it: a genuine transient failure to read
+		// the object's metadata here means this object never gets scheduled
+		// for cleanup at all, so it'd otherwise leak in S3 with no trace.
+		console.warn(
+			`Skipped scheduling deletion of ${bucket}/${key} - could not read its LastModified`,
+		);
+		return;
+	}
+
+	const lastModifiedIso = lastModified.toISOString();
+
+	// The job ID includes a generation marker (the object's LastModified) so
+	// that scheduling a deletion for a key that's since been rewritten gets
+	// its own job instead of silently deduplicating against - and being
+	// dropped in favor of - a still-pending job for the previous generation
+	// of that key.
 	await createJob(
 		Tasks.DELETE_S3_OBJECT,
-		`delete-s3-object:${bucket}:${key}:${lastModifiedIso ?? crypto.randomUUID()}`,
+		`delete-s3-object:${bucket}:${key}:${lastModifiedIso}`,
 		{ bucket, key, lastModified: lastModifiedIso },
 		{ delay: DELETE_S3_OBJECT_GRACE_PERIOD_MS },
 	);
