@@ -23,11 +23,17 @@ export async function scheduleS3ObjectDeletion(
 	key: string,
 ): Promise<void> {
 	const lastModified = await s3.getLastModified(bucket, key);
+	const lastModifiedIso = lastModified?.toISOString();
 
+	// The job ID includes a generation marker (the object's LastModified, or
+	// a random ID when that couldn't be read) so that scheduling a deletion
+	// for a key that's since been rewritten gets its own job instead of
+	// silently deduplicating against - and being dropped in favor of - a
+	// still-pending job for the previous generation of that key.
 	await createJob(
 		Tasks.DELETE_S3_OBJECT,
-		`delete-s3-object:${bucket}:${key}`,
-		{ bucket, key, lastModified: lastModified?.toISOString() },
+		`delete-s3-object:${bucket}:${key}:${lastModifiedIso ?? crypto.randomUUID()}`,
+		{ bucket, key, lastModified: lastModifiedIso },
 		{ delay: DELETE_S3_OBJECT_GRACE_PERIOD_MS },
 	);
 }
