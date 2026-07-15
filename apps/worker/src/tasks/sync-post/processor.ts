@@ -1,5 +1,9 @@
 import { env, PostMetaSchema } from "@playfulprogramming/common";
-import { Tasks, createJob } from "@playfulprogramming/bullmq";
+import {
+	Tasks,
+	createJob,
+	scheduleS3ObjectDeletion,
+} from "@playfulprogramming/bullmq";
 import {
 	db,
 	posts,
@@ -146,8 +150,10 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 				const bucket = await s3.ensureBucket(env.S3_BUCKET);
 				await Promise.all(
 					removedAttachmentRows.map(async ({ attachmentKey }) => {
-						await s3.remove(bucket, attachmentKey);
-						console.log(`Removed attachment ${attachmentKey} from S3`);
+						await scheduleS3ObjectDeletion(bucket, attachmentKey);
+						console.log(
+							`Scheduled removal of attachment ${attachmentKey} from S3`,
+						);
 					}),
 				);
 			}
@@ -286,9 +292,9 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 
 	for (const [attachmentName, row] of previousAttachmentsByName) {
 		if (!discoveredAttachmentNames.has(attachmentName)) {
-			await s3.remove(bucket, row.attachmentKey);
+			await scheduleS3ObjectDeletion(bucket, row.attachmentKey);
 			console.log(
-				`Removed attachment ${row.attachmentKey} from S3 (no longer in repo)`,
+				`Scheduled removal of attachment ${row.attachmentKey} from S3 (no longer in repo)`,
 			);
 		}
 	}
@@ -356,7 +362,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		console.log(`Uploaded attachment ${attachmentKey} to S3`);
 
 		if (previous !== undefined) {
-			await s3.remove(bucket, previous.attachmentKey);
+			await scheduleS3ObjectDeletion(bucket, previous.attachmentKey);
 		}
 
 		attachmentRows.push({

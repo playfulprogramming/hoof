@@ -1,5 +1,10 @@
 import processor from "./processor.ts";
-import { createJob, type TaskInputs, Tasks } from "@playfulprogramming/bullmq";
+import {
+	createJob,
+	scheduleS3ObjectDeletion,
+	type TaskInputs,
+	Tasks,
+} from "@playfulprogramming/bullmq";
 import type { Job } from "bullmq";
 import {
 	posts,
@@ -289,12 +294,12 @@ test("Deletes a post record if it no longer exists", async () => {
 		},
 	} as unknown as Job<TaskInputs["sync-post"]>);
 
-	// Assert: Post's attachments were removed from S3 before the cascading delete
-	expect(s3.remove).toBeCalledWith(
+	// Assert: Post's attachments had their S3 removal scheduled before the cascading delete
+	expect(scheduleS3ObjectDeletion).toBeCalledWith(
 		"example-bucket",
 		"posts/example-post/attachments/notes.pdf",
 	);
-	expect(s3.remove).toBeCalledWith(
+	expect(scheduleS3ObjectDeletion).toBeCalledWith(
 		"example-bucket",
 		"posts/example-post/attachments/banner.jpeg",
 	);
@@ -1143,15 +1148,15 @@ published: "2024-01-15T00:00:00Z"
 		},
 	} as unknown as Job<TaskInputs["sync-post"]>);
 
-	// Assert: attachment no longer in the repo was removed from S3
-	expect(s3.remove).toBeCalledWith(
+	// Assert: attachment no longer in the repo had its S3 removal scheduled
+	expect(scheduleS3ObjectDeletion).toBeCalledWith(
 		"example-bucket",
 		"posts/diffing-post/attachments/old-file-sha.txt",
 	);
 
-	// Assert: changed attachment's old sha-keyed object was removed, and the
-	// new sha-keyed object was uploaded in its place
-	expect(s3.remove).toBeCalledWith(
+	// Assert: changed attachment's old sha-keyed object had its removal
+	// scheduled, and the new sha-keyed object was uploaded in its place
+	expect(scheduleS3ObjectDeletion).toBeCalledWith(
 		"example-bucket",
 		"posts/diffing-post/attachments/old-changed-sha.txt",
 	);
@@ -1163,8 +1168,9 @@ published: "2024-01-15T00:00:00Z"
 		"text/plain",
 	);
 
-	// Assert: the new object is uploaded before the old one is removed, so a
-	// failed upload can't leave the persisted row pointing at a deleted key
+	// Assert: the new object is uploaded before the old one's removal is
+	// scheduled, so a failed upload can't leave the persisted row pointing at
+	// a deleted key
 	const newKeyUploadOrder = vi
 		.mocked(s3.upload)
 		.mock.calls.findIndex(
@@ -1172,7 +1178,7 @@ published: "2024-01-15T00:00:00Z"
 				call[1] === "posts/diffing-post/attachments/new-changed-sha.txt",
 		);
 	const oldKeyRemoveOrder = vi
-		.mocked(s3.remove)
+		.mocked(scheduleS3ObjectDeletion)
 		.mock.calls.findIndex(
 			(call) =>
 				call[1] === "posts/diffing-post/attachments/old-changed-sha.txt",
@@ -1180,10 +1186,12 @@ published: "2024-01-15T00:00:00Z"
 	expect(
 		vi.mocked(s3.upload).mock.invocationCallOrder[newKeyUploadOrder],
 	).toBeLessThan(
-		vi.mocked(s3.remove).mock.invocationCallOrder[oldKeyRemoveOrder],
+		vi.mocked(scheduleS3ObjectDeletion).mock.invocationCallOrder[
+			oldKeyRemoveOrder
+		],
 	);
 
-	// Assert: unchanged attachment was NOT re-uploaded or removed
+	// Assert: unchanged attachment was NOT re-uploaded or scheduled for removal
 	expect(s3.upload).not.toBeCalledWith(
 		"example-bucket",
 		"posts/diffing-post/attachments/unchanged-sha.txt",
@@ -1191,7 +1199,7 @@ published: "2024-01-15T00:00:00Z"
 		expect.anything(),
 		expect.anything(),
 	);
-	expect(s3.remove).not.toBeCalledWith(
+	expect(scheduleS3ObjectDeletion).not.toBeCalledWith(
 		"example-bucket",
 		"posts/diffing-post/attachments/unchanged-sha.txt",
 	);
@@ -1337,7 +1345,7 @@ published: "2024-01-15T00:00:00Z"
 		expect.anything(),
 		expect.anything(),
 	);
-	expect(s3.remove).not.toBeCalled();
+	expect(scheduleS3ObjectDeletion).not.toBeCalled();
 
 	// Assert: the existing row was carried forward unchanged
 	expect(insertPostAttachmentsValues).toBeCalledWith([

@@ -35,6 +35,7 @@ export async function createJob<T extends TasksValues>(
 	task: T,
 	id: string,
 	data: TaskInputs[T],
+	opts?: { delay?: number },
 ) {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const queue = createQueue(task) as Queue<any>;
@@ -42,5 +43,6 @@ export async function createJob<T extends TasksValues>(
 		deduplication: {
 			id: id,
 		},
+		delay: opts?.delay,
 	});
 }

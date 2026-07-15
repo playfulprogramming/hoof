@@ -3,6 +3,7 @@ import {
 	urlMetadataGist,
 	urlMetadataGistFile,
 } from "@playfulprogramming/db";
+import { scheduleS3ObjectDeletion } from "@playfulprogramming/bullmq";
 import { s3 } from "@playfulprogramming/s3";
 import { fetchAsBot } from "../../utils/fetchAsBot.ts";
 import * as github from "@playfulprogramming/github-api";
@@ -103,9 +104,10 @@ export async function getEmbedDataFromGist(
 			});
 	});
 
-	// Clean up deleted files from S3
+	// Schedule cleanup of deleted files from S3, after a grace period so any
+	// in-flight or cached request for the old key doesn't 404 immediately
 	for (const { filename } of deletedFilesResult) {
-		await s3.remove(BUCKET, getFileKey(filename));
+		await scheduleS3ObjectDeletion(BUCKET, getFileKey(filename));
 	}
 
 	return {
