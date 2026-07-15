@@ -266,6 +266,9 @@ importers:
       '@playfulprogramming/redis':
         specifier: workspace:*
         version: link:../redis
+      '@playfulprogramming/s3':
+        specifier: workspace:*
+        version: link:../s3
       bullmq:
         specifier: 'catalog:'
         version: 5.76.10

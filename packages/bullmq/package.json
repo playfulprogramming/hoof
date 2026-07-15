@@ -11,6 +11,7 @@
 	},
 	"dependencies": {
 		"@playfulprogramming/redis": "workspace:*",
+		"@playfulprogramming/s3": "workspace:*",
 		"bullmq": "catalog:",
 		"typebox": "catalog:"
 	}
