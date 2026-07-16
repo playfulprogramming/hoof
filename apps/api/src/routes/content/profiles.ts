@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from "fastify";
-import { db, profiles, postAuthors, postData } from "@playfulprogramming/db";
+import { db, profiles, postAuthors, posts } from "@playfulprogramming/db";
 import { and, asc, countDistinct, desc, eq, isNotNull } from "drizzle-orm";
 import { Type, type Static } from "typebox";
 import { createImageUrl } from "../../utils.ts";
@@ -76,16 +76,16 @@ const profilesRoutes: FastifyPluginAsync = async (fastify) => {
 					name: profiles.name,
 					description: profiles.description,
 					profileImage: profiles.profileImage,
-					postsCount: countDistinct(postData.slug),
+					postsCount: countDistinct(posts.slug),
 				})
 				.from(profiles)
 				.leftJoin(postAuthors, eq(postAuthors.authorSlug, profiles.slug))
 				.leftJoin(
-					postData,
+					posts,
 					and(
-						eq(postData.slug, postAuthors.postSlug),
-						isNotNull(postData.publishedAt),
-						eq(postData.noindex, false),
+						eq(posts.id, postAuthors.postId),
+						isNotNull(posts.publishedAt),
+						eq(posts.noindex, false),
 					),
 				)
 				.groupBy(
@@ -96,7 +96,7 @@ const profilesRoutes: FastifyPluginAsync = async (fastify) => {
 				)
 				.orderBy(
 					...(sortBy === "posts"
-						? [desc(countDistinct(postData.slug)), asc(profiles.slug)]
+						? [desc(countDistinct(posts.slug)), asc(profiles.slug)]
 						: [asc(profiles.slug)]),
 				)
 				.limit(queryParams.limit)

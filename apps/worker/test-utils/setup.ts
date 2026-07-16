@@ -43,14 +43,30 @@ vi.mock("@playfulprogramming/s3", () => {
 vi.mock("@playfulprogramming/db", () => {
 	const insertMap = new Map<unknown, unknown>();
 	const insertMockResponse = () => {
-		const onConflictDoUpdate = vi.fn();
-		return { values: vi.fn(() => ({ onConflictDoUpdate })) };
+		const returning = vi.fn();
+		const onConflictDoNothing = vi.fn(() => ({ returning }));
+		const onConflictDoUpdate = vi.fn(() => ({ returning }));
+		return {
+			values: vi.fn(() => ({
+				returning,
+				onConflictDoNothing,
+				onConflictDoUpdate,
+			})),
+		};
 	};
 
 	const deleteMap = new Map<unknown, unknown>();
 	const deleteMockResponse = () => {
 		const returning = vi.fn();
 		return { where: vi.fn(() => ({ returning })) };
+	};
+
+	const selectMap = new Map<unknown, unknown>();
+	const selectMockResponse = () => {
+		const limit = vi.fn();
+		const where = vi.fn(() => ({ limit }));
+		const innerJoin = vi.fn(() => ({ where, innerJoin }));
+		return { innerJoin, where };
 	};
 
 	const db = {
@@ -64,7 +80,14 @@ vi.mock("@playfulprogramming/db", () => {
 				deleteMap.get(arg) ?? deleteMap.set(arg, deleteMockResponse()).get(arg)
 			);
 		}),
-		select: vi.fn(),
+		select: vi.fn(() => ({
+			from: vi.fn((arg) => {
+				return (
+					selectMap.get(arg) ??
+					selectMap.set(arg, selectMockResponse()).get(arg)
+				);
+			}),
+		})),
 		transaction: vi.fn((cb: (tx: unknown) => unknown) => cb(db)),
 	};
 
@@ -81,7 +104,10 @@ vi.mock("@playfulprogramming/db", () => {
 			role: {},
 		},
 		posts: {
+			id: {},
 			slug: {},
+			locale: {},
+			branch: {},
 		},
 		collections: {
 			slug: {},
@@ -98,22 +124,22 @@ vi.mock("@playfulprogramming/db", () => {
 			collectionSlug: {},
 			tag: {},
 		},
-		postData: {
-			slug: {},
-			locale: {},
-			version: {},
-		},
 		postAuthors: {
-			postSlug: {},
+			postId: {},
 			authorSlug: {},
 		},
 		postTags: {
-			postSlug: {},
+			postId: {},
 			tag: {},
 		},
 		postAttachments: {
-			postSlug: {},
+			postId: {},
+			attachmentKey: {},
+		},
+		attachments: {
+			attachmentKey: {},
 			attachmentName: {},
+			sha: {},
 		},
 		collectionChapters: {
 			postSlug: {},

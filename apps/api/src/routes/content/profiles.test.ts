@@ -1,6 +1,6 @@
 import fastify, { type FastifyInstance } from "fastify";
 import profilesRoutes from "./profiles.ts";
-import { db, profiles, postAuthors, postData } from "@playfulprogramming/db";
+import { db, profiles, postAuthors, posts } from "@playfulprogramming/db";
 import { and, asc, countDistinct, desc, eq, isNotNull } from "drizzle-orm";
 
 function mockSelectChain(rows: unknown[]) {
@@ -8,10 +8,10 @@ function mockSelectChain(rows: unknown[]) {
 	const limit = vi.fn().mockReturnValue({ offset });
 	const orderBy = vi.fn().mockReturnValue({ limit });
 	const groupBy = vi.fn().mockReturnValue({ orderBy });
-	const leftJoinPostData = vi.fn().mockReturnValue({ groupBy });
+	const leftJoinPosts = vi.fn().mockReturnValue({ groupBy });
 	const leftJoinPostAuthors = vi
 		.fn()
-		.mockReturnValue({ leftJoin: leftJoinPostData });
+		.mockReturnValue({ leftJoin: leftJoinPosts });
 	const from = vi.fn().mockReturnValue({ leftJoin: leftJoinPostAuthors });
 
 	vi.mocked(db.select).mockReturnValue({ from } as never);
@@ -19,7 +19,7 @@ function mockSelectChain(rows: unknown[]) {
 	return {
 		from,
 		leftJoinPostAuthors,
-		leftJoinPostData,
+		leftJoinPosts,
 		groupBy,
 		orderBy,
 		limit,
@@ -106,8 +106,8 @@ describe("Profiles Routes Tests", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			expect(chain.limit).toBeCalledWith(10);
-			expect(chain.offset).toBeCalledWith(20);
+			expect(chain.limit).toHaveBeenCalledWith(10);
+			expect(chain.offset).toHaveBeenCalledWith(20);
 		});
 
 		test("defaults to sortBy=id, ordering by profile slug ascending", async () => {
@@ -120,7 +120,7 @@ describe("Profiles Routes Tests", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			expect(chain.orderBy).toBeCalledWith(asc(profiles.slug));
+			expect(chain.orderBy).toHaveBeenCalledWith(asc(profiles.slug));
 		});
 
 		test("sortBy=posts orders authors by descending post count", async () => {
@@ -148,8 +148,8 @@ describe("Profiles Routes Tests", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			expect(chain.orderBy).toBeCalledWith(
-				desc(countDistinct(postData.slug)),
+			expect(chain.orderBy).toHaveBeenCalledWith(
+				desc(countDistinct(posts.slug)),
 				asc(profiles.slug),
 			);
 			expect(
@@ -167,7 +167,7 @@ describe("Profiles Routes Tests", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			expect(chain.leftJoinPostAuthors).toBeCalledWith(
+			expect(chain.leftJoinPostAuthors).toHaveBeenCalledWith(
 				postAuthors,
 				eq(postAuthors.authorSlug, profiles.slug),
 			);
@@ -183,12 +183,12 @@ describe("Profiles Routes Tests", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			expect(chain.leftJoinPostData).toBeCalledWith(
-				postData,
+			expect(chain.leftJoinPosts).toHaveBeenCalledWith(
+				posts,
 				and(
-					eq(postData.slug, postAuthors.postSlug),
-					isNotNull(postData.publishedAt),
-					eq(postData.noindex, false),
+					eq(posts.id, postAuthors.postId),
+					isNotNull(posts.publishedAt),
+					eq(posts.noindex, false),
 				),
 			);
 		});

@@ -6,29 +6,34 @@ import {
 	primaryKey,
 	boolean,
 	integer,
+	uuid,
+	unique,
 } from "drizzle-orm/pg-core";
 import { profiles } from "./profiles.ts";
 import { collections } from "./collections.ts";
+import { attachments } from "./attachments.ts";
 
-export const posts = pgTable("posts", {
-	slug: text("slug").primaryKey(),
-	collectionSlug: text("collection_slug").references(() => collections.slug, {
-		onDelete: "set null",
-	}),
-	collectionOrder: integer("collection_order").notNull().default(0),
+export const postGroups = pgTable("post_groups", {
+	id: uuid("id").primaryKey().defaultRandom(),
 });
 
-export const postData = pgTable(
-	"post_data",
+export const posts = pgTable(
+	"posts",
 	{
-		slug: text("slug")
-			.notNull()
-			.references(() => posts.slug, {
-				onDelete: "cascade",
-			}),
+		id: uuid("id").primaryKey().defaultRandom(),
+		slug: text("slug").notNull(),
 		locale: text("locale").notNull(),
+		branch: text("branch").notNull(),
+		collectionSlug: text("collection_slug").references(() => collections.slug, {
+			onDelete: "set null",
+		}),
+		collectionOrder: integer("collection_order").notNull().default(0),
+		groupId: uuid("group_id").references(() => postGroups.id, {
+			onDelete: "cascade",
+		}),
+		versionName: text("version_name").notNull().default(""),
+		versionOrder: integer("version_order").notNull().default(0),
 		title: text("title").notNull(),
-		version: text("version").notNull().default(""),
 		description: text("description").notNull().default(""),
 		wordCount: integer("word_count").notNull().default(0),
 		socialImage: text("social_image"),
@@ -39,17 +44,15 @@ export const postData = pgTable(
 		publishedAt: timestamp("published_at", { withTimezone: true }),
 		meta: jsonb("meta").notNull(),
 	},
-	(table) => [
-		primaryKey({ columns: [table.slug, table.locale, table.version] }),
-	],
+	(table) => [unique().on(table.slug, table.locale, table.branch)],
 );
 
 export const postAuthors = pgTable(
 	"post_authors",
 	{
-		postSlug: text("post_slug")
+		postId: uuid("post_id")
 			.notNull()
-			.references(() => posts.slug, {
+			.references(() => posts.id, {
 				onDelete: "cascade",
 			}),
 		authorSlug: text("author_slug")
@@ -60,7 +63,46 @@ export const postAuthors = pgTable(
 	},
 	(table) => [
 		primaryKey({
-			columns: [table.postSlug, table.authorSlug],
+			columns: [table.postId, table.authorSlug],
+		}),
+	],
+);
+
+export const postTags = pgTable(
+	"post_tags",
+	{
+		postId: uuid("post_id")
+			.notNull()
+			.references(() => posts.id, {
+				onDelete: "cascade",
+			}),
+		tag: text("tag").notNull(),
+	},
+	(table) => [
+		primaryKey({
+			columns: [table.postId, table.tag],
+		}),
+	],
+);
+
+export const postAttachments = pgTable(
+	"post_attachments",
+	{
+		postId: uuid("post_id")
+			.notNull()
+			.references(() => posts.id, {
+				onDelete: "cascade",
+			}),
+		attachmentKey: text("attachment_key")
+			.notNull()
+			.references(() => attachments.attachmentKey, {
+				onDelete: "cascade",
+			}),
+		attachmentName: text("attachment_name").notNull(),
+	},
+	(table) => [
+		primaryKey({
+			columns: [table.postId, table.attachmentKey],
 		}),
 	],
 );

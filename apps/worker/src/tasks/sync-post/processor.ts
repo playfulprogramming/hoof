@@ -3,15 +3,16 @@ import { Tasks, createJob } from "@playfulprogramming/bullmq";
 import {
 	db,
 	posts,
-	postData,
 	postAuthors,
 	postTags,
 	postAttachments,
+	postGroups,
+	attachments,
 } from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
 import { s3 } from "@playfulprogramming/s3";
 import { createProcessor } from "../../createProcessor.ts";
-import { eq } from "drizzle-orm";
+import { and, eq, isNotNull } from "drizzle-orm";
 import matter from "gray-matter";
 import { Value } from "typebox/value";
 import sharp from "sharp";
@@ -100,12 +101,8 @@ function collectAttachmentEntries(
 }
 
 interface AttachmentRow {
-	postSlug: string;
-	attachmentName: string;
 	attachmentKey: string;
-	sha: string;
-	width: number | null;
-	height: number | null;
+	attachmentName: string;
 }
 
 export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
@@ -137,27 +134,18 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 				`Post ${post} (${basePath}) returned 404 - removing from database.`,
 			);
 
-			const removedAttachmentRows = await db
-				.select({ attachmentKey: postAttachments.attachmentKey })
-				.from(postAttachments)
-				.where(eq(postAttachments.postSlug, post));
+			const removedAuthorRows = await db.transaction(async (tx) => {
+				const removalFilter = and(eq(posts.slug, post), eq(posts.branch, ref));
 
-			if (removedAttachmentRows.length > 0) {
-				const bucket = await s3.ensureBucket(env.S3_BUCKET);
-				await Promise.all(
-					removedAttachmentRows.map(async ({ attachmentKey }) => {
-						await s3.remove(bucket, attachmentKey);
-						console.log(`Removed attachment ${attachmentKey} from S3`);
-					}),
-				);
-			}
+				const removedAuthorRows = await tx
+					.select({ authorSlug: postAuthors.authorSlug })
+					.from(postAuthors)
+					.innerJoin(posts, eq(posts.id, postAuthors.postId))
+					.where(removalFilter);
 
-			const removedAuthorRows = await db
-				.select({ authorSlug: postAuthors.authorSlug })
-				.from(postAuthors)
-				.where(eq(postAuthors.postSlug, post));
-
-			await db.delete(posts).where(eq(posts.slug, post));
+				await tx.delete(posts).where(removalFilter);
+				return removedAuthorRows;
+			});
 
 			for (const { authorSlug } of removedAuthorRows) {
 				await createJob(
@@ -194,9 +182,6 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	// =========================================================================
 	// Phase 1: Collect all data from GitHub
 	// =========================================================================
-	const allAuthorSlugs = new Set<string>([author]);
-	const allTags = new Set<string>();
-
 	const localeData = await Promise.all(
 		localeFiles.map(async (file) => {
 			const locale = extractLocale(file.name);
@@ -220,14 +205,6 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			const { data: frontmatter, content } = matter(rawMarkdown);
 			const parsed = Value.Parse(PostMetaSchema, frontmatter);
 
-			if (parsed.authors) {
-				parsed.authors.forEach((a) => allAuthorSlugs.add(a));
-			}
-
-			if (parsed.tags) {
-				parsed.tags.forEach((t) => allTags.add(t));
-			}
-
 			// If the description is missing, populate it from the content
 			parsed.description ??= extractMarkdownExcerpt(content, 150);
 			// calculate a (very) approximate word count
@@ -236,9 +213,6 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			return { locale, rawMarkdown, parsed, wordCount };
 		}),
 	);
-
-	const authorSlugs = [...allAuthorSlugs];
-	const tags = [...allTags];
 
 	// =========================================================================
 	// Phase 2: Upload all markdown to S3
@@ -262,53 +236,39 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	// =========================================================================
 	// Phase 3: Discover, resize, diff, and upload post attachments
 	// =========================================================================
-	const attachmentEntries = collectAttachmentEntries(
-		folderResponse.data.entries,
-	);
-
-	const previousAttachmentRows = await db
-		.select({
-			attachmentName: postAttachments.attachmentName,
-			attachmentKey: postAttachments.attachmentKey,
-			sha: postAttachments.sha,
-			width: postAttachments.width,
-			height: postAttachments.height,
-		})
-		.from(postAttachments)
-		.where(eq(postAttachments.postSlug, post));
-	const previousAttachmentsByName = new Map(
-		previousAttachmentRows.map((row) => [row.attachmentName, row]),
-	);
-
-	const discoveredAttachmentNames = new Set(
-		attachmentEntries.map((entry) => entry.name),
-	);
-
-	for (const [attachmentName, row] of previousAttachmentsByName) {
-		if (!discoveredAttachmentNames.has(attachmentName)) {
-			await s3.remove(bucket, row.attachmentKey);
-			console.log(
-				`Removed attachment ${row.attachmentKey} from S3 (no longer in repo)`,
-			);
-		}
-	}
-
 	const attachmentRows: AttachmentRow[] = [];
+	const existingAttachmentRecords = await db
+		.select({ attachmentKey: attachments.attachmentKey })
+		.from(attachments)
+		.innerJoin(
+			postAttachments,
+			eq(postAttachments.attachmentKey, attachments.attachmentKey),
+		)
+		.innerJoin(posts, eq(posts.id, postAttachments.postId))
+		.where(eq(posts.slug, post));
+	const existingAttachmentKeys = new Set(
+		existingAttachmentRecords.map(({ attachmentKey }) => attachmentKey),
+	);
 
-	for (const { name, path, sha } of attachmentEntries) {
-		const previous = previousAttachmentsByName.get(name);
+	for (const { name, path, sha } of collectAttachmentEntries(
+		folderResponse.data.entries,
+	)) {
+		const isImage = isImageAttachment(name);
+
+		// The key is derived from the file's sha, so a changed file always gets
+		// a brand-new key - no risk of collision. Upload the new object before
+		// removing the old one, so a failed upload doesn't leave the persisted
+		// row pointing at a key that no longer exists in S3.
+		const extension = isImage ? ".jpeg" : extname(name);
+		const attachmentKey = `posts/${post}/attachments/${sha}${extension}`;
 
 		// Content-addressed keys mean an unchanged sha implies an unchanged
 		// object in S3 - carry the existing row forward without touching GitHub
 		// or S3 at all.
-		if (previous !== undefined && previous.sha === sha) {
+		if (existingAttachmentKeys.has(attachmentKey)) {
 			attachmentRows.push({
-				postSlug: post,
+				attachmentKey,
 				attachmentName: name,
-				attachmentKey: previous.attachmentKey,
-				sha,
-				width: previous.width,
-				height: previous.height,
 			});
 			continue;
 		}
@@ -325,7 +285,6 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			throw new Error(`Unable to fetch attachment ${name} for ${post}`);
 		}
 
-		const isImage = isImageAttachment(name);
 		let buffer: Buffer;
 		let width: number | null = null;
 		let height: number | null = null;
@@ -339,13 +298,6 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			buffer = Buffer.from(await new Response(fileStream).arrayBuffer());
 		}
 
-		// The key is derived from the file's sha, so a changed file always gets
-		// a brand-new key - no risk of collision. Upload the new object before
-		// removing the old one, so a failed upload doesn't leave the persisted
-		// row pointing at a key that no longer exists in S3.
-		const extension = isImage ? ".jpeg" : extname(name);
-		const attachmentKey = `posts/${post}/attachments/${sha}${extension}`;
-
 		await s3.upload(
 			bucket,
 			attachmentKey,
@@ -355,17 +307,19 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		);
 		console.log(`Uploaded attachment ${attachmentKey} to S3`);
 
-		if (previous !== undefined) {
-			await s3.remove(bucket, previous.attachmentKey);
-		}
+		await db
+			.insert(attachments)
+			.values({
+				attachmentKey,
+				sha,
+				width,
+				height,
+			})
+			.onConflictDoNothing();
 
 		attachmentRows.push({
-			postSlug: post,
-			attachmentName: name,
 			attachmentKey,
-			sha,
-			width,
-			height,
+			attachmentName: name,
 		});
 	}
 
@@ -374,26 +328,56 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	// =========================================================================
 	const previousAuthorRows = await db
 		.select({ authorSlug: postAuthors.authorSlug })
-		.from(postAuthors)
-		.where(eq(postAuthors.postSlug, post));
-	const previousAuthorSlugs = previousAuthorRows.map((r) => r.authorSlug);
+		.from(posts)
+		.innerJoin(postAuthors, eq(posts.id, postAuthors.postId))
+		.where(and(eq(posts.slug, post), eq(posts.branch, ref)));
+	const affectedAuthorSlugs = new Set(
+		previousAuthorRows.map((r) => r.authorSlug),
+	);
 
 	await db.transaction(async (tx) => {
-		await tx
-			.insert(posts)
-			.values({
-				slug: post,
-				collectionSlug: collection,
-				collectionOrder: localeData[0]?.parsed?.order,
-			})
-			.onConflictDoNothing();
-
 		for (const { locale, parsed, wordCount } of localeData) {
-			const postDataRecord = {
+			let groupId: string | undefined;
+			if (parsed.upToDateSlug) {
+				const upToDatePosts = await tx
+					.select({ groupId: posts.groupId })
+					.from(posts)
+					.where(
+						and(eq(posts.slug, parsed.upToDateSlug), isNotNull(posts.groupId)),
+					)
+					.limit(1);
+
+				groupId = upToDatePosts[0]?.groupId || undefined;
+
+				if (!groupId) {
+					const [newGroup] = await tx
+						.insert(postGroups)
+						.values({})
+						.returning({ id: postGroups.id });
+					groupId = newGroup.id;
+				}
+			}
+
+			// Remove the existing post record (relations are removed by cascading deletes)
+			await tx
+				.delete(posts)
+				.where(
+					and(
+						eq(posts.slug, post),
+						eq(posts.locale, locale),
+						eq(posts.branch, ref),
+					),
+				);
+
+			const postValues = {
 				slug: post,
 				locale,
+				branch: ref,
+				groupId,
+				collectionSlug: collection,
+				collectionOrder: localeData[0]?.parsed?.order,
+				versionName: parsed.version,
 				title: parsed.title,
-				version: parsed.version,
 				description: parsed.description,
 				wordCount,
 				socialImage: parsed.socialImg ?? null,
@@ -409,41 +393,47 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 				},
 			};
 
-			await tx
-				.insert(postData)
-				.values(postDataRecord)
-				.onConflictDoUpdate({
-					target: [postData.slug, postData.locale, postData.version],
-					set: postDataRecord,
-				});
+			const [postRecord] = await tx
+				.insert(posts)
+				.values(postValues)
+				.returning({ id: posts.id });
+
+			const authorSlugs = new Set<string>([author, ...(parsed.authors ?? [])]);
+			parsed.authors?.forEach((authorSlug) =>
+				affectedAuthorSlugs.add(authorSlug),
+			);
+
+			await tx.insert(postAuthors).values(
+				Array.from(
+					authorSlugs.values().map((authorSlug) => ({
+						postId: postRecord.id,
+						authorSlug,
+					})),
+				),
+			);
+
+			if (parsed.tags && parsed.tags.length > 0) {
+				await tx.insert(postTags).values(
+					parsed.tags.map((tag) => ({
+						postId: postRecord.id,
+						tag,
+					})),
+				);
+			}
+
+			if (attachmentRows.length > 0) {
+				await tx.insert(postAttachments).values(
+					Array.from(
+						attachmentRows.values().map((row) => ({
+							postId: postRecord.id,
+							attachmentKey: row.attachmentKey,
+							attachmentName: row.attachmentName,
+						})),
+					),
+				);
+			}
 
 			console.log(`Saved post metadata for ${post} (${locale})`);
-		}
-
-		await tx.delete(postAuthors).where(eq(postAuthors.postSlug, post));
-
-		await tx.insert(postAuthors).values(
-			authorSlugs.map((authorSlug) => ({
-				postSlug: post,
-				authorSlug,
-			})),
-		);
-
-		await tx.delete(postTags).where(eq(postTags.postSlug, post));
-
-		if (tags.length > 0) {
-			await tx.insert(postTags).values(
-				tags.map((tag) => ({
-					postSlug: post,
-					tag,
-				})),
-			);
-		}
-
-		await tx.delete(postAttachments).where(eq(postAttachments.postSlug, post));
-
-		if (attachmentRows.length > 0) {
-			await tx.insert(postAttachments).values(attachmentRows);
 		}
 	});
 
@@ -451,10 +441,6 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	// authors removed from the frontmatter so their stats are recomputed too.
 	// createJob deduplicates by key, so concurrent post syncs for the same
 	// author collapse into a single achievements job.
-	const affectedAuthorSlugs = [
-		...new Set([...authorSlugs, ...previousAuthorSlugs]),
-	];
-
 	for (const authorSlug of affectedAuthorSlugs) {
 		await createJob(
 			Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
