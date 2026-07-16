@@ -20,6 +20,7 @@ export const Tasks = {
 	URL_METADATA: "url-metadata",
 	POST_IMAGES: "post-images",
 	GRANT_AUTHOR_ACHIEVEMENTS: "grant-author-achievements",
+	CLEANUP_ATTACHMENTS: "cleanup-attachments",
 } as const;
 
 export type TasksKeys = keyof typeof Tasks;
@@ -33,6 +34,7 @@ export interface TaskInputs {
 	[Tasks.URL_METADATA]: UrlMetadataInput;
 	[Tasks.POST_IMAGES]: PostImageInput;
 	[Tasks.GRANT_AUTHOR_ACHIEVEMENTS]: GrantAuthorAchievementsInput;
+	[Tasks.CLEANUP_ATTACHMENTS]: object;
 }
 
 export type TaskInputsValues = TaskInputs[TasksValues];
@@ -45,6 +47,7 @@ export interface TaskOutputs {
 	[Tasks.URL_METADATA]: UrlMetadataOutput;
 	[Tasks.POST_IMAGES]: PostImageOutput;
 	[Tasks.GRANT_AUTHOR_ACHIEVEMENTS]: GrantAuthorAchievementsOutput;
+	[Tasks.CLEANUP_ATTACHMENTS]: void;
 }
 
 export type TaskOutputsValues = TaskOutputs[TasksValues];
