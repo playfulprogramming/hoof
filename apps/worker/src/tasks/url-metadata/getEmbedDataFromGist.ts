@@ -3,9 +3,9 @@ import {
 	urlMetadataGist,
 	urlMetadataGistFile,
 } from "@playfulprogramming/db";
-import { scheduleS3ObjectDeletion } from "@playfulprogramming/bullmq";
 import { s3 } from "@playfulprogramming/s3";
 import { fetchAsBot } from "../../utils/fetchAsBot.ts";
+import { scheduleS3ObjectDeletion } from "../../utils/scheduleS3ObjectDeletion.ts";
 import * as github from "@playfulprogramming/github-api";
 import { and, eq, inArray, not } from "drizzle-orm";
 import { type EmbedData, BUCKET } from "./common.ts";

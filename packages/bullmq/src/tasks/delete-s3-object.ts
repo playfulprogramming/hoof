@@ -1,4 +1,3 @@
-import { s3 } from "@playfulprogramming/s3";
 import { createJob } from "../queues.ts";
 import { Tasks } from "./types.ts";
 
@@ -18,26 +17,11 @@ export type DeleteS3ObjectOutput = void;
 // or CDN doesn't hit a 404 for a key it just fetched or cached.
 export const DELETE_S3_OBJECT_GRACE_PERIOD_MS = 24 * 60 * 60 * 1000;
 
-export async function scheduleS3ObjectDeletion(
+export async function enqueueS3ObjectDeletion(
 	bucket: string,
 	key: string,
+	lastModified: Date,
 ): Promise<void> {
-	const lastModified = await s3.getLastModified(bucket, key);
-
-	if (lastModified === undefined) {
-		// Without a LastModified to check at execution time, the processor
-		// would have no way to detect a rewrite during the grace period and
-		// would unconditionally delete whatever's at this key 24h from now -
-		// including a legitimate new upload. Bail out instead of scheduling
-		// an unsafe deletion, but log it: a genuine transient failure to read
-		// the object's metadata here means this object never gets scheduled
-		// for cleanup at all, so it'd otherwise leak in S3 with no trace.
-		console.warn(
-			`Skipped scheduling deletion of ${bucket}/${key} - could not read its LastModified`,
-		);
-		return;
-	}
-
 	const lastModifiedIso = lastModified.toISOString();
 
 	// The job ID includes a generation marker (the object's LastModified) so

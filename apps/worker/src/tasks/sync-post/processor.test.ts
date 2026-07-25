@@ -1,10 +1,6 @@
 import processor from "./processor.ts";
-import {
-	createJob,
-	scheduleS3ObjectDeletion,
-	type TaskInputs,
-	Tasks,
-} from "@playfulprogramming/bullmq";
+import { createJob, type TaskInputs, Tasks } from "@playfulprogramming/bullmq";
+import { scheduleS3ObjectDeletion } from "../../utils/scheduleS3ObjectDeletion.ts";
 import type { Job } from "bullmq";
 import {
 	posts,

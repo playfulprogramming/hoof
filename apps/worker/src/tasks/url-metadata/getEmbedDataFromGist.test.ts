@@ -7,7 +7,7 @@ import {
 	urlMetadataGist,
 	urlMetadataGistFile,
 } from "@playfulprogramming/db";
-import { scheduleS3ObjectDeletion } from "@playfulprogramming/bullmq";
+import { scheduleS3ObjectDeletion } from "../../utils/scheduleS3ObjectDeletion.ts";
 
 test("fetches the expected information for a successful gist response", async () => {
 	const gistUrl = new URL(

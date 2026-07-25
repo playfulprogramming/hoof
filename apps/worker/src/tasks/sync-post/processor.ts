@@ -1,9 +1,5 @@
 import { env, PostMetaSchema } from "@playfulprogramming/common";
-import {
-	Tasks,
-	createJob,
-	scheduleS3ObjectDeletion,
-} from "@playfulprogramming/bullmq";
+import { Tasks, createJob } from "@playfulprogramming/bullmq";
 import {
 	db,
 	posts,
@@ -24,6 +20,7 @@ import { extname } from "node:path/posix";
 import { Response } from "undici";
 import { extractLocale } from "../../utils/extractLocale.ts";
 import { extractMarkdownExcerpt } from "../../utils/extractMarkdownExcerpt.ts";
+import { scheduleS3ObjectDeletion } from "../../utils/scheduleS3ObjectDeletion.ts";
 
 const ATTACHMENT_IMAGE_SIZE_MAX = 2048;
 
