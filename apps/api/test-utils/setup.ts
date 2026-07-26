@@ -22,12 +22,11 @@ vi.mock("@playfulprogramming/redis", () => {
 vi.mock("@playfulprogramming/db", () => {
 	return {
 		posts: {
-			slug: {},
-			collectionSlug: {},
-		},
-		postData: {
+			id: {},
 			slug: {},
 			locale: {},
+			branch: {},
+			collectionSlug: {},
 			title: {},
 			bannerImage: {},
 			wordCount: {},
@@ -61,6 +60,7 @@ vi.mock("@playfulprogramming/db", () => {
 				},
 				posts: {
 					findFirst: vi.fn(),
+					findMany: vi.fn(),
 				},
 				profiles: {
 					findMany: vi.fn(),

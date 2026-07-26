@@ -29,25 +29,25 @@ export const relations = defineRelations(schema, (r) => ({
 
 	// Posts relations
 	posts: {
-		data: r.many.postData({
-			from: r.posts.slug,
-			to: r.postData.slug,
-		}),
 		authors: r.many.profiles({
-			from: r.posts.slug.through(r.postAuthors.postSlug),
+			from: r.posts.id.through(r.postAuthors.postId),
 			to: r.profiles.slug.through(r.postAuthors.authorSlug),
 		}),
 		collection: r.one.collections({
 			from: r.posts.collectionSlug,
 			to: r.collections.slug,
 		}),
+		tags: r.many.postTags({
+			from: r.posts.id,
+			to: r.postTags.postId,
+		}),
 	},
 
 	// Posts authors junction
 	postAuthors: {
 		post: r.one.posts({
-			from: r.postAuthors.postSlug,
-			to: r.posts.slug,
+			from: r.postAuthors.postId,
+			to: r.posts.id,
 		}),
 		author: r.one.profiles({
 			from: r.postAuthors.authorSlug,
@@ -59,7 +59,7 @@ export const relations = defineRelations(schema, (r) => ({
 	profiles: {
 		postsAuthored: r.many.posts({
 			from: r.profiles.slug.through(r.postAuthors.authorSlug),
-			to: r.posts.slug.through(r.postAuthors.postSlug),
+			to: r.posts.id.through(r.postAuthors.postId),
 		}),
 		collectionsAuthored: r.many.collections({
 			from: r.profiles.slug.through(r.collectionAuthors.authorSlug),
