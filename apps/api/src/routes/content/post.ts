@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { db } from "@playfulprogramming/db";
 import { Type, type Static } from "typebox";
 import { createImageUrl } from "../../utils.ts";
+import { PostBaseSchema } from "./postBaseSchema.ts";
 
 const PostParamsSchema = Type.Object({
 	slug: Type.String(),
@@ -9,37 +10,29 @@ const PostParamsSchema = Type.Object({
 
 const PostQueryParamsSchema = Type.Object({
 	locale: Type.String({ default: "en" }),
+	branch: Type.String({ default: "main" }),
 });
 
-const PostResponseSchema = Type.Object(
-	{
-		slug: Type.String(),
-		title: Type.String(),
-		description: Type.String(),
-		bannerUrl: Type.Optional(Type.String()),
-		socialImageUrl: Type.Optional(Type.String()),
-		wordCount: Type.Number(),
-		publishedAt: Type.Optional(Type.String({ format: "date-time" })),
-		authors: Type.Array(
-			Type.Object({
-				id: Type.String(),
-				name: Type.String(),
-				profileImageUrl: Type.Optional(Type.String()),
-			}),
-		),
-		collection: Type.Optional(
-			Type.Object({
-				slug: Type.String(),
-				title: Type.String(),
-				chapters: Type.Array(
-					Type.Object({
-						slug: Type.String(),
-						title: Type.String(),
-					}),
-				),
-			}),
-		),
-	},
+const PostResponseSchema = Type.Intersect(
+	[
+		PostBaseSchema,
+		Type.Object({
+			description: Type.String(),
+			socialImageUrl: Type.Optional(Type.String()),
+			collection: Type.Optional(
+				Type.Object({
+					slug: Type.String(),
+					title: Type.String(),
+					chapters: Type.Array(
+						Type.Object({
+							slug: Type.String(),
+							title: Type.String(),
+						}),
+					),
+				}),
+			),
+		}),
+	],
 	{
 		examples: [
 			{
@@ -107,22 +100,20 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 		},
 		async (request, reply) => {
 			const { slug } = request.params;
-			const { locale } = request.query;
+			const { locale, branch } = request.query;
 
 			const post = await db.query.posts.findFirst({
-				where: { slug },
+				where: { slug, locale, branch },
+				columns: {
+					slug: true,
+					title: true,
+					description: true,
+					bannerImage: true,
+					socialImage: true,
+					wordCount: true,
+					publishedAt: true,
+				},
 				with: {
-					data: {
-						columns: {
-							title: true,
-							description: true,
-							bannerImage: true,
-							socialImage: true,
-							wordCount: true,
-							publishedAt: true,
-						},
-						where: { locale },
-					},
 					authors: { columns: { slug: true, name: true, profileImage: true } },
 					collection: {
 						with: {
@@ -131,22 +122,20 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 								where: { locale },
 							},
 							posts: {
-								columns: { slug: true, collectionOrder: true },
-								with: {
-									data: {
-										columns: { title: true, publishedAt: true },
-										where: { locale },
-									},
+								columns: {
+									slug: true,
+									collectionOrder: true,
+									title: true,
+									publishedAt: true,
 								},
+								where: { locale, branch },
 							},
 						},
 					},
 				},
 			});
 
-			const postData = post?.data[0];
-
-			if (!post || !postData || postData.publishedAt === null) {
+			if (!post || post.publishedAt === null) {
 				reply.code(404);
 				reply.send({ error: "Post not found" });
 				return;
@@ -160,31 +149,28 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 							slug: post.collection.slug,
 							title: collectionData.title,
 							chapters: post.collection.posts
-								.filter(
-									(chapter) =>
-										chapter.data[0] && chapter.data[0].publishedAt !== null,
-								)
+								.filter((chapter) => chapter.publishedAt !== null)
 								.sort((a, b) => a.collectionOrder - b.collectionOrder)
 								.map((chapter) => ({
 									slug: chapter.slug,
-									title: chapter.data[0].title,
+									title: chapter.title,
 								})),
 						}
 					: undefined;
 
 			const response: PostResponse = {
 				slug: post.slug,
-				title: postData.title,
-				description: postData.description,
-				bannerUrl: postData.bannerImage
-					? createImageUrl(postData.bannerImage)
+				title: post.title,
+				description: post.description,
+				bannerUrl: post.bannerImage
+					? createImageUrl(post.bannerImage)
 					: undefined,
-				socialImageUrl: postData.socialImage
-					? createImageUrl(postData.socialImage)
+				socialImageUrl: post.socialImage
+					? createImageUrl(post.socialImage)
 					: undefined,
-				wordCount: postData.wordCount,
-				publishedAt: postData.publishedAt
-					? postData.publishedAt.toISOString()
+				wordCount: post.wordCount,
+				publishedAt: post.publishedAt
+					? post.publishedAt.toISOString()
 					: undefined,
 				authors: post.authors.map((author) => ({
 					id: author.slug,
