@@ -908,6 +908,20 @@ published: "2024-01-15T00:00:00Z"
 		expect.anything(),
 	);
 
+	// Assert: no-longer-referenced attachments are NOT scheduled for deletion
+	// here. This is intentional and confirmed with James - removal-scheduling
+	// for orphaned attachments now lives in #191/#195's periodic sweep, not
+	// inline in sync-post, since attachments are shared/reference-counted
+	// across posts and branches under the new schema.
+	expect(scheduleS3ObjectDeletion).not.toBeCalledWith(
+		"example-bucket",
+		"posts/diffing-post/attachments/old-file-sha.txt",
+	);
+	expect(scheduleS3ObjectDeletion).not.toBeCalledWith(
+		"example-bucket",
+		"posts/diffing-post/attachments/old-changed-sha.txt",
+	);
+
 	// Assert: only the two attachments still present in the repo are saved
 	expect(db.insert(attachments).values).toHaveBeenCalledWith({
 		attachmentKey: "posts/diffing-post/attachments/new-changed-sha.txt",

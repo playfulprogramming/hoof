@@ -21,7 +21,6 @@ import { extname } from "node:path/posix";
 import { Response } from "undici";
 import { extractLocale } from "../../utils/extractLocale.ts";
 import { extractMarkdownExcerpt } from "../../utils/extractMarkdownExcerpt.ts";
-import { scheduleS3ObjectDeletion } from "../../utils/scheduleS3ObjectDeletion.ts";
 
 const ATTACHMENT_IMAGE_SIZE_MAX = 2048;
 
@@ -246,7 +245,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			eq(postAttachments.attachmentKey, attachments.attachmentKey),
 		)
 		.innerJoin(posts, eq(posts.id, postAttachments.postId))
-		.where(eq(posts.slug, post));
+		.where(and(eq(posts.slug, post), eq(posts.branch, ref)));
 	const existingAttachmentKeys = new Set(
 		existingAttachmentRecords.map(({ attachmentKey }) => attachmentKey),
 	);
