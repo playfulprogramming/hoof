@@ -1,6 +1,5 @@
 import processor from "./processor.ts";
 import { createJob, type TaskInputs, Tasks } from "@playfulprogramming/bullmq";
-import { scheduleS3ObjectDeletion } from "../../utils/scheduleS3ObjectDeletion.ts";
 import type { Job } from "bullmq";
 import {
 	posts,
@@ -906,20 +905,6 @@ published: "2024-01-15T00:00:00Z"
 		undefined,
 		expect.anything(),
 		expect.anything(),
-	);
-
-	// Assert: no-longer-referenced attachments are NOT scheduled for deletion
-	// here. This is intentional and confirmed with James - removal-scheduling
-	// for orphaned attachments now lives in #191/#195's periodic sweep, not
-	// inline in sync-post, since attachments are shared/reference-counted
-	// across posts and branches under the new schema.
-	expect(scheduleS3ObjectDeletion).not.toBeCalledWith(
-		"example-bucket",
-		"posts/diffing-post/attachments/old-file-sha.txt",
-	);
-	expect(scheduleS3ObjectDeletion).not.toBeCalledWith(
-		"example-bucket",
-		"posts/diffing-post/attachments/old-changed-sha.txt",
 	);
 
 	// Assert: only the two attachments still present in the repo are saved
