@@ -237,6 +237,9 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	// Phase 3: Discover, resize, diff, and upload post attachments
 	// =========================================================================
 	const attachmentRows: AttachmentRow[] = [];
+	// Note: this can pick up attachments from different branches
+	// Attachments are only keyed by post/sha, so an unchanged attachment will
+	// reference the same record
 	const existingAttachmentRecords = await db
 		.select({ attachmentKey: attachments.attachmentKey })
 		.from(attachments)
