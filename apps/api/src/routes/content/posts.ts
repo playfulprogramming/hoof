@@ -1,13 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
-import {
-	db,
-	posts,
-	postData,
-	postTags,
-	postAuthors,
-	profiles,
-} from "@playfulprogramming/db";
-import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { db, postAuthors } from "@playfulprogramming/db";
+import { sql } from "drizzle-orm";
 import { Type, type Static } from "typebox";
 import { createImageUrl } from "../../utils.ts";
 import { PostBaseSchema } from "./postBaseSchema.ts";
@@ -49,8 +42,6 @@ const PostsResponseSchema = Type.Array(
 
 type PostsResponse = Static<typeof PostsResponseSchema>;
 
-type PostAuthorEntry = PostsResponse[number]["authors"][number];
-
 const postsRoutes: FastifyPluginAsync = async (fastify) => {
 	fastify.get<{
 		Querystring: Static<typeof PostsQueryParamsSchema>;
@@ -74,84 +65,46 @@ const postsRoutes: FastifyPluginAsync = async (fastify) => {
 		async (request, reply) => {
 			const { locale, page, limit, sort, author } = request.query;
 
-			const conditions = [
-				isNotNull(postData.publishedAt),
-				eq(postData.noindex, false),
-			];
-			if (author) {
-				conditions.push(
-					sql`exists (select 1 from ${postAuthors} where ${postAuthors.postSlug} = ${posts.slug} and ${postAuthors.authorSlug} = ${author})`,
-				);
-			}
-
-			const rows = await db
-				.select({
-					slug: posts.slug,
-					title: postData.title,
-					bannerImage: postData.bannerImage,
-					wordCount: postData.wordCount,
-					publishedAt: postData.publishedAt,
-					tags: sql<
-						string[]
-					>`coalesce(array_agg(distinct ${postTags.tag}) filter (where ${postTags.tag} is not null), '{}')`,
-				})
-				.from(posts)
-				.innerJoin(
-					postData,
-					and(
-						eq(postData.slug, posts.slug),
-						eq(postData.locale, locale),
-						// No documented "current version" convention exists anywhere else in
-						// the query layer (post.ts doesn't filter by version either); this
-						// pins to the schema's default empty-string version to avoid
-						// returning duplicate rows per slug/locale until one is established.
-						eq(postData.version, ""),
-					),
-				)
-				.leftJoin(postTags, eq(postTags.postSlug, posts.slug))
-				.where(and(...conditions))
-				.groupBy(
-					posts.slug,
-					postData.title,
-					postData.bannerImage,
-					postData.wordCount,
-					postData.publishedAt,
-				)
-				.orderBy(
-					sort === "oldest"
-						? asc(postData.publishedAt)
-						: desc(postData.publishedAt),
-				)
-				.limit(limit)
-				.offset(page * limit);
-
-			const slugs = rows.map((row) => row.slug);
-
-			const authorRows = slugs.length
-				? await db
-						.select({
-							postSlug: postAuthors.postSlug,
-							id: profiles.slug,
-							name: profiles.name,
-							profileImage: profiles.profileImage,
-						})
-						.from(postAuthors)
-						.innerJoin(profiles, eq(profiles.slug, postAuthors.authorSlug))
-						.where(inArray(postAuthors.postSlug, slugs))
-				: [];
-
-			const authorsByPostSlug = new Map<string, PostAuthorEntry[]>();
-			for (const authorRow of authorRows) {
-				const entries = authorsByPostSlug.get(authorRow.postSlug) ?? [];
-				entries.push({
-					id: authorRow.id,
-					name: authorRow.name,
-					profileImageUrl: authorRow.profileImage
-						? createImageUrl(authorRow.profileImage)
+			const rows = await db.query.posts.findMany({
+				columns: {
+					slug: true,
+					title: true,
+					bannerImage: true,
+					wordCount: true,
+					publishedAt: true,
+				},
+				where: {
+					locale,
+					branch: "main",
+					publishedAt: {
+						isNotNull: true,
+					},
+					noindex: false,
+					RAW: author
+						? (posts) =>
+								sql`exists (select 1 from ${postAuthors} where ${postAuthors.postId} = ${posts.id} and ${postAuthors.authorSlug} = ${author})`
 						: undefined,
-				});
-				authorsByPostSlug.set(authorRow.postSlug, entries);
-			}
+				},
+				with: {
+					authors: {
+						columns: {
+							slug: true,
+							name: true,
+							profileImage: true,
+						},
+					},
+					tags: {
+						columns: {
+							tag: true,
+						},
+					},
+				},
+				orderBy: {
+					publishedAt: sort === "oldest" ? "asc" : "desc",
+				},
+				limit: limit,
+				offset: page * limit,
+			});
 
 			const postsResponse: PostsResponse = rows.map((row) => ({
 				slug: row.slug,
@@ -163,8 +116,14 @@ const postsRoutes: FastifyPluginAsync = async (fastify) => {
 				publishedAt: row.publishedAt
 					? row.publishedAt.toISOString()
 					: undefined,
-				authors: authorsByPostSlug.get(row.slug) ?? [],
-				tags: row.tags,
+				authors: row.authors.map((authorRow) => ({
+					id: authorRow.slug,
+					name: authorRow.name,
+					profileImageUrl: authorRow.profileImage
+						? createImageUrl(authorRow.profileImage)
+						: undefined,
+				})),
+				tags: row.tags.map(({ tag }) => tag),
 			}));
 
 			reply.code(200);

@@ -85,6 +85,39 @@ export async function matchesEtag(
 	}
 }
 
+export async function getLastModified(
+	bucket: string,
+	key: string,
+): Promise<Date | undefined> {
+	try {
+		const obj = await client.send(
+			new HeadObjectCommand({ Bucket: bucket, Key: key }),
+		);
+		return obj.LastModified;
+	} catch (_e) {
+		return undefined;
+	}
+}
+
+export async function unmodifiedSince(
+	bucket: string,
+	key: string,
+	since: Date,
+): Promise<boolean> {
+	try {
+		const obj = await client.send(
+			new HeadObjectCommand({
+				Bucket: bucket,
+				Key: key,
+				IfUnmodifiedSince: since,
+			}),
+		);
+		return !!obj;
+	} catch (_e) {
+		return false;
+	}
+}
+
 export async function upload(
 	bucket: string,
 	key: string,

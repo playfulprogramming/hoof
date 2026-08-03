@@ -3,14 +3,30 @@ import { vi } from "vitest";
 export function createDbMock() {
 	const insertMap = new Map<unknown, unknown>();
 	const insertMockResponse = () => {
-		const onConflictDoUpdate = vi.fn();
-		return { values: vi.fn(() => ({ onConflictDoUpdate })) };
+		const returning = vi.fn();
+		const onConflictDoNothing = vi.fn(() => ({ returning }));
+		const onConflictDoUpdate = vi.fn(() => ({ returning }));
+		return {
+			values: vi.fn(() => ({
+				returning,
+				onConflictDoNothing,
+				onConflictDoUpdate,
+			})),
+		};
 	};
 
 	const deleteMap = new Map<unknown, unknown>();
 	const deleteMockResponse = () => {
 		const returning = vi.fn();
 		return { where: vi.fn(() => ({ returning })) };
+	};
+
+	const selectMap = new Map<unknown, unknown>();
+	const selectMockResponse = () => {
+		const limit = vi.fn();
+		const where = vi.fn(() => ({ limit }));
+		const innerJoin = vi.fn(() => ({ where, innerJoin }));
+		return { innerJoin, where };
 	};
 
 	const db = {
@@ -24,7 +40,14 @@ export function createDbMock() {
 				deleteMap.get(arg) ?? deleteMap.set(arg, deleteMockResponse()).get(arg)
 			);
 		}),
-		select: vi.fn(),
+		select: vi.fn(() => ({
+			from: vi.fn((arg) => {
+				return (
+					selectMap.get(arg) ??
+					selectMap.set(arg, selectMockResponse()).get(arg)
+				);
+			}),
+		})),
 		transaction: vi.fn((cb: (tx: unknown) => unknown) => cb(db)),
 		query: {
 			postImages: {
@@ -38,6 +61,7 @@ export function createDbMock() {
 			},
 			posts: {
 				findFirst: vi.fn(),
+				findMany: vi.fn(),
 			},
 			profiles: {
 				findMany: vi.fn(),
@@ -60,9 +84,29 @@ export function createDbMock() {
 			profileSlug: {},
 			role: {},
 		},
+		postGroups: {
+			id: {},
+		},
 		posts: {
+			id: {},
 			slug: {},
+			locale: {},
+			branch: {},
 			collectionSlug: {},
+			collectionOrder: {},
+			groupId: {},
+			versionName: {},
+			versionOrder: {},
+			title: {},
+			description: {},
+			wordCount: {},
+			socialImage: {},
+			bannerImage: {},
+			originalLink: {},
+			noindex: {},
+			editedAt: {},
+			publishedAt: {},
+			meta: {},
 		},
 		collections: {
 			slug: {},
@@ -79,31 +123,24 @@ export function createDbMock() {
 			collectionSlug: {},
 			tag: {},
 		},
-		postData: {
-			slug: {},
-			locale: {},
-			version: {},
-			title: {},
-			bannerImage: {},
-			wordCount: {},
-			publishedAt: {},
-			noindex: {},
-		},
 		postAuthors: {
-			postSlug: {},
+			postId: {},
 			authorSlug: {},
 		},
 		postTags: {
-			postSlug: {},
+			postId: {},
 			tag: {},
 		},
 		postAttachments: {
-			postSlug: {},
+			postId: {},
+			attachmentKey: {},
 			attachmentName: {},
 		},
-		collectionChapters: {
-			postSlug: {},
-			locale: {},
+		attachments: {
+			attachmentKey: {},
+			sha: {},
+			width: {},
+			height: {},
 		},
 		urlMetadata: {},
 		urlMetadataPost: {},

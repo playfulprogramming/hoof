@@ -11,6 +11,10 @@ import type {
 	GrantAuthorAchievementsInput,
 	GrantAuthorAchievementsOutput,
 } from "./grant-author-achievements.ts";
+import type {
+	DeleteS3ObjectInput,
+	DeleteS3ObjectOutput,
+} from "./delete-s3-object.ts";
 
 export const Tasks = {
 	SYNC_ALL: "sync-all",
@@ -20,6 +24,7 @@ export const Tasks = {
 	URL_METADATA: "url-metadata",
 	POST_IMAGES: "post-images",
 	GRANT_AUTHOR_ACHIEVEMENTS: "grant-author-achievements",
+	DELETE_S3_OBJECT: "delete-s3-object",
 } as const;
 
 export type TasksKeys = keyof typeof Tasks;
@@ -33,6 +38,7 @@ export interface TaskInputs {
 	[Tasks.URL_METADATA]: UrlMetadataInput;
 	[Tasks.POST_IMAGES]: PostImageInput;
 	[Tasks.GRANT_AUTHOR_ACHIEVEMENTS]: GrantAuthorAchievementsInput;
+	[Tasks.DELETE_S3_OBJECT]: DeleteS3ObjectInput;
 }
 
 export type TaskInputsValues = TaskInputs[TasksValues];
@@ -45,6 +51,7 @@ export interface TaskOutputs {
 	[Tasks.URL_METADATA]: UrlMetadataOutput;
 	[Tasks.POST_IMAGES]: PostImageOutput;
 	[Tasks.GRANT_AUTHOR_ACHIEVEMENTS]: GrantAuthorAchievementsOutput;
+	[Tasks.DELETE_S3_OBJECT]: DeleteS3ObjectOutput;
 }
 
 export type TaskOutputsValues = TaskOutputs[TasksValues];

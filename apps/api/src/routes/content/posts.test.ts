@@ -1,52 +1,6 @@
 import fastify, { type FastifyInstance } from "fastify";
 import postsRoutes from "./posts.ts";
-import { db, postAuthors, postData, posts } from "@playfulprogramming/db";
-import { and, asc, desc, eq, isNotNull, sql } from "drizzle-orm";
-
-function mockPostsSelectChain(rows: unknown[]) {
-	const offset = vi.fn().mockResolvedValue(rows);
-	const limit = vi.fn().mockReturnValue({ offset });
-	const orderBy = vi.fn().mockReturnValue({ limit });
-	const groupBy = vi.fn().mockReturnValue({ orderBy });
-	const where = vi.fn().mockReturnValue({ groupBy });
-	const leftJoinPostTags = vi.fn().mockReturnValue({ where });
-	const innerJoinPostData = vi
-		.fn()
-		.mockReturnValue({ leftJoin: leftJoinPostTags });
-	const from = vi.fn().mockReturnValue({ innerJoin: innerJoinPostData });
-
-	return {
-		from,
-		innerJoinPostData,
-		leftJoinPostTags,
-		where,
-		groupBy,
-		orderBy,
-		limit,
-		offset,
-	};
-}
-
-function mockAuthorsSelectChain(rows: unknown[]) {
-	const where = vi.fn().mockResolvedValue(rows);
-	const innerJoin = vi.fn().mockReturnValue({ where });
-	const from = vi.fn().mockReturnValue({ innerJoin });
-
-	return { from, innerJoin, where };
-}
-
-function mockDbSelect(postsRows: unknown[], authorRows: unknown[] = []) {
-	const postsChain = mockPostsSelectChain(postsRows);
-	const authorsChain = mockAuthorsSelectChain(authorRows);
-
-	const selectMock = vi.mocked(db.select);
-	selectMock.mockReturnValueOnce({ from: postsChain.from } as never);
-	if (postsRows.length > 0) {
-		selectMock.mockReturnValueOnce({ from: authorsChain.from } as never);
-	}
-
-	return { postsChain, authorsChain };
-}
+import { db } from "@playfulprogramming/db";
 
 describe("Posts Routes Tests", () => {
 	let app: FastifyInstance;
@@ -61,26 +15,23 @@ describe("Posts Routes Tests", () => {
 
 	describe("/content/posts", () => {
 		test("returns posts with their authors and tags", async () => {
-			mockDbSelect(
-				[
-					{
-						slug: "example-post",
-						title: "Example Post",
-						bannerImage: "content/banner.png",
-						wordCount: 1200,
-						publishedAt: new Date("2024-01-15T00:00:00Z"),
-						tags: ["react", "javascript"],
-					},
-				],
-				[
-					{
-						postSlug: "example-post",
-						id: "crutchcorn",
-						name: "Corbin Crutchley",
-						profileImage: "content/profile.png",
-					},
-				],
-			);
+			vi.mocked(db.query.posts.findMany).mockResolvedValue([
+				{
+					slug: "example-post",
+					title: "Example Post",
+					bannerImage: "content/banner.png",
+					wordCount: 1200,
+					publishedAt: new Date("2024-01-15T00:00:00Z"),
+					authors: [
+						{
+							slug: "crutchcorn",
+							name: "Corbin Crutchley",
+							profileImage: "content/profile.png",
+						},
+					],
+					tags: [{ tag: "react" }, { tag: "javascript" }],
+				},
+			] as never);
 
 			const response = await app.inject({
 				method: "GET",
@@ -114,16 +65,17 @@ describe("Posts Routes Tests", () => {
 		});
 
 		test("does not include a description or excerpt field", async () => {
-			mockDbSelect([
+			vi.mocked(db.query.posts.findMany).mockResolvedValue([
 				{
 					slug: "example-post",
 					title: "Example Post",
 					bannerImage: null,
 					wordCount: 300,
 					publishedAt: new Date("2024-01-15T00:00:00Z"),
+					authors: [],
 					tags: [],
 				},
-			]);
+			] as never);
 
 			const response = await app.inject({
 				method: "GET",
@@ -138,32 +90,28 @@ describe("Posts Routes Tests", () => {
 		});
 
 		test("groups multiple co-authors under the same post", async () => {
-			mockDbSelect(
-				[
-					{
-						slug: "example-post",
-						title: "Example Post",
-						bannerImage: null,
-						wordCount: 300,
-						publishedAt: new Date("2024-01-15T00:00:00Z"),
-						tags: [],
-					},
-				],
-				[
-					{
-						postSlug: "example-post",
-						id: "crutchcorn",
-						name: "Corbin Crutchley",
-						profileImage: null,
-					},
-					{
-						postSlug: "example-post",
-						id: "fennifith",
-						name: "James Fenn",
-						profileImage: null,
-					},
-				],
-			);
+			vi.mocked(db.query.posts.findMany).mockResolvedValue([
+				{
+					slug: "example-post",
+					title: "Example Post",
+					bannerImage: null,
+					wordCount: 300,
+					publishedAt: new Date("2024-01-15T00:00:00Z"),
+					authors: [
+						{
+							slug: "crutchcorn",
+							name: "Corbin Crutchley",
+							profileImage: null,
+						},
+						{
+							slug: "fennifith",
+							name: "James Fenn",
+							profileImage: null,
+						},
+					],
+					tags: [],
+				},
+			] as never);
 
 			const response = await app.inject({
 				method: "GET",
@@ -178,7 +126,7 @@ describe("Posts Routes Tests", () => {
 		});
 
 		test("returns an empty list when there are no posts", async () => {
-			mockDbSelect([]);
+			vi.mocked(db.query.posts.findMany).mockResolvedValue([]);
 
 			const response = await app.inject({
 				method: "GET",
@@ -191,7 +139,7 @@ describe("Posts Routes Tests", () => {
 		});
 
 		test("paginates using page and limit query params", async () => {
-			const { postsChain } = mockDbSelect([]);
+			vi.mocked(db.query.posts.findMany).mockResolvedValue([]);
 
 			const response = await app.inject({
 				method: "GET",
@@ -200,12 +148,16 @@ describe("Posts Routes Tests", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			expect(postsChain.limit).toBeCalledWith(10);
-			expect(postsChain.offset).toBeCalledWith(20);
+			expect(db.query.posts.findMany).toHaveBeenCalledWith(
+				expect.objectContaining({
+					limit: 10,
+					offset: 20,
+				}),
+			);
 		});
 
 		test("defaults to sort=newest, ordering by publishedAt descending", async () => {
-			const { postsChain } = mockDbSelect([]);
+			vi.mocked(db.query.posts.findMany).mockResolvedValue([]);
 
 			const response = await app.inject({
 				method: "GET",
@@ -214,11 +166,15 @@ describe("Posts Routes Tests", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			expect(postsChain.orderBy).toBeCalledWith(desc(postData.publishedAt));
+			expect(db.query.posts.findMany).toHaveBeenCalledWith(
+				expect.objectContaining({
+					orderBy: { publishedAt: "desc" },
+				}),
+			);
 		});
 
 		test("sort=oldest orders by publishedAt ascending", async () => {
-			const { postsChain } = mockDbSelect([]);
+			vi.mocked(db.query.posts.findMany).mockResolvedValue([]);
 
 			const response = await app.inject({
 				method: "GET",
@@ -227,11 +183,15 @@ describe("Posts Routes Tests", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			expect(postsChain.orderBy).toBeCalledWith(asc(postData.publishedAt));
+			expect(db.query.posts.findMany).toHaveBeenCalledWith(
+				expect.objectContaining({
+					orderBy: { publishedAt: "asc" },
+				}),
+			);
 		});
 
 		test("only includes posts with a publishedAt date and noindex false", async () => {
-			const { postsChain } = mockDbSelect([]);
+			vi.mocked(db.query.posts.findMany).mockResolvedValue([]);
 
 			const response = await app.inject({
 				method: "GET",
@@ -240,13 +200,18 @@ describe("Posts Routes Tests", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			expect(postsChain.where).toBeCalledWith(
-				and(isNotNull(postData.publishedAt), eq(postData.noindex, false)),
+			expect(db.query.posts.findMany).toHaveBeenCalledWith(
+				expect.objectContaining({
+					where: expect.objectContaining({
+						publishedAt: { isNotNull: true },
+						noindex: false,
+					}),
+				}),
 			);
 		});
 
 		test("author filter adds an EXISTS clause matching co-authors, not just a primary author", async () => {
-			const { postsChain } = mockDbSelect([]);
+			vi.mocked(db.query.posts.findMany).mockResolvedValue([]);
 
 			const response = await app.inject({
 				method: "GET",
@@ -255,17 +220,17 @@ describe("Posts Routes Tests", () => {
 			});
 
 			expect(response.statusCode).toBe(200);
-			expect(postsChain.where).toBeCalledWith(
-				and(
-					isNotNull(postData.publishedAt),
-					eq(postData.noindex, false),
-					sql`exists (select 1 from ${postAuthors} where ${postAuthors.postSlug} = ${posts.slug} and ${postAuthors.authorSlug} = ${"crutchcorn"})`,
-				),
+			expect(db.query.posts.findMany).toHaveBeenCalledWith(
+				expect.objectContaining({
+					where: expect.objectContaining({
+						RAW: expect.any(Function),
+					}),
+				}),
 			);
 		});
 
 		test("returns an empty list for an author with no posts", async () => {
-			mockDbSelect([]);
+			vi.mocked(db.query.posts.findMany).mockResolvedValue([]);
 
 			const response = await app.inject({
 				method: "GET",
