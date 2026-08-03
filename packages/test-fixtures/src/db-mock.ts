@@ -26,7 +26,7 @@ export function createDbMock() {
 		const limit = vi.fn();
 		const where = vi.fn(() => ({ limit }));
 		const innerJoin = vi.fn(() => ({ where, innerJoin }));
-		return { innerJoin, where };
+		return { innerJoin, where, limit };
 	};
 
 	const db = {
