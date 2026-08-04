@@ -7,6 +7,7 @@
 	"scripts": {
 		"test:eslint": "eslint ./src",
 		"test:build": "publint --strict",
+		"test": "drizzle-kit check",
 		"drizzle:push": "drizzle-kit push",
 		"drizzle:generate": "drizzle-kit generate",
 		"build": "tsc --noEmit"
