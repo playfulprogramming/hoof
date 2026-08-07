@@ -1,6 +1,13 @@
 import processor from "./processor.ts";
 import { db, attachments } from "@playfulprogramming/db";
 import { s3 } from "@playfulprogramming/s3";
+import { lt } from "drizzle-orm";
+import type * as DrizzleOrm from "drizzle-orm";
+
+vi.mock("drizzle-orm", async (importOriginal) => {
+	const actual = await importOriginal<typeof DrizzleOrm>();
+	return { ...actual, lt: vi.fn(actual.lt) };
+});
 
 const NOW = new Date("2025-05-05T12:00:00Z");
 
@@ -33,6 +40,19 @@ test("Removes an attachment returned by the delete query from S3", async () => {
 		"posts/example-post/attachments/orphaned-sha.jpeg",
 	);
 	expect(s3.remove).toHaveBeenCalledTimes(1);
+});
+
+test("Uses a one-hour-old cutoff for the lastModified staleness check", async () => {
+	vi.setSystemTime(NOW);
+
+	vi.mocked(deleteAttachmentReturning).mockResolvedValueOnce([]);
+
+	await processor({} as never);
+
+	expect(lt).toHaveBeenCalledWith(
+		attachments.lastModified,
+		new Date(NOW.getTime() - 60 * 60 * 1000),
+	);
 });
 
 test("Does nothing when the delete query returns no rows", async () => {
