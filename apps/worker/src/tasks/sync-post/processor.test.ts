@@ -700,12 +700,14 @@ published: "2024-01-15T00:00:00Z"
 		sha: "notes-sha",
 		width: null,
 		height: null,
+		lastModified: expect.any(Date),
 	});
 	expect(db.insert(attachments).values).toHaveBeenCalledWith({
 		attachmentKey: "posts/attachment-post/attachments/banner-sha.jpeg",
 		sha: "banner-sha",
 		width: 1,
 		height: 1,
+		lastModified: expect.any(Date),
 	});
 	expect(db.insert(attachments).values).toHaveBeenCalledTimes(2);
 
@@ -913,6 +915,7 @@ published: "2024-01-15T00:00:00Z"
 		sha: "new-changed-sha",
 		width: null,
 		height: null,
+		lastModified: expect.any(Date),
 	});
 	expect(db.insert(attachments).values).toHaveBeenCalledTimes(1);
 

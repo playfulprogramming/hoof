@@ -1,141 +1,109 @@
 import processor from "./processor.ts";
-import { db, postAttachments } from "@playfulprogramming/db";
+import { db, attachments } from "@playfulprogramming/db";
 import { s3 } from "@playfulprogramming/s3";
 
 const NOW = new Date("2025-05-05T12:00:00Z");
-const ONE_HOUR_MS = 60 * 60 * 1000;
-const OUTSIDE_GRACE_PERIOD = new Date(NOW.getTime() - ONE_HOUR_MS - 1000);
-const INSIDE_GRACE_PERIOD = new Date(NOW.getTime() - 30 * 60 * 1000);
 
-test("Removes an attachment from S3 when no post_attachments row references it", async () => {
+const deleteAttachmentReturning = db
+	.delete(attachments)
+	.where(expect.anything()).returning;
+const insertAttachmentValues = db.insert(attachments).values;
+const insertAttachmentOnConflictDoUpdate = db
+	.insert(attachments)
+	.values(expect.anything()).onConflictDoUpdate;
+
+test("Removes an attachment returned by the delete query from S3", async () => {
 	vi.setSystemTime(NOW);
 
-	vi.mocked(s3.list).mockResolvedValue([
-		{
-			key: "posts/example-post/en/content.md",
-			lastModified: OUTSIDE_GRACE_PERIOD,
-		},
-		{
-			key: "posts/example-post/attachments/referenced-sha.pdf",
-			lastModified: OUTSIDE_GRACE_PERIOD,
-		},
-		{
-			key: "posts/example-post/attachments/orphaned-sha.jpeg",
-			lastModified: OUTSIDE_GRACE_PERIOD,
-		},
-	]);
-
-	vi.mocked(db.select).mockReturnValue({
-		from: vi.fn().mockResolvedValue([
+	vi.mocked(deleteAttachmentReturning)
+		.mockResolvedValueOnce([
 			{
-				attachmentKey: "posts/example-post/attachments/referenced-sha.pdf",
+				attachmentKey: "posts/example-post/attachments/orphaned-sha.jpeg",
+				sha: "orphaned-sha",
+				width: 100,
+				height: 100,
 			},
-		]),
-	} as never);
+		])
+		.mockResolvedValueOnce([]);
 
 	await processor({} as never);
 
-	expect(s3.remove).toBeCalledWith(
+	expect(s3.remove).toHaveBeenCalledWith(
 		"example-bucket",
 		"posts/example-post/attachments/orphaned-sha.jpeg",
 	);
-	expect(s3.remove).toBeCalledTimes(1);
+	expect(s3.remove).toHaveBeenCalledTimes(1);
 });
 
-test("Leaves an attachment alone when a post_attachments row still references it", async () => {
+test("Does nothing when the delete query returns no rows", async () => {
 	vi.setSystemTime(NOW);
 
-	vi.mocked(s3.list).mockResolvedValue([
-		{
-			key: "posts/example-post/attachments/referenced-sha.pdf",
-			lastModified: OUTSIDE_GRACE_PERIOD,
-		},
-	]);
+	vi.mocked(deleteAttachmentReturning).mockResolvedValueOnce([]);
 
-	vi.mocked(db.select).mockReturnValue({
-		from: vi.fn().mockResolvedValue([
+	await processor({} as never);
+
+	expect(s3.remove).not.toHaveBeenCalled();
+});
+
+test("Keeps deleting and removing until the delete query returns no more rows", async () => {
+	vi.setSystemTime(NOW);
+
+	vi.mocked(deleteAttachmentReturning)
+		.mockResolvedValueOnce([
 			{
-				attachmentKey: "posts/example-post/attachments/referenced-sha.pdf",
+				attachmentKey: "posts/example-post/attachments/first.jpeg",
+				sha: "first",
+				width: 1,
+				height: 1,
 			},
-		]),
-	} as never);
+		])
+		.mockResolvedValueOnce([
+			{
+				attachmentKey: "posts/example-post/attachments/second.jpeg",
+				sha: "second",
+				width: 1,
+				height: 1,
+			},
+		])
+		.mockResolvedValueOnce([]);
 
 	await processor({} as never);
 
-	expect(s3.remove).not.toBeCalled();
-});
-
-test("Does nothing when there are no attachment objects in S3", async () => {
-	vi.setSystemTime(NOW);
-
-	vi.mocked(s3.list).mockResolvedValue([
-		{
-			key: "posts/example-post/en/content.md",
-			lastModified: OUTSIDE_GRACE_PERIOD,
-		},
-	]);
-
-	await processor({} as never);
-
-	expect(db.select).not.toBeCalled();
-	expect(s3.remove).not.toBeCalled();
-});
-
-test("Queries the full attachment table with no per-post filter", async () => {
-	vi.setSystemTime(NOW);
-
-	vi.mocked(s3.list).mockResolvedValue([
-		{
-			key: "posts/example-post/attachments/orphaned-sha.jpeg",
-			lastModified: OUTSIDE_GRACE_PERIOD,
-		},
-	]);
-
-	const from = vi.fn().mockResolvedValue([]);
-	vi.mocked(db.select).mockReturnValue({ from } as never);
-
-	await processor({} as never);
-
-	expect(from).toBeCalledWith(postAttachments);
-	expect(s3.remove).toBeCalledWith(
+	expect(s3.remove).toHaveBeenNthCalledWith(
+		1,
 		"example-bucket",
-		"posts/example-post/attachments/orphaned-sha.jpeg",
+		"posts/example-post/attachments/first.jpeg",
 	);
+	expect(s3.remove).toHaveBeenNthCalledWith(
+		2,
+		"example-bucket",
+		"posts/example-post/attachments/second.jpeg",
+	);
+	expect(s3.remove).toHaveBeenCalledTimes(2);
 });
 
-test("Fails the job when an S3 removal rejects, rather than continuing past the error", async () => {
+test("Re-inserts the row and fails the job when S3 removal rejects, rather than leaking the object untracked", async () => {
 	vi.setSystemTime(NOW);
 
-	vi.mocked(s3.list).mockResolvedValue([
-		{
-			key: "posts/example-post/attachments/orphaned-sha.jpeg",
-			lastModified: OUTSIDE_GRACE_PERIOD,
-		},
-	]);
-
-	vi.mocked(db.select).mockReturnValue({
-		from: vi.fn().mockResolvedValue([]),
-	} as never);
+	const orphan = {
+		attachmentKey: "posts/example-post/attachments/orphaned-sha.jpeg",
+		sha: "orphaned-sha",
+		width: 100,
+		height: 100,
+	};
+	vi.mocked(deleteAttachmentReturning).mockResolvedValueOnce([orphan]);
 
 	const s3Error = new Error("S3 removal failed");
 	vi.mocked(s3.remove).mockRejectedValue(s3Error);
 
 	await expect(processor({} as never)).rejects.toThrow(s3Error);
-});
 
-test("Leaves an unreferenced attachment alone when it's within the grace period", async () => {
-	vi.setSystemTime(NOW);
-
-	vi.mocked(s3.list).mockResolvedValue([
-		{
-			key: "posts/example-post/attachments/fresh-sha.jpeg",
-			lastModified: INSIDE_GRACE_PERIOD,
-		},
-	]);
-
-	await processor({} as never);
-
-	// The grace period filters it out before the post_attachments query even runs
-	expect(db.select).not.toBeCalled();
-	expect(s3.remove).not.toBeCalled();
+	expect(insertAttachmentValues).toHaveBeenCalledWith({
+		...orphan,
+		lastModified: expect.any(Date),
+	});
+	expect(insertAttachmentOnConflictDoUpdate).toHaveBeenCalledWith({
+		target: attachments.attachmentKey,
+		set: { lastModified: expect.any(Date) },
+	});
 });
