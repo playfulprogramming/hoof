@@ -141,6 +141,7 @@ export function createDbMock() {
 			sha: {},
 			width: {},
 			height: {},
+			lastModified: {},
 		},
 		urlMetadata: {},
 		urlMetadataPost: {},

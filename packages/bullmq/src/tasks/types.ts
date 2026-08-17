@@ -24,6 +24,7 @@ export const Tasks = {
 	URL_METADATA: "url-metadata",
 	POST_IMAGES: "post-images",
 	GRANT_AUTHOR_ACHIEVEMENTS: "grant-author-achievements",
+	CLEANUP_ATTACHMENTS: "cleanup-attachments",
 	DELETE_S3_OBJECT: "delete-s3-object",
 } as const;
 
@@ -38,6 +39,7 @@ export interface TaskInputs {
 	[Tasks.URL_METADATA]: UrlMetadataInput;
 	[Tasks.POST_IMAGES]: PostImageInput;
 	[Tasks.GRANT_AUTHOR_ACHIEVEMENTS]: GrantAuthorAchievementsInput;
+	[Tasks.CLEANUP_ATTACHMENTS]: object;
 	[Tasks.DELETE_S3_OBJECT]: DeleteS3ObjectInput;
 }
 
@@ -51,6 +53,7 @@ export interface TaskOutputs {
 	[Tasks.URL_METADATA]: UrlMetadataOutput;
 	[Tasks.POST_IMAGES]: PostImageOutput;
 	[Tasks.GRANT_AUTHOR_ACHIEVEMENTS]: GrantAuthorAchievementsOutput;
+	[Tasks.CLEANUP_ATTACHMENTS]: void;
 	[Tasks.DELETE_S3_OBJECT]: DeleteS3ObjectOutput;
 }
 

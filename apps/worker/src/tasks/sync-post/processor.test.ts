@@ -29,6 +29,9 @@ const selectPreviousAuthors = db
 const insertPostReturning = db
 	.insert(posts)
 	.values(expect.anything()).returning;
+const insertAttachmentOnConflictDoUpdate = db
+	.insert(attachments)
+	.values(expect.anything()).onConflictDoUpdate;
 
 test("Syncs a standalone post successfully", async () => {
 	const postId = ":test-post-uuid:";
@@ -700,14 +703,20 @@ published: "2024-01-15T00:00:00Z"
 		sha: "notes-sha",
 		width: null,
 		height: null,
+		lastModified: expect.any(Date),
 	});
 	expect(db.insert(attachments).values).toHaveBeenCalledWith({
 		attachmentKey: "posts/attachment-post/attachments/banner-sha.jpeg",
 		sha: "banner-sha",
 		width: 1,
 		height: 1,
+		lastModified: expect.any(Date),
 	});
 	expect(db.insert(attachments).values).toHaveBeenCalledTimes(2);
+	expect(insertAttachmentOnConflictDoUpdate).toHaveBeenCalledWith({
+		target: attachments.attachmentKey,
+		set: { lastModified: expect.any(Date) },
+	});
 
 	expect(db.insert(postAttachments).values).toHaveBeenCalledExactlyOnceWith([
 		{
@@ -913,6 +922,7 @@ published: "2024-01-15T00:00:00Z"
 		sha: "new-changed-sha",
 		width: null,
 		height: null,
+		lastModified: expect.any(Date),
 	});
 	expect(db.insert(attachments).values).toHaveBeenCalledTimes(1);
 

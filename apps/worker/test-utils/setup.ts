@@ -44,6 +44,7 @@ vi.mock("@playfulprogramming/s3", () => {
 			ensureBucket: vi.fn(() => "example-bucket"),
 			upload: vi.fn(),
 			remove: vi.fn(),
+			list: vi.fn(() => []),
 			getLastModified: vi.fn(),
 			unmodifiedSince: vi.fn(() => true),
 		},
