@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { s3 } from "@playfulprogramming/s3";
-import { type Mock } from "vitest";
+import { vi } from "vitest";
 import { mockEndpoint } from "../../../../test-utils/server.ts";
 import { processImages } from "./processImage.ts";
 
@@ -28,6 +28,16 @@ test("decodes an inline percent-encoded SVG data URL without a network request",
 		"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Ccircle fill='#ff0000' cx='5' cy='5' r='5'/%3E%3C/svg%3E",
 	);
 
+	// setup.ts's default s3.upload mock drains the file stream itself (to let
+	// sharp's resize pipeline settle), which leaves nothing to read back from
+	// mock.calls afterward - capture the content as it's uploaded instead.
+	let uploadedSvg = "";
+	vi.mocked(s3.upload).mockImplementationOnce(
+		async (_bucket, _key, _tag, file) => {
+			uploadedSvg = await readStreamToString(file as NodeJS.ReadableStream);
+		},
+	);
+
 	const result = await processImages(
 		[dataUrl],
 		24,
@@ -49,8 +59,6 @@ test("decodes an inline percent-encoded SVG data URL without a network request",
 		"image/svg+xml",
 	);
 
-	const uploadedStream = (s3.upload as Mock).mock.calls[0][3];
-	const uploadedSvg = await readStreamToString(uploadedStream);
 	expect(uploadedSvg).toContain("<svg");
 	// cx/cy/r sit after the unescaped `#` in the raw data URL - their
 	// presence proves url.href (not the hash-truncated url.pathname) was

@@ -7,7 +7,6 @@ import { env } from "@playfulprogramming/common";
 import { s3 } from "@playfulprogramming/s3";
 import { fetchAsBot } from "../../../utils/fetchAsBot.ts";
 import { setTimeout } from "timers/promises";
-import type { Dispatcher } from "undici";
 
 export interface ProcessImageResult {
 	key: string;
@@ -15,44 +14,58 @@ export interface ProcessImageResult {
 	height?: number;
 }
 
+interface ReadImageResult {
+	body: stream.Readable;
+	format: string;
+	width?: number;
+	height?: number;
+	// undefined for sources with no HTTP resource to compare a last-modified
+	// header against (e.g. data: URLs) - always upload in that case
+	lastModified?: Date;
+}
+
 async function compareLastModified(
-	request: Dispatcher.ResponseData<null>,
+	lastModified: Date,
 	bucket: string,
 	key: string,
 	signal?: AbortSignal,
 ): Promise<boolean> {
-	// If there is a last-modified header, compare it to the header from S3
-	const lastModified = request.headers["last-modified"]?.toString();
-	if (lastModified) {
-		const existingFile = await fetchAsBot({
-			url: new URL(`${bucket}/${key}`, env.S3_PUBLIC_URL),
-			method: "HEAD",
-			skipRobotsCheck: true,
-			signal,
-		}).catch(() => undefined);
+	const existingFile = await fetchAsBot({
+		url: new URL(`${bucket}/${key}`, env.S3_PUBLIC_URL),
+		method: "HEAD",
+		skipRobotsCheck: true,
+		signal,
+	}).catch(() => undefined);
 
-		if (existingFile && existingFile.statusCode == 200) {
-			const modS3 = existingFile.headers["last-modified"]?.toString();
-			const modExternal = lastModified;
+	if (existingFile && existingFile.statusCode == 200) {
+		const modS3 = existingFile.headers["last-modified"]?.toString();
 
-			if (modS3 && modExternal) {
-				return new Date(modS3) > new Date(modExternal);
-			} else {
-				console.error("File exists in S3, but has no last-modified header.");
-				return false;
-			}
+		if (modS3) {
+			return new Date(modS3) > lastModified;
+		} else {
+			console.error("File exists in S3, but has no last-modified header.");
+			return false;
 		}
 	}
 
 	return false;
 }
 
+async function readStreamToBuffer(readable: stream.Readable): Promise<Buffer> {
+	const chunks: Buffer[] = [];
+	for await (const chunk of readable) {
+		chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+	}
+	return Buffer.concat(chunks);
+}
+
 async function uploadSvg(
-	svg: string,
+	body: stream.Readable,
 	bucket: string,
 	uploadKey: string,
 	tag: string | undefined,
-): Promise<void> {
+): Promise<ProcessImageResult> {
+	const svg = (await readStreamToBuffer(body)).toString("utf-8");
 	const optimizedSvg = svgo.optimize(svg, { multipass: true }).data;
 	await s3.upload(
 		bucket,
@@ -61,65 +74,44 @@ async function uploadSvg(
 		stream.Readable.from([optimizedSvg]),
 		"image/svg+xml",
 	);
+	return { key: uploadKey };
+}
+
+function computeRasterDimensions(
+	image: Pick<ReadImageResult, "width" | "height">,
+	width: number,
+): { width: number; height?: number } {
+	const transformWidth = Math.min(width, image.width || width);
+	const transformHeight =
+		image.height && image.width
+			? Math.round(image.height * (transformWidth / image.width))
+			: undefined;
+
+	return { width: transformWidth, height: transformHeight };
 }
 
 async function uploadRasterImage(
-	body: NodeJS.ReadableStream,
-	url: URL,
-	urlHash: string,
-	width: number,
+	image: ReadImageResult,
+	dimensions: { width: number; height?: number },
 	bucket: string,
-	key: string,
+	uploadKey: string,
 	tag: string | undefined,
-	signal: AbortSignal | undefined,
-	// undefined for sources with no HTTP resource to compare a last-modified
-	// header against (e.g. data: URLs) - always upload in that case
-	request: Dispatcher.ResponseData<null> | undefined,
-): Promise<ProcessImageResult | undefined> {
-	const pipeline = sharp();
-	const metadataStream = body.pipe(pipeline);
-	const metadata = await Promise.race([
-		setTimeout(10 * 1000).then(() => undefined),
-		pipeline.metadata().catch(() => undefined),
-	]);
+): Promise<ProcessImageResult> {
+	const transformer = sharp().resize(dimensions.width);
+	const transformerStream = image.body.pipe(transformer);
 
-	if (!metadata || !metadata.format) {
-		console.error(`Image format for ${url} could not be found.`);
-		return undefined;
-	}
-
-	const uploadKey = `${key}-${urlHash}.${metadata.format}`;
-
-	const transformWidth = Math.min(width, metadata.width || width);
-	const transformHeight =
-		metadata.height && metadata.width
-			? Math.round(metadata.height * (transformWidth / metadata.width))
-			: undefined;
-
-	const alreadyStored =
-		request !== undefined &&
-		(await compareLastModified(request, bucket, uploadKey, signal));
-
-	if (alreadyStored) {
-		console.log(`Skipping ${uploadKey}, as it has already been stored.`);
-		metadataStream.destroy();
-	} else {
-		const transformer = sharp().resize(transformWidth);
-		const transformerStream = metadataStream.pipe(transformer);
-
-		await s3.upload(
-			bucket,
-			uploadKey,
-			tag,
-			transformerStream,
-			`image/${metadata.format}`,
-		);
-	}
+	await s3.upload(
+		bucket,
+		uploadKey,
+		tag,
+		transformerStream,
+		`image/${image.format}`,
+	);
 
 	return {
 		key: uploadKey,
-		width: transformWidth,
-		height: transformHeight,
+		width: dimensions.width,
+		height: dimensions.height,
 	};
 }
 
@@ -150,64 +142,59 @@ function parseDataUrl(url: URL): ParsedDataUrl | undefined {
 	return { mediaType, isBase64, payload };
 }
 
-async function processDataUrlImage(
+async function readRasterMetadata(
+	body: stream.Readable,
 	url: URL,
-	width: number,
-	bucket: string,
-	key: string,
-	tag: string | undefined,
-	signal: AbortSignal | undefined,
-): Promise<ProcessImageResult | undefined> {
+): Promise<ReadImageResult | undefined> {
+	const pipeline = sharp();
+	const metadataStream = body.pipe(pipeline);
+	const metadata = await Promise.race([
+		setTimeout(10 * 1000).then(() => undefined),
+		pipeline.metadata().catch(() => undefined),
+	]);
+
+	if (!metadata || !metadata.format) {
+		console.error(`Image format for ${url} could not be found.`);
+		return undefined;
+	}
+
+	return {
+		body: metadataStream,
+		format: metadata.format,
+		width: metadata.width,
+		height: metadata.height,
+	};
+}
+
+async function readDataUrlImage(
+	url: URL,
+): Promise<ReadImageResult | undefined> {
 	const parsed = parseDataUrl(url);
 	if (!parsed) {
 		console.error(`Unable to parse data URL ${url}`);
 		return undefined;
 	}
 
-	const urlHash = crypto.createHash("md5").update(url.href).digest("hex");
 	const isSvg = parsed.mediaType.includes("image/svg");
-
 	if (isSvg) {
 		const svg = parsed.isBase64
 			? Buffer.from(parsed.payload, "base64").toString("utf-8")
 			: decodeURIComponent(parsed.payload);
 
-		const uploadKey = `${key}-${urlHash}.svg`;
-		await uploadSvg(svg, bucket, uploadKey, tag);
-		return { key: uploadKey };
+		return { body: stream.Readable.from([svg]), format: "svg" };
 	}
 
 	const buffer = parsed.isBase64
 		? Buffer.from(parsed.payload, "base64")
 		: Buffer.from(decodeURIComponent(parsed.payload), "utf-8");
 
-	const body = stream.Readable.from(buffer);
-
-	return uploadRasterImage(
-		body,
-		url,
-		urlHash,
-		width,
-		bucket,
-		key,
-		tag,
-		signal,
-		undefined,
-	);
+	return readRasterMetadata(stream.Readable.from(buffer), url);
 }
 
-async function processImage(
+async function readFetchedImage(
 	url: URL,
-	width: number,
-	bucket: string,
-	key: string,
-	tag?: string,
-	signal?: AbortSignal,
-): Promise<ProcessImageResult | undefined> {
-	if (url.protocol === "data:") {
-		return processDataUrlImage(url, width, bucket, key, tag, signal);
-	}
-
+	signal: AbortSignal | undefined,
+): Promise<ReadImageResult | undefined> {
 	const request = await fetchAsBot({ url, method: "GET", signal }).catch(
 		(e) => {
 			console.error(`Error fetching ${url}`, e);
@@ -223,7 +210,10 @@ async function processImage(
 		return undefined;
 	}
 
-	const urlHash = crypto.createHash("md5").update(url.href).digest("hex");
+	const lastModifiedHeader = request.headers["last-modified"]?.toString();
+	const lastModified = lastModifiedHeader
+		? new Date(lastModifiedHeader)
+		: undefined;
 
 	const isSvg =
 		request.headers["content-type"]?.includes("image/svg") ||
@@ -231,32 +221,66 @@ async function processImage(
 			path.extname(url.pathname) === ".svg");
 
 	if (isSvg) {
-		const uploadKey = `${key}-${urlHash}.svg`;
-
-		if (await compareLastModified(request, bucket, uploadKey, signal)) {
-			console.log(`Skipping ${uploadKey}, as it has already been stored.`);
-			await body.dump();
-		} else {
-			const svg = await body.text();
-			await uploadSvg(svg, bucket, uploadKey, tag);
-		}
-
-		return { key: uploadKey };
+		return { body, format: "svg", lastModified };
 	}
 
-	const result = await uploadRasterImage(
-		body,
-		url,
-		urlHash,
-		width,
-		bucket,
-		key,
-		tag,
-		signal,
-		request,
-	);
-	await body.dump();
-	return result;
+	const raster = await readRasterMetadata(body, url);
+	if (!raster) {
+		return undefined;
+	}
+
+	return { ...raster, lastModified };
+}
+
+async function readImage(
+	url: URL,
+	signal: AbortSignal | undefined,
+): Promise<ReadImageResult | undefined> {
+	if (url.protocol === "data:") {
+		return readDataUrlImage(url);
+	}
+
+	return readFetchedImage(url, signal);
+}
+
+async function processImage(
+	url: URL,
+	width: number,
+	bucket: string,
+	key: string,
+	tag?: string,
+	signal?: AbortSignal,
+): Promise<ProcessImageResult | undefined> {
+	const image = await readImage(url, signal);
+	if (!image) {
+		return undefined;
+	}
+
+	const urlHash = crypto.createHash("md5").update(url.href).digest("hex");
+	const uploadKey = `${key}-${urlHash}.${image.format}`;
+
+	const alreadyStored =
+		image.lastModified !== undefined &&
+		(await compareLastModified(image.lastModified, bucket, uploadKey, signal));
+
+	if (alreadyStored) {
+		console.log(`Skipping ${uploadKey}, as it has already been stored.`);
+	}
+
+	if (image.format === "svg") {
+		if (alreadyStored) {
+			image.body.destroy();
+			return { key: uploadKey };
+		}
+		return uploadSvg(image.body, bucket, uploadKey, tag);
+	}
+
+	const dimensions = computeRasterDimensions(image, width);
+	if (alreadyStored) {
+		image.body.destroy();
+		return { key: uploadKey, ...dimensions };
+	}
+	return uploadRasterImage(image, dimensions, bucket, uploadKey, tag);
 }
 
 export async function processImages(
