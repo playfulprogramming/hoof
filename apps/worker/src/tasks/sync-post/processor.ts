@@ -237,6 +237,9 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	// Phase 3: Discover, resize, diff, and upload post attachments
 	// =========================================================================
 	const attachmentRows: AttachmentRow[] = [];
+	// Note: this can pick up attachments from different branches
+	// Attachments are only keyed by post/sha, so an unchanged attachment will
+	// reference the same record
 	const existingAttachmentRecords = await db
 		.select({ attachmentKey: attachments.attachmentKey })
 		.from(attachments)
@@ -307,6 +310,11 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		);
 		console.log(`Uploaded attachment ${attachmentKey} to S3`);
 
+		// onConflictDoUpdate (not DoNothing) so a conflicting insert - e.g. the
+		// same sha reused across posts/branches - still refreshes lastModified.
+		// Otherwise a stale timestamp could let the cleanup sweep delete this row
+		// in the narrow window before its new post_attachments reference commits.
+		const attachmentLastModified = new Date();
 		await db
 			.insert(attachments)
 			.values({
@@ -314,8 +322,12 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 				sha,
 				width,
 				height,
+				lastModified: attachmentLastModified,
 			})
-			.onConflictDoNothing();
+			.onConflictDoUpdate({
+				target: attachments.attachmentKey,
+				set: { lastModified: attachmentLastModified },
+			});
 
 		attachmentRows.push({
 			attachmentKey,

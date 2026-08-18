@@ -1,0 +1,1 @@
+CREATE INDEX "attachments_last_modified_idx" ON "attachments" ("last_modified");

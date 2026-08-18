@@ -1,6 +1,6 @@
 import "./server.ts";
 import { vi, afterEach, beforeEach } from "vitest";
-import "@playfulprogramming/test-fixtures";
+import { createDbMock } from "@playfulprogramming/test-fixtures";
 import { s3 } from "@playfulprogramming/s3";
 import { Readable } from "node:stream";
 
@@ -27,8 +27,16 @@ vi.mock("@playfulprogramming/bullmq", async () => {
 		flowProducer: { add: vi.fn() },
 		createQueue: vi.fn(),
 		createJob: vi.fn(),
+		// enqueueS3ObjectDeletion calls the real createJob internally via a
+		// relative import, which bypasses the createJob mock above - it needs
+		// its own override so tests don't hit a real BullMQ queue/Redis.
+		enqueueS3ObjectDeletion: vi.fn(),
 	};
 });
+
+vi.mock("../src/utils/scheduleS3ObjectDeletion.ts", () => ({
+	scheduleS3ObjectDeletion: vi.fn(),
+}));
 
 vi.mock("@playfulprogramming/s3", () => {
 	return {
@@ -36,122 +44,14 @@ vi.mock("@playfulprogramming/s3", () => {
 			ensureBucket: vi.fn(() => "example-bucket"),
 			upload: vi.fn(),
 			remove: vi.fn(),
+			list: vi.fn(() => []),
+			getLastModified: vi.fn(),
+			unmodifiedSince: vi.fn(() => true),
 		},
 	};
 });
 
-vi.mock("@playfulprogramming/db", () => {
-	const insertMap = new Map<unknown, unknown>();
-	const insertMockResponse = () => {
-		const returning = vi.fn();
-		const onConflictDoNothing = vi.fn(() => ({ returning }));
-		const onConflictDoUpdate = vi.fn(() => ({ returning }));
-		return {
-			values: vi.fn(() => ({
-				returning,
-				onConflictDoNothing,
-				onConflictDoUpdate,
-			})),
-		};
-	};
-
-	const deleteMap = new Map<unknown, unknown>();
-	const deleteMockResponse = () => {
-		const returning = vi.fn();
-		return { where: vi.fn(() => ({ returning })) };
-	};
-
-	const selectMap = new Map<unknown, unknown>();
-	const selectMockResponse = () => {
-		const limit = vi.fn();
-		const where = vi.fn(() => ({ limit }));
-		const innerJoin = vi.fn(() => ({ where, innerJoin }));
-		return { innerJoin, where };
-	};
-
-	const db = {
-		insert: vi.fn((arg) => {
-			return (
-				insertMap.get(arg) ?? insertMap.set(arg, insertMockResponse()).get(arg)
-			);
-		}),
-		delete: vi.fn((arg) => {
-			return (
-				deleteMap.get(arg) ?? deleteMap.set(arg, deleteMockResponse()).get(arg)
-			);
-		}),
-		select: vi.fn(() => ({
-			from: vi.fn((arg) => {
-				return (
-					selectMap.get(arg) ??
-					selectMap.set(arg, selectMockResponse()).get(arg)
-				);
-			}),
-		})),
-		transaction: vi.fn((cb: (tx: unknown) => unknown) => cb(db)),
-	};
-
-	return {
-		profiles: {
-			slug: {},
-		},
-		profileAchievements: {
-			profileSlug: {},
-			achievementId: {},
-		},
-		authorRoles: {
-			profileSlug: {},
-			role: {},
-		},
-		posts: {
-			id: {},
-			slug: {},
-			locale: {},
-			branch: {},
-		},
-		collections: {
-			slug: {},
-		},
-		collectionData: {
-			slug: {},
-			locale: {},
-		},
-		collectionAuthors: {
-			collectionSlug: {},
-			authorSlug: {},
-		},
-		collectionTags: {
-			collectionSlug: {},
-			tag: {},
-		},
-		postAuthors: {
-			postId: {},
-			authorSlug: {},
-		},
-		postTags: {
-			postId: {},
-			tag: {},
-		},
-		postAttachments: {
-			postId: {},
-			attachmentKey: {},
-		},
-		attachments: {
-			attachmentKey: {},
-			attachmentName: {},
-			sha: {},
-		},
-		collectionChapters: {
-			postSlug: {},
-			locale: {},
-		},
-		urlMetadata: {},
-		urlMetadataPost: {},
-		urlMetadataGist: {},
-		urlMetadataGistFile: {},
-		db,
-	};
-});
+vi.mock("@playfulprogramming/db", () => createDbMock());
 
 vi.mock("@playfulprogramming/github-api", async (importOriginal) => {
 	const actual = await importOriginal();
