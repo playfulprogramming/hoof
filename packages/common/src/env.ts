@@ -1,8 +1,8 @@
-import { type Static, Type } from "typebox";
+import { Type } from "typebox";
 import { Settings } from "typebox/system";
 import { Value } from "typebox/value";
 
-export const EnvSchema = Type.Object({
+const EnvSchema = Type.Object({
 	PORT: Type.Integer({ default: 3000 }),
 	WORKER_PORT: Type.Integer({ default: 3001 }),
 	ENVIRONMENT: Type.Union([
@@ -33,8 +33,6 @@ export const EnvSchema = Type.Object({
 	GITHUB_REPO_NAME: Type.String({ default: "playfulprogramming" }),
 	GITHUB_TOKEN: Type.Optional(Type.String()),
 });
-
-export type EnvType = Static<typeof EnvSchema>;
 
 Settings.Set({ correctiveParse: true });
 export const env = Value.Parse(EnvSchema, { ...process.env });

@@ -15,7 +15,7 @@ export type DeleteS3ObjectOutput = void;
 
 // Grace period before a scheduled S3 deletion actually runs, so the frontend
 // or CDN doesn't hit a 404 for a key it just fetched or cached.
-export const DELETE_S3_OBJECT_GRACE_PERIOD_MS = 24 * 60 * 60 * 1000;
+const DELETE_S3_OBJECT_GRACE_PERIOD_MS = 24 * 60 * 60 * 1000;
 
 export async function enqueueS3ObjectDeletion(
 	bucket: string,
