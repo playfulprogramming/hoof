@@ -5,6 +5,9 @@
 	"workspaces": {
 		"apps/worker": {
 			"entry": ["src/tasks/*/processor.ts"]
+		},
+		"packages/*": {
+			"includeEntryExports": true
 		}
 	}
 }

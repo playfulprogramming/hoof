@@ -3,9 +3,7 @@ import {
 	BucketAlreadyOwnedByYou,
 	CreateBucketCommand,
 	DeleteObjectCommand,
-	GetObjectCommand,
 	HeadObjectCommand,
-	NoSuchKey,
 	PutBucketPolicyCommand,
 } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
@@ -54,35 +52,8 @@ export async function ensureBucket(name: string) {
 	return name;
 }
 
-export async function exists(bucket: string, key: string) {
-	try {
-		const obj = await client.send(
-			new GetObjectCommand({ Bucket: bucket, Key: key }),
-		);
-		return !!obj;
-	} catch (e) {
-		if (e instanceof NoSuchKey) return false;
-		throw e;
-	}
-}
-
 export async function remove(bucket: string, key: string) {
 	await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
-}
-
-export async function matchesEtag(
-	bucket: string,
-	key: string,
-	etag: string,
-): Promise<boolean> {
-	try {
-		const obj = await client.send(
-			new HeadObjectCommand({ Bucket: bucket, Key: key, IfMatch: etag }),
-		);
-		return !!obj;
-	} catch (_e) {
-		return false;
-	}
 }
 
 export async function getLastModified(

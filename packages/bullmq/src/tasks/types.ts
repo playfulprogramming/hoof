@@ -28,7 +28,7 @@ export const Tasks = {
 	DELETE_S3_OBJECT: "delete-s3-object",
 } as const;
 
-export type TasksKeys = keyof typeof Tasks;
+type TasksKeys = keyof typeof Tasks;
 export type TasksValues = (typeof Tasks)[TasksKeys];
 
 export interface TaskInputs {
@@ -43,8 +43,6 @@ export interface TaskInputs {
 	[Tasks.DELETE_S3_OBJECT]: DeleteS3ObjectInput;
 }
 
-export type TaskInputsValues = TaskInputs[TasksValues];
-
 export interface TaskOutputs {
 	[Tasks.SYNC_ALL]: object;
 	[Tasks.SYNC_AUTHOR]: SyncAuthorOutput;
@@ -56,5 +54,3 @@ export interface TaskOutputs {
 	[Tasks.CLEANUP_ATTACHMENTS]: void;
 	[Tasks.DELETE_S3_OBJECT]: DeleteS3ObjectOutput;
 }
-
-export type TaskOutputsValues = TaskOutputs[TasksValues];

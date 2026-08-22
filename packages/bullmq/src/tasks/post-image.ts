@@ -1,6 +1,8 @@
 import { Type, type Static } from "typebox";
 
-export const PostImageInputSchema = Type.Object(
+// Only used to derive PostImageInput's type below via `Static<>` - never read as a value.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const PostImageInputSchema = Type.Object(
 	{
 		slug: Type.String(),
 		// `path` and `author` are temporary, will be removed after https://github.com/playfulprogramming/hoof/issues/18
