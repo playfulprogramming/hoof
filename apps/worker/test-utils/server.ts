@@ -1,12 +1,20 @@
 import { MockAgent, setGlobalDispatcher } from "undici";
 
-const mockAgent = new MockAgent({
-	connections: 1,
-	bodyTimeout: 10,
-	connectTimeout: 10,
-	headersTimeout: 10,
+let mockAgent: MockAgent;
+beforeEach(() => {
+	mockAgent = new MockAgent({
+		connections: 1,
+		bodyTimeout: 10,
+		connectTimeout: 10,
+		headersTimeout: 10,
+	});
+	mockAgent.disableNetConnect();
+	setGlobalDispatcher(mockAgent);
 });
-setGlobalDispatcher(mockAgent);
+afterEach(async () => {
+	mockAgent.assertNoPendingInterceptors();
+	await mockAgent.close();
+});
 
 interface MockEndpointProps {
 	path: string | URL;
@@ -14,6 +22,7 @@ interface MockEndpointProps {
 	headers?: Record<string, string>;
 	method?: "get" | "post" | "put" | "delete";
 	status?: number;
+	repeatTimes?: number;
 }
 
 export function mockEndpoint({
@@ -22,6 +31,7 @@ export function mockEndpoint({
 	headers,
 	method = "get",
 	status = 200,
+	repeatTimes = 1,
 }: MockEndpointProps) {
 	const url = path instanceof URL ? path : new URL(path);
 	mockAgent
@@ -32,5 +42,6 @@ export function mockEndpoint({
 		})
 		.reply(status, body, {
 			headers,
-		});
+		})
+		.times(repeatTimes);
 }

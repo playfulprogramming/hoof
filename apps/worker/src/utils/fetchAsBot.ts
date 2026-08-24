@@ -1,7 +1,9 @@
-import { request, stream, type Dispatcher } from "undici";
+import { createWriteStream } from "fs";
 import { LRUCache } from "lru-cache";
+import { devNull } from "os";
 import robotsParserDefault, { type Robot } from "robots-parser";
-import type { Writable } from "stream";
+import { type Writable } from "stream";
+import { request, stream, type Dispatcher } from "undici";
 const robotsParser =
 	robotsParserDefault as never as typeof robotsParserDefault.default;
 
@@ -42,11 +44,22 @@ async function getRobots(input: URL): Promise<Robot | undefined> {
 	return robotsParser(robotsUrl.toString(), robots);
 }
 
+async function checkRobotsAccess(url: URL) {
+	const robots = await getRobots(url);
+
+	if (robots && robots.isDisallowed(url.toString(), userAgent)) {
+		throw new RobotDeniedError(
+			`${userAgent} is disallowed from ${url.hostname}!`,
+		);
+	}
+}
+
 type FetchAsBotInit = Omit<
 	Dispatcher.RequestOptions<null>,
-	"origin" | "path"
+	"origin" | "path" | "method"
 > & {
 	url: string | URL;
+	method: "GET" | "POST" | "PUT" | "DELETE" | "HEAD";
 	skipRobotsCheck?: boolean;
 	maxLength?: number;
 	followRedirects?: number;
@@ -68,18 +81,12 @@ export async function fetchAsBot(options: FetchAsBotInit) {
 	} = options;
 	const parsedUrl = url instanceof URL ? url : new URL(url);
 	if (!skipRobotsCheck) {
-		const robots = await getRobots(parsedUrl);
-
-		if (robots && robots.isDisallowed(url.toString(), userAgent)) {
-			throw new RobotDeniedError(
-				`${userAgent} is disallowed from ${parsedUrl.hostname}!`,
-			);
-		}
+		await checkRobotsAccess(parsedUrl);
 	}
 
-	console.debug(init.method ?? "GET", parsedUrl.href);
+	console.log(init.method ?? "GET", parsedUrl.href);
 
-	const response = await request(url, {
+	const response = await request(parsedUrl, {
 		...init,
 		headers: {
 			"User-Agent": userAgent,
@@ -89,61 +96,147 @@ export async function fetchAsBot(options: FetchAsBotInit) {
 		signal: init?.signal ?? AbortSignal.timeout(10 * 1000),
 	});
 
-	if (response.statusCode == 301 || response.statusCode == 302) {
+	if (
+		[301, 302, 303, 307, 308].includes(response.statusCode) &&
+		followRedirects > 0
+	) {
 		await response.body.dump();
-		const newLocation = response.headers["location"]?.toString();
-		console.log(`redirect (${response.statusCode})`);
 
-		if (followRedirects > 0 && newLocation && URL.canParse(newLocation)) {
-			const newUrl = new URL(newLocation);
+		const newLocation = response.headers["location"]?.toString();
+		const newLocationUrl = newLocation
+			? URL.parse(newLocation, parsedUrl)
+			: null;
+		if (newLocationUrl) {
+			console.log(
+				`redirect (${response.statusCode}) [${parsedUrl} -> ${newLocationUrl}]`,
+			);
+
+			if (!["https:", "http:"].includes(newLocationUrl.protocol)) {
+				throw new Error(`Invalid redirect protocol for ${parsedUrl}`);
+			}
+
 			return await fetchAsBot({
 				...options,
-				url: newUrl,
+				url: newLocationUrl,
 				followRedirects: followRedirects - 1,
 			});
+		} else {
+			throw new Error(
+				`The redirect location ${newLocation} couldn't be parsed as a URL for ${parsedUrl}`,
+			);
 		}
 	}
 
 	if (response.statusCode < 200 || response.statusCode > 299) {
 		await response.body.dump();
-		throw new Error(`Request ${url} returned ${response.statusCode}`);
+		throw new Error(`Request ${parsedUrl} returned ${response.statusCode}`);
 	}
 
 	return response;
 }
+
+interface FetchAsBotStreamFactoryOpaque {
+	writable: Writable;
+	followRedirects: number;
+	currentUrl: URL;
+	redirect: boolean;
+	error: Error | null;
+}
+
+const fetchAsBotStreamFactory: Dispatcher.StreamFactory<
+	FetchAsBotStreamFactoryOpaque
+> = ({ opaque, statusCode, headers }) => {
+	opaque.redirect = false;
+
+	if (
+		[301, 302, 303, 307, 308].includes(statusCode) &&
+		opaque.followRedirects > 0
+	) {
+		const newLocation = headers["location"]?.toString();
+		const newLocationUrl = newLocation
+			? URL.parse(newLocation, opaque.currentUrl)
+			: null;
+		if (newLocationUrl) {
+			console.log(
+				`redirect (${statusCode}) [${opaque.currentUrl} -> ${newLocationUrl}]`,
+			);
+
+			if (!["https:", "http:"].includes(newLocationUrl.protocol)) {
+				opaque.error = new Error(
+					`Invalid redirect protocol for ${opaque.currentUrl}`,
+				);
+				return createWriteStream(devNull);
+			}
+
+			opaque.currentUrl = newLocationUrl;
+			opaque.followRedirects -= 1;
+			opaque.redirect = true;
+		} else {
+			opaque.error = new Error(
+				`The redirect location ${newLocation} couldn't be parsed as a URL for ${opaque.currentUrl}`,
+			);
+		}
+
+		return createWriteStream(devNull);
+	}
+
+	if (statusCode < 200 || statusCode > 299) {
+		opaque.error = new Error(
+			`Request ${opaque.currentUrl} returned ${statusCode}`,
+		);
+
+		return createWriteStream(devNull);
+	}
+
+	return opaque.writable;
+};
 
 export async function fetchAsBotStream({
 	url,
 	skipRobotsCheck,
 	maxLength,
 	writable,
+	followRedirects = 10,
 	...init
 }: FetchAsBotInit & { writable: Writable }) {
 	const parsedUrl = url instanceof URL ? url : new URL(url);
-	if (!skipRobotsCheck) {
-		const robots = await getRobots(parsedUrl);
 
-		if (robots && robots.isDisallowed(url.toString(), userAgent)) {
-			throw new RobotDeniedError(
-				`${userAgent} is disallowed from ${parsedUrl.hostname}!`,
-			);
+	console.log(init.method ?? "GET", parsedUrl.href);
+
+	const opaque: FetchAsBotStreamFactoryOpaque = {
+		writable,
+		followRedirects,
+		currentUrl: parsedUrl,
+		redirect: false,
+		error: null,
+	};
+
+	while (true) {
+		if (!skipRobotsCheck) {
+			await checkRobotsAccess(opaque.currentUrl);
+		}
+
+		await stream(
+			opaque.currentUrl,
+			{
+				...init,
+				headers: {
+					"User-Agent": userAgent,
+					"Accept-Language": "en",
+					...init?.headers,
+				},
+				signal: init?.signal ?? AbortSignal.timeout(10 * 1000),
+				opaque,
+			},
+			fetchAsBotStreamFactory,
+		);
+
+		if (opaque.error) {
+			throw opaque.error;
+		}
+
+		if (!opaque.redirect) {
+			break;
 		}
 	}
-
-	console.debug(init.method ?? "GET", parsedUrl.href);
-
-	await stream(
-		url,
-		{
-			...init,
-			headers: {
-				"User-Agent": userAgent,
-				"Accept-Language": "en",
-				...init?.headers,
-			},
-			signal: init?.signal ?? AbortSignal.timeout(10 * 1000),
-			opaque: writable,
-		},
-		({ opaque }) => opaque,
-	);
 }
