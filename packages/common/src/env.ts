@@ -32,6 +32,7 @@ const EnvSchema = Type.Object({
 	GITHUB_REPO_OWNER: Type.String({ default: "playfulprogramming" }),
 	GITHUB_REPO_NAME: Type.String({ default: "playfulprogramming" }),
 	GITHUB_TOKEN: Type.Optional(Type.String()),
+	GITHUB_WEBHOOK_SECRET: Type.String(),
 });
 
 Settings.Set({ correctiveParse: true });
