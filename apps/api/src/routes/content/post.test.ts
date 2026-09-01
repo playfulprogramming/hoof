@@ -46,6 +46,7 @@ describe("Post Routes Tests", () => {
 						},
 					],
 				},
+				versions: [],
 			} as never);
 
 			const response = await app.inject({
@@ -84,6 +85,7 @@ describe("Post Routes Tests", () => {
 				  "slug": "chapter-two",
 				  "socialImageUrl": "https://s3_public_url.test/s3_bucket/content/social.png",
 				  "title": "Chapter Two",
+				  "versions": [],
 				  "wordCount": 500,
 				}
 			`);
@@ -102,6 +104,7 @@ describe("Post Routes Tests", () => {
 					{ slug: "crutchcorn", name: "Corbin Crutchley", profileImage: null },
 				],
 				collection: null,
+				versions: [],
 			} as never);
 
 			const response = await app.inject({
@@ -123,6 +126,7 @@ describe("Post Routes Tests", () => {
 				  "publishedAt": "2024-01-15T00:00:00.000Z",
 				  "slug": "standalone-post",
 				  "title": "Standalone Post",
+				  "versions": [],
 				  "wordCount": 200,
 				}
 			`);
@@ -189,6 +193,7 @@ describe("Post Routes Tests", () => {
 						},
 					],
 				},
+				versions: [],
 			} as never);
 
 			const response = await app.inject({
@@ -219,9 +224,101 @@ describe("Post Routes Tests", () => {
 				  "publishedAt": "2024-01-15T00:00:00.000Z",
 				  "slug": "chapter-one",
 				  "title": "Chapter One",
+				  "versions": [],
 				  "wordCount": 300,
 				}
 			`);
+		});
+
+		test("returns other versions sorted by versionOrder then publishedAt", async () => {
+			vi.mocked(db.query.posts.findFirst).mockResolvedValue({
+				slug: "example-post",
+				title: "Example Post",
+				description: "A post with multiple versions",
+				bannerImage: null,
+				socialImage: null,
+				wordCount: 400,
+				publishedAt: new Date("2024-01-15T00:00:00Z"),
+				authors: [],
+				collection: null,
+				versions: [
+					{
+						slug: "example-post",
+						versionName: "",
+						versionOrder: 0,
+						publishedAt: new Date("2024-01-15T00:00:00Z"),
+					},
+					{
+						slug: "example-post-v3",
+						versionName: "v3",
+						versionOrder: 2,
+						publishedAt: new Date("2024-06-01T00:00:00Z"),
+					},
+					{
+						slug: "example-post-v2-later",
+						versionName: "v2",
+						versionOrder: 1,
+						publishedAt: new Date("2024-04-01T00:00:00Z"),
+					},
+					{
+						slug: "example-post-v2-earlier",
+						versionName: "v2",
+						versionOrder: 1,
+						publishedAt: new Date("2024-03-01T00:00:00Z"),
+					},
+				],
+			} as never);
+
+			const response = await app.inject({
+				method: "GET",
+				url: "/content/post/example-post",
+				query: { locale: "en" },
+			});
+
+			expect(response.statusCode).toBe(200);
+			expect(response.json().versions).toMatchInlineSnapshot(`
+				[
+				  {
+				    "publishedAt": "2024-03-01T00:00:00.000Z",
+				    "slug": "example-post-v2-earlier",
+				    "versionName": "v2",
+				  },
+				  {
+				    "publishedAt": "2024-04-01T00:00:00.000Z",
+				    "slug": "example-post-v2-later",
+				    "versionName": "v2",
+				  },
+				  {
+				    "publishedAt": "2024-06-01T00:00:00.000Z",
+				    "slug": "example-post-v3",
+				    "versionName": "v3",
+				  },
+				]
+			`);
+		});
+
+		test("returns an empty versions array when the post has no groupId", async () => {
+			vi.mocked(db.query.posts.findFirst).mockResolvedValue({
+				slug: "standalone-post",
+				title: "Standalone Post",
+				description: "A post with no other versions",
+				bannerImage: null,
+				socialImage: null,
+				wordCount: 200,
+				publishedAt: new Date("2024-01-15T00:00:00Z"),
+				authors: [],
+				collection: null,
+				versions: [],
+			} as never);
+
+			const response = await app.inject({
+				method: "GET",
+				url: "/content/post/standalone-post",
+				query: { locale: "en" },
+			});
+
+			expect(response.statusCode).toBe(200);
+			expect(response.json().versions).toMatchInlineSnapshot(`[]`);
 		});
 
 		test("returns 404 when the post does not exist", async () => {
