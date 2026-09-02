@@ -2,8 +2,8 @@ import { env, AuthorMetaSchema } from "@playfulprogramming/common";
 import { Tasks, createJob } from "@playfulprogramming/bullmq";
 import {
 	db,
-	profiles,
-	profileAchievements,
+	authors,
+	authorAchievements,
 	authorRoles,
 } from "@playfulprogramming/db";
 import * as github from "@playfulprogramming/github-api";
@@ -36,7 +36,7 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 			console.log(
 				`Metadata for ${authorId} (${authorMetaUrl.pathname}) returned 404 - removing profile entry.`,
 			);
-			await db.delete(profiles).where(eq(profiles.slug, authorId));
+			await db.delete(authors).where(eq(authors.slug, authorId));
 			return;
 		}
 
@@ -89,37 +89,37 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 
 	await db.transaction(async (tx) => {
 		await tx
-			.insert(profiles)
+			.insert(authors)
 			.values(result)
-			.onConflictDoUpdate({ target: profiles.slug, set: result });
+			.onConflictDoUpdate({ target: authors.slug, set: result });
 
 		await tx
-			.delete(profileAchievements)
+			.delete(authorAchievements)
 			.where(
 				and(
-					eq(profileAchievements.profileSlug, authorId),
+					eq(authorAchievements.authorSlug, authorId),
 					inArray(
-						profileAchievements.achievementId,
+						authorAchievements.achievementId,
 						MANUAL_ACHIEVEMENT_IDS as unknown as string[],
 					),
 				),
 			);
 
 		if (earnedManualIds.length > 0) {
-			await tx.insert(profileAchievements).values(
+			await tx.insert(authorAchievements).values(
 				earnedManualIds.map((achievementId) => ({
-					profileSlug: authorId,
+					authorSlug: authorId,
 					achievementId,
 				})),
 			);
 		}
 
-		await tx.delete(authorRoles).where(eq(authorRoles.profileSlug, authorId));
+		await tx.delete(authorRoles).where(eq(authorRoles.authorSlug, authorId));
 
 		if (authorData.roles.length > 0) {
 			await tx.insert(authorRoles).values(
 				authorData.roles.map((role) => ({
-					profileSlug: authorId,
+					authorSlug: authorId,
 					role,
 				})),
 			);
@@ -129,6 +129,6 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 	await createJob(
 		Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
 		`grant-author-achievements:${authorId}`,
-		{ profileSlug: authorId },
+		{ authorSlug: authorId },
 	);
 });

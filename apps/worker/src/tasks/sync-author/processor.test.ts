@@ -1,22 +1,22 @@
 import processor from "./processor.ts";
 import type { TaskInputs } from "@playfulprogramming/bullmq";
 import type { Job } from "bullmq";
-import { db, profiles, authorRoles } from "@playfulprogramming/db";
+import { db, authors, authorRoles } from "@playfulprogramming/db";
 import { s3 } from "@playfulprogramming/s3";
 import * as github from "@playfulprogramming/github-api";
 import { Readable } from "node:stream";
 import { eq } from "drizzle-orm";
 import { uploadProcessedImage } from "../../utils/uploadProcessedImage.ts";
 
-test("Creates an example profile successfully", async () => {
-	const insertProfilesValues = vi.fn().mockReturnValue({
+test("Creates an example author successfully", async () => {
+	const insertAuthorsValues = vi.fn().mockReturnValue({
 		onConflictDoUpdate: vi.fn(),
 	});
 	const insertAuthorRolesValues = vi.fn();
 
 	vi.mocked(db.insert).mockImplementation((table) => {
-		if (table === profiles) {
-			return { values: insertProfilesValues } as never;
+		if (table === authors) {
+			return { values: insertAuthorsValues } as never;
 		}
 		if (table === authorRoles) {
 			return { values: insertAuthorRolesValues } as never;
@@ -77,8 +77,8 @@ test("Creates an example profile successfully", async () => {
 		"image/jpeg",
 	);
 
-	// The profile was inserted into the database, without roles in meta
-	expect(insertProfilesValues).toBeCalledWith({
+	// The author was inserted into the database, without roles in meta
+	expect(insertAuthorsValues).toBeCalledWith({
 		slug: "example",
 		name: "Example Person",
 		description: "Hello",
@@ -89,22 +89,22 @@ test("Creates an example profile successfully", async () => {
 	});
 
 	// Old roles were deleted, new roles were inserted
-	expect(deleteWhere).toBeCalledWith(eq(authorRoles.profileSlug, "example"));
+	expect(deleteWhere).toBeCalledWith(eq(authorRoles.authorSlug, "example"));
 	expect(insertAuthorRolesValues).toBeCalledWith([
-		{ profileSlug: "example", role: "author" },
-		{ profileSlug: "example", role: "editor" },
+		{ authorSlug: "example", role: "author" },
+		{ authorSlug: "example", role: "editor" },
 	]);
 });
 
 test("Replaces an existing author's roles on a subsequent sync with a different role set", async () => {
-	const insertProfilesValues = vi.fn().mockReturnValue({
+	const insertAuthorsValues = vi.fn().mockReturnValue({
 		onConflictDoUpdate: vi.fn(),
 	});
 	const insertAuthorRolesValues = vi.fn();
 
 	vi.mocked(db.insert).mockImplementation((table) => {
-		if (table === profiles) {
-			return { values: insertProfilesValues } as never;
+		if (table === authors) {
+			return { values: insertAuthorsValues } as never;
 		}
 		if (table === authorRoles) {
 			return { values: insertAuthorRolesValues } as never;
@@ -142,7 +142,7 @@ test("Replaces an existing author's roles on a subsequent sync with a different 
 	} as unknown as Job<TaskInputs["sync-author"]>);
 
 	expect(insertAuthorRolesValues).toBeCalledWith([
-		{ profileSlug: "example", role: "author" },
+		{ authorSlug: "example", role: "author" },
 	]);
 
 	vi.mocked(github.getContentsRaw).mockImplementationOnce((params) => {
@@ -170,22 +170,22 @@ test("Replaces an existing author's roles on a subsequent sync with a different 
 	} as unknown as Job<TaskInputs["sync-author"]>);
 
 	// Old roles were deleted again, and only the new role set was inserted
-	expect(deleteWhere).toBeCalledWith(eq(authorRoles.profileSlug, "example"));
+	expect(deleteWhere).toBeCalledWith(eq(authorRoles.authorSlug, "example"));
 	expect(insertAuthorRolesValues).toHaveBeenLastCalledWith([
-		{ profileSlug: "example", role: "editor" },
-		{ profileSlug: "example", role: "reviewer" },
+		{ authorSlug: "example", role: "editor" },
+		{ authorSlug: "example", role: "reviewer" },
 	]);
 });
 
 test("Inserts no rows for an author with an empty roles array", async () => {
-	const insertProfilesValues = vi.fn().mockReturnValue({
+	const insertAuthorsValues = vi.fn().mockReturnValue({
 		onConflictDoUpdate: vi.fn(),
 	});
 	const insertAuthorRolesValues = vi.fn();
 
 	vi.mocked(db.insert).mockImplementation((table) => {
-		if (table === profiles) {
-			return { values: insertProfilesValues } as never;
+		if (table === authors) {
+			return { values: insertAuthorsValues } as never;
 		}
 		if (table === authorRoles) {
 			return { values: insertAuthorRolesValues } as never;
@@ -222,11 +222,11 @@ test("Inserts no rows for an author with an empty roles array", async () => {
 	} as unknown as Job<TaskInputs["sync-author"]>);
 
 	// Roles were still deleted (in case any existed previously), but nothing was inserted
-	expect(deleteWhere).toBeCalledWith(eq(authorRoles.profileSlug, "example"));
+	expect(deleteWhere).toBeCalledWith(eq(authorRoles.authorSlug, "example"));
 	expect(insertAuthorRolesValues).not.toBeCalled();
 });
 
-test("Deletes a profile record if it no longer exists", async () => {
+test("Deletes an author record if it no longer exists", async () => {
 	const deleteWhere = vi.fn();
 	vi.mocked(db.delete).mockReturnValue({
 		where: deleteWhere,
@@ -249,8 +249,8 @@ test("Deletes a profile record if it no longer exists", async () => {
 		},
 	} as unknown as Job<TaskInputs["sync-author"]>);
 
-	// The profile was deleted from the database
-	expect(deleteWhere).toBeCalledWith(eq(profiles.slug, "example"));
+	// The author was deleted from the database
+	expect(deleteWhere).toBeCalledWith(eq(authors.slug, "example"));
 });
 
 test("Rejects the profile image upload when the signal is already aborted", async () => {

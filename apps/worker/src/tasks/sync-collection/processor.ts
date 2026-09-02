@@ -243,7 +243,7 @@ export default createProcessor(
 			await createJob(
 				Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
 				`grant-author-achievements:${authorSlug}`,
-				{ profileSlug: authorSlug },
+				{ authorSlug },
 			);
 		}
 	},
