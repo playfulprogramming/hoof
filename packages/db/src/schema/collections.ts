@@ -5,7 +5,7 @@ import {
 	jsonb,
 	primaryKey,
 } from "drizzle-orm/pg-core";
-import { profiles } from "./profiles.ts";
+import { authors } from "./authors.ts";
 
 export const collections = pgTable("collections", {
 	slug: text("slug").primaryKey(),
@@ -36,7 +36,7 @@ export const collectionAuthors = pgTable(
 			.references(() => collections.slug, { onDelete: "cascade" }),
 		authorSlug: text("author_slug")
 			.notNull()
-			.references(() => profiles.slug, { onDelete: "cascade" }),
+			.references(() => authors.slug, { onDelete: "cascade" }),
 	},
 	(table) => [
 		primaryKey({
