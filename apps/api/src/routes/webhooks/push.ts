@@ -1,4 +1,3 @@
-import crypto from "crypto";
 import type { FastifyPluginAsync } from "fastify";
 import { Type, type Static } from "typebox";
 import { Tasks, createJob } from "@playfulprogramming/bullmq";
@@ -23,6 +22,11 @@ const PushWebhookBodySchema = Type.Object(
 	},
 );
 
+const GithubWebhookHeadersSchema = Type.Object({
+	"x-hub-signature-256": Type.String(),
+	"x-github-delivery": Type.String(),
+});
+
 const PushWebhookResponseSchema = Type.Object(
 	{
 		enqueued: Type.Boolean(),
@@ -37,6 +41,7 @@ const pushWebhookRoutes: FastifyPluginAsync = async (fastify) => {
 
 	fastify.post<{
 		Body: Static<typeof PushWebhookBodySchema>;
+		Headers: Static<typeof GithubWebhookHeadersSchema>;
 		Reply: Static<typeof PushWebhookResponseSchema>;
 	}>(
 		"/webhooks/github/push",
@@ -44,6 +49,7 @@ const pushWebhookRoutes: FastifyPluginAsync = async (fastify) => {
 			schema: {
 				description:
 					"Receive a GitHub `push` webhook event (https://docs.github.com/en/webhooks/webhook-events-and-payloads#push). Verifies the X-Hub-Signature-256 header, filters to the main branch, and enqueues the raw payload - interpreting its contents happens in a separate task.",
+				headers: GithubWebhookHeadersSchema,
 				body: {
 					content: {
 						"application/json": {
@@ -74,10 +80,7 @@ const pushWebhookRoutes: FastifyPluginAsync = async (fastify) => {
 				return;
 			}
 
-			const deliveryIdHeader = request.headers["x-github-delivery"];
-			const deliveryId = Array.isArray(deliveryIdHeader)
-				? deliveryIdHeader[0]
-				: (deliveryIdHeader ?? crypto.randomUUID());
+			const deliveryId = request.headers["x-github-delivery"];
 
 			await createJob(Tasks.WEBHOOK_PUSH, deliveryId, request.body);
 

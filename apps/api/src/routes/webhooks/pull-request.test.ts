@@ -74,3 +74,23 @@ test("pull_request webhook returns 401 when the signature header is missing", as
 	expect(response.statusCode).to.equal(401);
 	expect(createJob).not.toBeCalled();
 });
+
+test("pull_request webhook returns 400 when the delivery id header is missing", async () => {
+	const app = fastify();
+	app.register(pullRequestWebhookRoutes);
+
+	const payload = JSON.stringify({ action: "opened" });
+
+	const response = await app.inject({
+		method: "POST",
+		url: "/webhooks/github/pull_request",
+		headers: {
+			"content-type": "application/json",
+			"x-hub-signature-256": sign(payload),
+		},
+		payload,
+	});
+
+	expect(response.statusCode).to.equal(400);
+	expect(createJob).not.toBeCalled();
+});
