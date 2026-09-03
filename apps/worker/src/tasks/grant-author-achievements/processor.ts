@@ -1,7 +1,7 @@
 import { Tasks } from "@playfulprogramming/bullmq";
 import {
 	db,
-	profileAchievements,
+	authorAchievements,
 	postAuthors,
 	collectionAuthors,
 	collectionData,
@@ -13,19 +13,19 @@ import { and, eq, inArray, count, ne, isNotNull } from "drizzle-orm";
 import { ACHIEVEMENT_RULES, ALL_POSSIBLE_AUTO_IDS } from "./achievement-ids.ts";
 
 export default createProcessor(Tasks.GRANT_AUTHOR_ACHIEVEMENTS, async (job) => {
-	const { profileSlug } = job.data;
+	const { authorSlug } = job.data;
 
-	const profile = await db.query.profiles.findFirst({
-		where: { slug: profileSlug },
+	const author = await db.query.authors.findFirst({
+		where: { slug: authorSlug },
 	});
 
-	if (!profile) {
+	if (!author) {
 		throw new Error(
-			`grant-author-achievements: profile ${profileSlug} not found.`,
+			`grant-author-achievements: author ${authorSlug} not found.`,
 		);
 	}
 
-	const meta = profile.meta as {
+	const meta = author.meta as {
 		roles?: string[];
 		socials?: Record<string, string>;
 	};
@@ -47,7 +47,7 @@ export default createProcessor(Tasks.GRANT_AUTHOR_ACHIEVEMENTS, async (job) => {
 			postAuthors,
 			and(
 				eq(postAuthors.postId, posts.id),
-				eq(postAuthors.authorSlug, profileSlug),
+				eq(postAuthors.authorSlug, authorSlug),
 			),
 		)
 		.where(
@@ -79,7 +79,7 @@ export default createProcessor(Tasks.GRANT_AUTHOR_ACHIEVEMENTS, async (job) => {
 			.where(
 				and(
 					inArray(postAuthors.postId, postIds),
-					ne(postAuthors.authorSlug, profileSlug),
+					ne(postAuthors.authorSlug, authorSlug),
 				),
 			);
 		hasCoAuthoredPost = (coAuthorRows[0]?.value ?? 0) > 0;
@@ -98,7 +98,7 @@ export default createProcessor(Tasks.GRANT_AUTHOR_ACHIEVEMENTS, async (job) => {
 		)
 		.where(
 			and(
-				eq(collectionAuthors.authorSlug, profileSlug),
+				eq(collectionAuthors.authorSlug, authorSlug),
 				isNotNull(collectionData.publishedAt),
 			),
 		);
@@ -125,23 +125,23 @@ export default createProcessor(Tasks.GRANT_AUTHOR_ACHIEVEMENTS, async (job) => {
 	).map((rule) => rule.id);
 
 	// ── Write results ─────────────────────────────────────────────────────────
-	// Delete all rows for this profile that are in the auto-computed set, then
+	// Delete all rows for this author that are in the auto-computed set, then
 	// re-insert only the earned subset. Manual achievement rows are never touched.
 
 	await db.transaction(async (tx) => {
 		await tx
-			.delete(profileAchievements)
+			.delete(authorAchievements)
 			.where(
 				and(
-					eq(profileAchievements.profileSlug, profileSlug),
-					inArray(profileAchievements.achievementId, ALL_POSSIBLE_AUTO_IDS),
+					eq(authorAchievements.authorSlug, authorSlug),
+					inArray(authorAchievements.achievementId, ALL_POSSIBLE_AUTO_IDS),
 				),
 			);
 
 		if (earnedIds.length > 0) {
-			await tx.insert(profileAchievements).values(
+			await tx.insert(authorAchievements).values(
 				earnedIds.map((achievementId) => ({
-					profileSlug,
+					authorSlug,
 					achievementId,
 				})),
 			);
@@ -149,6 +149,6 @@ export default createProcessor(Tasks.GRANT_AUTHOR_ACHIEVEMENTS, async (job) => {
 	});
 
 	console.log(
-		`grant-author-achievements: ${profileSlug} → ${earnedIds.length} auto achievements granted (${earnedIds.join(", ")})`,
+		`grant-author-achievements: ${authorSlug} → ${earnedIds.length} auto achievements granted (${earnedIds.join(", ")})`,
 	);
 });

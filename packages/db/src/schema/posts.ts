@@ -9,7 +9,7 @@ import {
 	uuid,
 	unique,
 } from "drizzle-orm/pg-core";
-import { profiles } from "./profiles.ts";
+import { authors } from "./authors.ts";
 import { collections } from "./collections.ts";
 import { attachments } from "./attachments.ts";
 
@@ -57,7 +57,7 @@ export const postAuthors = pgTable(
 			}),
 		authorSlug: text("author_slug")
 			.notNull()
-			.references(() => profiles.slug, {
+			.references(() => authors.slug, {
 				onDelete: "cascade",
 			}),
 	},
