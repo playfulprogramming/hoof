@@ -5,6 +5,8 @@ import swagger from "./plugins/swagger.ts";
 import { healthRoutes } from "./routes/health.ts";
 import postImagesRoutes from "./routes/tasks/post-images.ts";
 import urlMetadataRoutes from "./routes/tasks/url-metadata.ts";
+import pushWebhookRoutes from "./routes/webhooks/push.ts";
+import pullRequestWebhookRoutes from "./routes/webhooks/pull-request.ts";
 import authorsRoutes from "./routes/content/authors.ts";
 import collectionsRoutes from "./routes/content/collections.ts";
 import postRoutes from "./routes/content/post.ts";
@@ -26,6 +28,8 @@ export const createApp = () => {
 	app.register(healthRoutes);
 	app.register(postImagesRoutes);
 	app.register(urlMetadataRoutes);
+	app.register(pushWebhookRoutes);
+	app.register(pullRequestWebhookRoutes);
 	app.register(authorsRoutes);
 	app.register(collectionsRoutes);
 	app.register(postRoutes);
