@@ -230,7 +230,7 @@ describe("Post Routes Tests", () => {
 			`);
 		});
 
-		test("returns other versions sorted by versionOrder then publishedAt", async () => {
+		test("includes the current post in the versions list, in the order returned by the query", async () => {
 			vi.mocked(db.query.posts.findFirst).mockResolvedValue({
 				slug: "example-post",
 				title: "Example Post",
@@ -245,26 +245,22 @@ describe("Post Routes Tests", () => {
 					{
 						slug: "example-post",
 						versionName: "",
-						versionOrder: 0,
 						publishedAt: new Date("2024-01-15T00:00:00Z"),
-					},
-					{
-						slug: "example-post-v3",
-						versionName: "v3",
-						versionOrder: 2,
-						publishedAt: new Date("2024-06-01T00:00:00Z"),
-					},
-					{
-						slug: "example-post-v2-later",
-						versionName: "v2",
-						versionOrder: 1,
-						publishedAt: new Date("2024-04-01T00:00:00Z"),
 					},
 					{
 						slug: "example-post-v2-earlier",
 						versionName: "v2",
-						versionOrder: 1,
 						publishedAt: new Date("2024-03-01T00:00:00Z"),
+					},
+					{
+						slug: "example-post-v2-later",
+						versionName: "v2",
+						publishedAt: new Date("2024-04-01T00:00:00Z"),
+					},
+					{
+						slug: "example-post-v3",
+						versionName: "v3",
+						publishedAt: new Date("2024-06-01T00:00:00Z"),
 					},
 				],
 			} as never);
@@ -278,6 +274,11 @@ describe("Post Routes Tests", () => {
 			expect(response.statusCode).toBe(200);
 			expect(response.json().versions).toMatchInlineSnapshot(`
 				[
+				  {
+				    "publishedAt": "2024-01-15T00:00:00.000Z",
+				    "slug": "example-post",
+				    "versionName": "",
+				  },
 				  {
 				    "publishedAt": "2024-03-01T00:00:00.000Z",
 				    "slug": "example-post-v2-earlier",

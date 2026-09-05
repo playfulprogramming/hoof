@@ -155,10 +155,19 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 						columns: {
 							slug: true,
 							versionName: true,
-							versionOrder: true,
 							publishedAt: true,
 						},
-						where: { locale, branch },
+						where: {
+							locale,
+							branch,
+							publishedAt: {
+								isNotNull: true,
+							},
+						},
+						orderBy: {
+							versionOrder: "asc",
+							publishedAt: "asc",
+						},
 					},
 				},
 			});
@@ -186,21 +195,13 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 						}
 					: undefined;
 
-			const versions: PostResponse["versions"] = post.versions
-				.filter(
-					(version) =>
-						version.publishedAt !== null && version.slug !== post.slug,
-				)
-				.sort(
-					(a, b) =>
-						a.versionOrder - b.versionOrder ||
-						a.publishedAt!.getTime() - b.publishedAt!.getTime(),
-				)
-				.map((version) => ({
+			const versions: PostResponse["versions"] = post.versions.map(
+				(version) => ({
 					slug: version.slug,
 					versionName: version.versionName,
 					publishedAt: version.publishedAt!.toISOString(),
-				}));
+				}),
+			);
 
 			const response: PostResponse = {
 				slug: post.slug,
