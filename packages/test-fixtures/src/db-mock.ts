@@ -63,25 +63,25 @@ export function createDbMock() {
 				findFirst: vi.fn(),
 				findMany: vi.fn(),
 			},
-			profiles: {
+			authors: {
 				findMany: vi.fn(),
 			},
 		},
 	};
 
 	return {
-		profiles: {
+		authors: {
 			slug: {},
 			name: {},
 			description: {},
 			profileImage: {},
 		},
-		profileAchievements: {
-			profileSlug: {},
+		authorAchievements: {
+			authorSlug: {},
 			achievementId: {},
 		},
 		authorRoles: {
-			profileSlug: {},
+			authorSlug: {},
 			role: {},
 		},
 		postGroups: {

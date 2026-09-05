@@ -1,6 +1,6 @@
 import fastify, { type FastifyInstance } from "fastify";
-import profilesRoutes from "./profiles.ts";
-import { db, profiles, postAuthors, posts } from "@playfulprogramming/db";
+import authorsRoutes from "./authors.ts";
+import { db, authors, postAuthors, posts } from "@playfulprogramming/db";
 import { and, asc, countDistinct, desc, eq, isNotNull } from "drizzle-orm";
 
 function mockSelectChain(rows: unknown[]) {
@@ -27,19 +27,19 @@ function mockSelectChain(rows: unknown[]) {
 	};
 }
 
-describe("Profiles Routes Tests", () => {
+describe("Authors Routes Tests", () => {
 	let app: FastifyInstance;
 	beforeAll(async () => {
 		app = fastify();
-		await app.register(profilesRoutes);
+		await app.register(authorsRoutes);
 	});
 
 	afterAll(async () => {
 		await app.close();
 	});
 
-	describe("/content/profiles", () => {
-		test("returns all profiles", async () => {
+	describe("/content/authors", () => {
+		test("returns all authors", async () => {
 			mockSelectChain([
 				{
 					slug: "crutchcorn",
@@ -59,7 +59,7 @@ describe("Profiles Routes Tests", () => {
 
 			const response = await app.inject({
 				method: "GET",
-				url: "/content/profiles",
+				url: "/content/authors",
 				query: { page: "0", limit: "10" },
 			});
 
@@ -83,12 +83,12 @@ describe("Profiles Routes Tests", () => {
 			`);
 		});
 
-		test("returns an empty list when there are no profiles", async () => {
+		test("returns an empty list when there are no authors", async () => {
 			mockSelectChain([]);
 
 			const response = await app.inject({
 				method: "GET",
-				url: "/content/profiles",
+				url: "/content/authors",
 				query: { page: "0", limit: "10" },
 			});
 
@@ -101,7 +101,7 @@ describe("Profiles Routes Tests", () => {
 
 			const response = await app.inject({
 				method: "GET",
-				url: "/content/profiles",
+				url: "/content/authors",
 				query: { page: "2", limit: "10" },
 			});
 
@@ -110,17 +110,17 @@ describe("Profiles Routes Tests", () => {
 			expect(chain.offset).toHaveBeenCalledWith(20);
 		});
 
-		test("defaults to sortBy=id, ordering by profile slug ascending", async () => {
+		test("defaults to sortBy=id, ordering by author slug ascending", async () => {
 			const chain = mockSelectChain([]);
 
 			const response = await app.inject({
 				method: "GET",
-				url: "/content/profiles",
+				url: "/content/authors",
 				query: { page: "0", limit: "10" },
 			});
 
 			expect(response.statusCode).toBe(200);
-			expect(chain.orderBy).toHaveBeenCalledWith(asc(profiles.slug));
+			expect(chain.orderBy).toHaveBeenCalledWith(asc(authors.slug));
 		});
 
 		test("sortBy=posts orders authors by descending post count", async () => {
@@ -143,33 +143,33 @@ describe("Profiles Routes Tests", () => {
 
 			const response = await app.inject({
 				method: "GET",
-				url: "/content/profiles",
+				url: "/content/authors",
 				query: { page: "0", limit: "10", sortBy: "posts" },
 			});
 
 			expect(response.statusCode).toBe(200);
 			expect(chain.orderBy).toHaveBeenCalledWith(
 				desc(countDistinct(posts.slug)),
-				asc(profiles.slug),
+				asc(authors.slug),
 			);
 			expect(
-				response.json().map((profile: { id: string }) => profile.id),
+				response.json().map((author: { id: string }) => author.id),
 			).toEqual(["crutchcorn", "fennifith"]);
 		});
 
-		test("joins postAuthors on the profile's slug", async () => {
+		test("joins postAuthors on the author's slug", async () => {
 			const chain = mockSelectChain([]);
 
 			const response = await app.inject({
 				method: "GET",
-				url: "/content/profiles",
+				url: "/content/authors",
 				query: { page: "0", limit: "10" },
 			});
 
 			expect(response.statusCode).toBe(200);
 			expect(chain.leftJoinPostAuthors).toHaveBeenCalledWith(
 				postAuthors,
-				eq(postAuthors.authorSlug, profiles.slug),
+				eq(postAuthors.authorSlug, authors.slug),
 			);
 		});
 
@@ -178,7 +178,7 @@ describe("Profiles Routes Tests", () => {
 
 			const response = await app.inject({
 				method: "GET",
-				url: "/content/profiles",
+				url: "/content/authors",
 				query: { page: "0", limit: "10" },
 			});
 

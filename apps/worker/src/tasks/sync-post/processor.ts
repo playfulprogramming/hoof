@@ -151,7 +151,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 				await createJob(
 					Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
 					`grant-author-achievements:${authorSlug}`,
-					{ profileSlug: authorSlug },
+					{ authorSlug },
 				);
 			}
 
@@ -457,7 +457,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		await createJob(
 			Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
 			`grant-author-achievements:${authorSlug}`,
-			{ profileSlug: authorSlug },
+			{ authorSlug },
 		);
 	}
 });

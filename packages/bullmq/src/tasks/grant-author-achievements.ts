@@ -1,5 +1,5 @@
 export interface GrantAuthorAchievementsInput {
-	profileSlug: string;
+	authorSlug: string;
 }
 
 export type GrantAuthorAchievementsOutput = void;

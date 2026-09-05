@@ -6,7 +6,7 @@ import {
 	primaryKey,
 } from "drizzle-orm/pg-core";
 
-export const profiles = pgTable("profiles", {
+export const authors = pgTable("authors", {
 	slug: text("slug").primaryKey(),
 	name: text("name").notNull(),
 	description: text("description").notNull().default(""),
@@ -17,29 +17,27 @@ export const profiles = pgTable("profiles", {
 	meta: jsonb("meta").notNull(),
 });
 
-export const profileAchievements = pgTable(
-	"profile_achievements",
+export const authorAchievements = pgTable(
+	"author_achievements",
 	{
-		profileSlug: text("profile_slug")
+		authorSlug: text("author_slug")
 			.notNull()
-			.references(() => profiles.slug, { onDelete: "cascade" }),
+			.references(() => authors.slug, { onDelete: "cascade" }),
 		achievementId: text("achievement_id").notNull(),
 		grantedAt: timestamp("granted_at", { withTimezone: true })
 			.notNull()
 			.$default(() => new Date()),
 	},
-	(table) => [
-		primaryKey({ columns: [table.profileSlug, table.achievementId] }),
-	],
+	(table) => [primaryKey({ columns: [table.authorSlug, table.achievementId] })],
 );
 
 export const authorRoles = pgTable(
 	"author_roles",
 	{
-		profileSlug: text("profile_slug")
+		authorSlug: text("author_slug")
 			.notNull()
-			.references(() => profiles.slug, { onDelete: "cascade" }),
+			.references(() => authors.slug, { onDelete: "cascade" }),
 		role: text("role").notNull(),
 	},
-	(table) => [primaryKey({ columns: [table.profileSlug, table.role] })],
+	(table) => [primaryKey({ columns: [table.authorSlug, table.role] })],
 );
