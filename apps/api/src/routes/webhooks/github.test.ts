@@ -92,7 +92,14 @@ test("pull_request webhook enqueues a job", async () => {
 	const app = fastify();
 	app.register(githubWebhookRoutes);
 
-	const payload = JSON.stringify({ action: "opened" });
+	const payloadObj = {
+		action: "opened",
+		repository: {
+			full_name: `${env.GITHUB_REPO_OWNER}/${env.GITHUB_REPO_NAME}`,
+		},
+	};
+
+	const payload = JSON.stringify(payloadObj);
 
 	const response = await app.inject({
 		method: "POST",
@@ -111,9 +118,7 @@ test("pull_request webhook enqueues a job", async () => {
 	expect(createJob).toHaveBeenCalledWith(
 		"webhook-pull-request",
 		"test-delivery-id",
-		{
-			action: "opened",
-		},
+		payloadObj,
 	);
 });
 
@@ -121,7 +126,14 @@ test("push webhook enqueues a job", async () => {
 	const app = fastify();
 	app.register(githubWebhookRoutes);
 
-	const payload = JSON.stringify({ ref: "refs/heads/main" });
+	const payloadObj = {
+		ref: "refs/heads/main",
+		repository: {
+			full_name: `${env.GITHUB_REPO_OWNER}/${env.GITHUB_REPO_NAME}`,
+		},
+	};
+
+	const payload = JSON.stringify(payloadObj);
 
 	const response = await app.inject({
 		method: "POST",
@@ -137,9 +149,11 @@ test("push webhook enqueues a job", async () => {
 
 	expect(response.statusCode).to.equal(200);
 	expect(response.json()).to.deep.equal({ enqueued: true });
-	expect(createJob).toHaveBeenCalledWith("webhook-push", "test-delivery-id", {
-		ref: "refs/heads/main",
-	});
+	expect(createJob).toHaveBeenCalledWith(
+		"webhook-push",
+		"test-delivery-id",
+		payloadObj,
+	);
 });
 
 test("webhook handler returns 401 for an invalid signature", async () => {
