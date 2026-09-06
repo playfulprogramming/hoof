@@ -120,9 +120,7 @@ webhooks.registerWebhookListener(async (event) => {
 			event.payload.repository.full_name !==
 			`${env.GITHUB_REPO_OWNER}/${env.GITHUB_REPO_NAME}`
 		) {
-			throw new Error(
-				"Attempted pull_request on a non-playful repository/owner.",
-			);
+			throw new Error("Attempted push on a non-playful repository/owner.");
 		}
 		if (event.payload.ref !== MAIN_BRANCH_REF) {
 			console.log("Ignoring push webhook for a non-main branch", {
