@@ -41,6 +41,10 @@ export const relations = defineRelations(schema, (r) => ({
 			from: r.posts.id,
 			to: r.postTags.postId,
 		}),
+		versions: r.many.posts({
+			from: r.posts.groupId,
+			to: r.posts.groupId,
+		}),
 	},
 
 	// Posts authors junction

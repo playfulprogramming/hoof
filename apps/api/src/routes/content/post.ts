@@ -31,6 +31,13 @@ const PostResponseSchema = Type.Intersect(
 					),
 				}),
 			),
+			versions: Type.Array(
+				Type.Object({
+					slug: Type.String(),
+					versionName: Type.String(),
+					publishedAt: Type.String({ format: "date-time" }),
+				}),
+			),
 		}),
 	],
 	{
@@ -58,6 +65,18 @@ const PostResponseSchema = Type.Intersect(
 						{ slug: "example-post-2", title: "Example Post 2" },
 					],
 				},
+				versions: [
+					{
+						slug: "example-post",
+						versionName: "",
+						publishedAt: "2024-01-15T00:00:00.000Z",
+					},
+					{
+						slug: "example-post-rewrite",
+						versionName: "rewrite",
+						publishedAt: "2024-06-01T00:00:00.000Z",
+					},
+				],
 			},
 		],
 	},
@@ -79,7 +98,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 		{
 			schema: {
 				description:
-					"Fetch a single post, its authors, and its collection chapter list",
+					"Fetch a single post, its authors, its collection chapter list, and its other versions",
 				params: PostParamsSchema,
 				querystring: PostQueryParamsSchema,
 				response: {
@@ -132,6 +151,24 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 							},
 						},
 					},
+					versions: {
+						columns: {
+							slug: true,
+							versionName: true,
+							publishedAt: true,
+						},
+						where: {
+							locale,
+							branch,
+							publishedAt: {
+								isNotNull: true,
+							},
+						},
+						orderBy: {
+							versionOrder: "asc",
+							publishedAt: "asc",
+						},
+					},
 				},
 			});
 
@@ -158,6 +195,14 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 						}
 					: undefined;
 
+			const versions: PostResponse["versions"] = post.versions.map(
+				(version) => ({
+					slug: version.slug,
+					versionName: version.versionName,
+					publishedAt: version.publishedAt!.toISOString(),
+				}),
+			);
+
 			const response: PostResponse = {
 				slug: post.slug,
 				title: post.title,
@@ -180,6 +225,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 						: undefined,
 				})),
 				collection,
+				versions,
 			};
 
 			reply.code(200);
