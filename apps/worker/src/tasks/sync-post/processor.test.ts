@@ -1,5 +1,5 @@
 import processor from "./processor.ts";
-import { createJob, type TaskInputs, Tasks } from "@playfulprogramming/bullmq";
+import { createJob, Tasks } from "@playfulprogramming/bullmq";
 import type { Job } from "bullmq";
 import {
 	posts,
@@ -10,7 +10,7 @@ import {
 	attachments,
 } from "@playfulprogramming/db";
 import { s3 } from "@playfulprogramming/s3";
-import * as github from "@playfulprogramming/github-api";
+import { createInstallationClient } from "@playfulprogramming/github-api";
 import { and, eq } from "drizzle-orm";
 import { Readable } from "node:stream";
 
@@ -32,6 +32,11 @@ const insertPostReturning = db
 const insertAttachmentOnConflictDoUpdate = db
 	.insert(attachments)
 	.values(expect.anything()).onConflictDoUpdate;
+const github = await createInstallationClient(0);
+
+function fakeJob<Data>(data: Data): Job<Data> {
+	return { data } as unknown as Job<Data>;
+}
 
 test("Syncs a standalone post successfully", async () => {
 	const postId = ":test-post-uuid:";
@@ -84,13 +89,14 @@ This is the post content.
 	});
 
 	// Run the processor
-	await processor({
-		data: {
+	await processor(
+		fakeJob({
 			author: "example-author",
 			post: "example-post",
 			ref: "main",
-		},
-	} as unknown as Job<TaskInputs["sync-post"]>);
+			installation: { id: 0 },
+		}),
+	);
 
 	// Assert: Markdown was uploaded to S3
 	expect(s3.upload).toHaveBeenCalledWith(
@@ -188,13 +194,14 @@ This is the post content.
 		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
 	});
 
-	await processor({
-		data: {
+	await processor(
+		fakeJob({
 			author: "example-author",
 			post: "date-only-post",
 			ref: "main",
-		},
-	} as unknown as Job<TaskInputs["sync-post"]>);
+			installation: { id: 0 },
+		}),
+	);
 
 	expect(db.insert(posts).values).toHaveBeenCalledWith(
 		expect.objectContaining({
@@ -229,13 +236,14 @@ test("Deletes a post record if it no longer exists", async () => {
 	}) as never);
 
 	// Run the processor
-	await processor({
-		data: {
+	await processor(
+		fakeJob({
 			author: "example-author",
 			post: "example-post",
 			ref: "main",
-		},
-	} as unknown as Job<TaskInputs["sync-post"]>);
+			installation: { id: 0 },
+		}),
+	);
 
 	// Assert: Post was deleted from posts table (cascade handles related tables)
 	expect(db.delete(posts).where).toHaveBeenCalledWith(
@@ -246,12 +254,12 @@ test("Deletes a post record if it no longer exists", async () => {
 	expect(createJob).toHaveBeenCalledWith(
 		Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
 		"grant-author-achievements:example-author",
-		{ authorSlug: "example-author" },
+		{ authorSlug: "example-author", installation: { id: 0 } },
 	);
 	expect(createJob).toHaveBeenCalledWith(
 		Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
 		"grant-author-achievements:co-author",
-		{ authorSlug: "co-author" },
+		{ authorSlug: "co-author", installation: { id: 0 } },
 	);
 });
 
@@ -305,14 +313,15 @@ order: 1
 	});
 
 	// Run with collection provided
-	await processor({
-		data: {
+	await processor(
+		fakeJob({
 			author: "example-author",
 			collection: "example-collection",
 			post: "example-post",
 			ref: "main",
-		},
-	} as unknown as Job<TaskInputs["sync-post"]>);
+			installation: { id: 0 },
+		}),
+	);
 
 	// Assert: Collection chapter was referenced
 	expect(db.insert(posts).values).toHaveBeenCalledWith(
@@ -389,13 +398,14 @@ published: "2024-01-15T00:00:00Z"
 		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
 	});
 
-	await processor({
-		data: {
+	await processor(
+		fakeJob({
 			author: "example-author",
 			post: "multilang-post",
 			ref: "main",
-		},
-	} as unknown as Job<TaskInputs["sync-post"]>);
+			installation: { id: 0 },
+		}),
+	);
 
 	// Assert: Both locales were uploaded to S3
 	expect(s3.upload).toHaveBeenCalledWith(
@@ -472,13 +482,14 @@ authors:
 		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
 	});
 
-	await processor({
-		data: {
+	await processor(
+		fakeJob({
 			author: "example-author",
 			post: "collab-post",
 			ref: "main",
-		},
-	} as unknown as Job<TaskInputs["sync-post"]>);
+			installation: { id: 0 },
+		}),
+	);
 
 	// Assert: Both authors should be inserted (folder owner first, then co-author from frontmatter)
 	expect(db.insert(postAuthors).values).toHaveBeenCalledWith([
@@ -563,13 +574,14 @@ tags:
 		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
 	});
 
-	await processor({
-		data: {
+	await processor(
+		fakeJob({
 			author: "example-author",
 			post: "multilang-tags-post",
 			ref: "main",
-		},
-	} as unknown as Job<TaskInputs["sync-post"]>);
+			installation: { id: 0 },
+		}),
+	);
 
 	// Assert: Tags from each locale are correctly linked
 	expect(db.insert(postTags).values).toHaveBeenCalledWith([
@@ -669,13 +681,14 @@ published: "2024-01-15T00:00:00Z"
 		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
 	});
 
-	await processor({
-		data: {
+	await processor(
+		fakeJob({
 			author: "example-author",
 			post: "attachment-post",
 			ref: "main",
-		},
-	} as unknown as Job<TaskInputs["sync-post"]>);
+			installation: { id: 0 },
+		}),
+	);
 
 	// Assert: Non-image attachment uploaded as-is, keyed by its sha and original extension
 	expect(s3.upload).toHaveBeenCalledWith(
@@ -796,13 +809,14 @@ published: "2024-01-15T00:00:00Z"
 		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
 	});
 
-	await processor({
-		data: {
+	await processor(
+		fakeJob({
 			author: "example-author",
 			post: "special-chars-post",
 			ref: "main",
-		},
-	} as unknown as Job<TaskInputs["sync-post"]>);
+			installation: { id: 0 },
+		}),
+	);
 
 	// Assert: the raw entry path (with its space and "#" intact) was passed
 	// straight through to getContentsRawStream, unencoded
@@ -889,13 +903,14 @@ published: "2024-01-15T00:00:00Z"
 		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
 	});
 
-	await processor({
-		data: {
+	await processor(
+		fakeJob({
 			author: "example-author",
 			post: "diffing-post",
 			ref: "main",
-		},
-	} as unknown as Job<TaskInputs["sync-post"]>);
+			installation: { id: 0 },
+		}),
+	);
 
 	// Assert: changed attachment's old sha-keyed object was removed, and the
 	// new sha-keyed object was uploaded in its place
@@ -994,13 +1009,14 @@ published: "2024-01-15T00:00:00Z"
 		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
 	});
 
-	await processor({
-		data: {
+	await processor(
+		fakeJob({
 			author: "example-author",
 			post: "skip-post",
 			ref: "main",
-		},
-	} as unknown as Job<TaskInputs["sync-post"]>);
+			installation: { id: 0 },
+		}),
+	);
 
 	// Assert: the attachment's content was never fetched from GitHub, since its
 	// sha already matched the stored row

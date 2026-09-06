@@ -18,6 +18,7 @@
 		"@playfulprogramming/bullmq": "workspace:*",
 		"@playfulprogramming/common": "workspace:*",
 		"@playfulprogramming/db": "workspace:*",
+		"@playfulprogramming/github-api": "workspace:*",
 		"@playfulprogramming/redis": "workspace:*",
 		"@scalar/fastify-api-reference": "^1.57.2",
 		"drizzle-orm": "catalog:",

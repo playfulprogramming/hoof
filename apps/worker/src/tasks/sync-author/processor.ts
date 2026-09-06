@@ -6,7 +6,7 @@ import {
 	authorAchievements,
 	authorRoles,
 } from "@playfulprogramming/db";
-import * as github from "@playfulprogramming/github-api";
+import { createInstallationClient } from "@playfulprogramming/github-api";
 import { createProcessor } from "../../createProcessor.ts";
 import matter from "gray-matter";
 import { Value } from "typebox/value";
@@ -22,6 +22,7 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 		`content/${encodeURIComponent(authorId)}/index.md`,
 		"http://localhost",
 	);
+	const github = await createInstallationClient(job.data.installation.id);
 
 	const authorMetaResponse = await github.getContentsRaw({
 		ref: job.data.ref,
@@ -129,6 +130,6 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 	await createJob(
 		Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
 		`grant-author-achievements:${authorId}`,
-		{ authorSlug: authorId },
+		{ authorSlug: authorId, installation: job.data.installation },
 	);
 });

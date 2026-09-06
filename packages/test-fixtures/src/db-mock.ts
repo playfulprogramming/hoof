@@ -66,6 +66,9 @@ export function createDbMock() {
 			authors: {
 				findMany: vi.fn(),
 			},
+			githubInstallations: {
+				findFirst: vi.fn(),
+			},
 		},
 	};
 
@@ -122,6 +125,10 @@ export function createDbMock() {
 		collectionTags: {
 			collectionSlug: {},
 			tag: {},
+		},
+		githubInstallations: {
+			id: {},
+			installationId: {},
 		},
 		postAuthors: {
 			postId: {},

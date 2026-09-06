@@ -1,12 +1,17 @@
 import processor from "./processor.ts";
-import type { TaskInputs } from "@playfulprogramming/bullmq";
 import type { Job } from "bullmq";
 import { db, authors, authorRoles } from "@playfulprogramming/db";
 import { s3 } from "@playfulprogramming/s3";
-import * as github from "@playfulprogramming/github-api";
+import { createInstallationClient } from "@playfulprogramming/github-api";
 import { Readable } from "node:stream";
 import { eq } from "drizzle-orm";
 import { uploadProcessedImage } from "../../utils/uploadProcessedImage.ts";
+
+const github = await createInstallationClient(0);
+
+function fakeJob<Data>(data: Data): Job<Data> {
+	return { data } as unknown as Job<Data>;
+}
 
 test("Creates an example author successfully", async () => {
 	const insertAuthorsValues = vi.fn().mockReturnValue({
@@ -61,15 +66,16 @@ test("Creates an example author successfully", async () => {
 		return Promise.reject();
 	});
 
-	await processor({
-		data: {
+	await processor(
+		fakeJob({
 			author: "example",
 			ref: "main",
-		},
-	} as unknown as Job<TaskInputs["sync-author"]>);
+			installation: { id: 0 },
+		}),
+	);
 
 	// The profile image was uploaded to S3
-	expect(s3.upload).toBeCalledWith(
+	expect(s3.upload).toHaveBeenCalledWith(
 		"example-bucket",
 		"profiles/example.jpeg",
 		undefined,
@@ -78,7 +84,7 @@ test("Creates an example author successfully", async () => {
 	);
 
 	// The author was inserted into the database, without roles in meta
-	expect(insertAuthorsValues).toBeCalledWith({
+	expect(insertAuthorsValues).toHaveBeenCalledWith({
 		slug: "example",
 		name: "Example Person",
 		description: "Hello",
@@ -89,8 +95,10 @@ test("Creates an example author successfully", async () => {
 	});
 
 	// Old roles were deleted, new roles were inserted
-	expect(deleteWhere).toBeCalledWith(eq(authorRoles.authorSlug, "example"));
-	expect(insertAuthorRolesValues).toBeCalledWith([
+	expect(deleteWhere).toHaveBeenCalledWith(
+		eq(authorRoles.authorSlug, "example"),
+	);
+	expect(insertAuthorRolesValues).toHaveBeenCalledWith([
 		{ authorSlug: "example", role: "author" },
 		{ authorSlug: "example", role: "editor" },
 	]);
@@ -134,14 +142,15 @@ test("Replaces an existing author's roles on a subsequent sync with a different 
 		return Promise.reject();
 	});
 
-	await processor({
-		data: {
+	await processor(
+		fakeJob({
 			author: "example",
 			ref: "main",
-		},
-	} as unknown as Job<TaskInputs["sync-author"]>);
+			installation: { id: 0 },
+		}),
+	);
 
-	expect(insertAuthorRolesValues).toBeCalledWith([
+	expect(insertAuthorRolesValues).toHaveBeenCalledWith([
 		{ authorSlug: "example", role: "author" },
 	]);
 
@@ -162,15 +171,18 @@ test("Replaces an existing author's roles on a subsequent sync with a different 
 		return Promise.reject();
 	});
 
-	await processor({
-		data: {
+	await processor(
+		fakeJob({
 			author: "example",
 			ref: "main",
-		},
-	} as unknown as Job<TaskInputs["sync-author"]>);
+			installation: { id: 0 },
+		}),
+	);
 
 	// Old roles were deleted again, and only the new role set was inserted
-	expect(deleteWhere).toBeCalledWith(eq(authorRoles.authorSlug, "example"));
+	expect(deleteWhere).toHaveBeenCalledWith(
+		eq(authorRoles.authorSlug, "example"),
+	);
 	expect(insertAuthorRolesValues).toHaveBeenLastCalledWith([
 		{ authorSlug: "example", role: "editor" },
 		{ authorSlug: "example", role: "reviewer" },
@@ -214,16 +226,19 @@ test("Inserts no rows for an author with an empty roles array", async () => {
 		return Promise.reject();
 	});
 
-	await processor({
-		data: {
+	await processor(
+		fakeJob({
 			author: "example",
 			ref: "main",
-		},
-	} as unknown as Job<TaskInputs["sync-author"]>);
+			installation: { id: 0 },
+		}),
+	);
 
 	// Roles were still deleted (in case any existed previously), but nothing was inserted
-	expect(deleteWhere).toBeCalledWith(eq(authorRoles.authorSlug, "example"));
-	expect(insertAuthorRolesValues).not.toBeCalled();
+	expect(deleteWhere).toHaveBeenCalledWith(
+		eq(authorRoles.authorSlug, "example"),
+	);
+	expect(insertAuthorRolesValues).not.toHaveBeenCalled();
 });
 
 test("Deletes an author record if it no longer exists", async () => {
@@ -242,15 +257,16 @@ test("Deletes an author record if it no longer exists", async () => {
 		return Promise.reject();
 	});
 
-	await processor({
-		data: {
+	await processor(
+		fakeJob({
 			author: "example",
 			ref: "main",
-		},
-	} as unknown as Job<TaskInputs["sync-author"]>);
+			installation: { id: 0 },
+		}),
+	);
 
 	// The author was deleted from the database
-	expect(deleteWhere).toBeCalledWith(eq(authors.slug, "example"));
+	expect(deleteWhere).toHaveBeenCalledWith(eq(authors.slug, "example"));
 });
 
 test("Rejects the profile image upload when the signal is already aborted", async () => {

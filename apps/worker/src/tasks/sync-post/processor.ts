@@ -9,7 +9,7 @@ import {
 	postGroups,
 	attachments,
 } from "@playfulprogramming/db";
-import * as github from "@playfulprogramming/github-api";
+import { createInstallationClient } from "@playfulprogramming/github-api";
 import { s3 } from "@playfulprogramming/s3";
 import { createProcessor } from "../../createProcessor.ts";
 import { and, eq, isNotNull } from "drizzle-orm";
@@ -106,7 +106,8 @@ interface AttachmentRow {
 }
 
 export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
-	const { author, post, collection, ref } = job.data;
+	const { author, post, collection, ref, installation } = job.data;
+	const client = await createInstallationClient(installation.id);
 
 	const basePath = collection
 		? new URL(
@@ -120,7 +121,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 
 	console.log(`Syncing post: ${basePath}`);
 
-	const folderResponse = await github.getContents({
+	const folderResponse = await client.getContents({
 		ref,
 		path: basePath,
 		repoOwner: env.GITHUB_REPO_OWNER,
@@ -151,7 +152,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 				await createJob(
 					Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
 					`grant-author-achievements:${authorSlug}`,
-					{ authorSlug },
+					{ authorSlug, installation: job.data.installation },
 				);
 			}
 
@@ -187,7 +188,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			const locale = extractLocale(file.name);
 
 			const contentUrl = new URL(file.path, "http://localhost");
-			const contentResponse = await github.getContentsRaw({
+			const contentResponse = await client.getContentsRaw({
 				ref,
 				path: contentUrl.pathname,
 				repoOwner: env.GITHUB_REPO_OWNER,
@@ -276,7 +277,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			continue;
 		}
 
-		const { data: fileStream } = await github.getContentsRawStream({
+		const { data: fileStream } = await client.getContentsRawStream({
 			ref,
 			path,
 			repoOwner: env.GITHUB_REPO_OWNER,
@@ -457,7 +458,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		await createJob(
 			Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
 			`grant-author-achievements:${authorSlug}`,
-			{ authorSlug },
+			{ authorSlug, installation: job.data.installation },
 		);
 	}
 });

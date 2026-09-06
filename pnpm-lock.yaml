@@ -131,6 +131,9 @@ importers:
       '@playfulprogramming/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@playfulprogramming/github-api':
+        specifier: workspace:*
+        version: link:../../packages/github-api
       '@playfulprogramming/redis':
         specifier: workspace:*
         version: link:../../packages/redis
@@ -307,6 +310,9 @@ importers:
 
   packages/github-api:
     dependencies:
+      '@octokit/webhooks':
+        specifier: ^14.2.0
+        version: 14.2.0
       '@playfulprogramming/common':
         specifier: workspace:*
         version: link:../common
