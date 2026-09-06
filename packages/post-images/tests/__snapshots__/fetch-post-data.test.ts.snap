@@ -1,0 +1,44 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`fetches and assembles post image data for the example post fixture 1`] = `
+"flowchart LR
+A[Hard] -->|Text| B(Round)
+B --> C{Decision}
+C -->|One| D[Result 1]
+C -->|Two| E[Result 2]
+sequenceDiagram
+    participant Client
+    participant Server
+    participant Database
+    Client->>Server: Request
+    Server->>Database: Query
+    Database-->>Server: Results
+    Server-->>Client: Response
+    Client->>Server: Update
+    Server->>Database: Write
+    Database-->>Server: Confirm
+    Server-->>Client: Success
+sequenceDiagram
+  participant Client
+  participant API
+  participant DB
+  Client->>API: Request
+  activate API
+  API->>DB: Query
+  activate DB
+  DB-->>API: Rows
+  deactivate DB
+  alt success
+    API-->>Client: 200 OK
+  else failure
+    API-->>Client: 500 Error
+  end
+  deactivate API
+pie showData
+  title Pets
+  "Dogs" : 10
+  "Cats" : 5
+gitGraph
+  commit id:"C0"
+  branch feature"
+`;
