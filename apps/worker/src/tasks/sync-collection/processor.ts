@@ -7,7 +7,7 @@ import {
 	collectionTags,
 	db,
 } from "@playfulprogramming/db";
-import * as github from "@playfulprogramming/github-api";
+import { createInstallationClient } from "@playfulprogramming/github-api";
 import { createProcessor } from "../../createProcessor.ts";
 import { eq } from "drizzle-orm";
 import matter from "gray-matter";
@@ -22,13 +22,14 @@ export default createProcessor(
 	async (job, { signal }) => {
 		const authorId = job.data.author;
 		const collectionId = job.data.collection;
+		const client = await createInstallationClient(job.data.installation.id);
 
 		const collectionMetaUrl = new URL(
 			`content/${encodeURIComponent(authorId)}/collections/${encodeURIComponent(collectionId)}/`,
 			"http://localhost",
 		);
 
-		const collectionMetaResponse = await github.getContents({
+		const collectionMetaResponse = await client.getContents({
 			ref: job.data.ref,
 			path: collectionMetaUrl.pathname,
 			repoOwner: env.GITHUB_REPO_OWNER,
@@ -86,7 +87,7 @@ export default createProcessor(
 		for (const { entry, locale } of collectionEntries) {
 			const contentUrl = new URL(entry.path, "http://localhost");
 
-			const contentResponse = await github.getContentsRaw({
+			const contentResponse = await client.getContentsRaw({
 				ref: job.data.ref,
 				path: contentUrl.pathname,
 				repoOwner: env.GITHUB_REPO_OWNER,
@@ -114,7 +115,7 @@ export default createProcessor(
 					collectionParsedData.coverImg,
 					collectionMetaUrl,
 				);
-				const { data: coverImgStream } = await github.getContentsRawStream({
+				const { data: coverImgStream } = await client.getContentsRawStream({
 					ref: job.data.ref,
 					path: coverImgUrl.pathname,
 					repoOwner: env.GITHUB_REPO_OWNER,
@@ -142,7 +143,7 @@ export default createProcessor(
 					collectionParsedData.socialImg,
 					collectionMetaUrl,
 				);
-				const { data: socialImgStream } = await github.getContentsRawStream({
+				const { data: socialImgStream } = await client.getContentsRawStream({
 					ref: job.data.ref,
 					path: socialImgUrl.pathname,
 					repoOwner: env.GITHUB_REPO_OWNER,
@@ -243,7 +244,7 @@ export default createProcessor(
 			await createJob(
 				Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
 				`grant-author-achievements:${authorSlug}`,
-				{ authorSlug },
+				{ authorSlug, installation: job.data.installation },
 			);
 		}
 	},

@@ -1,4 +1,4 @@
-import { getGistById } from "@playfulprogramming/github-api";
+import { createAppClient } from "@playfulprogramming/github-api";
 import { mockEndpoint } from "../../../test-utils/server.ts";
 import { getEmbedDataFromGist } from "./getEmbedDataFromGist.ts";
 import { type Mock } from "vitest";
@@ -8,6 +8,8 @@ import {
 	urlMetadataGistFile,
 } from "@playfulprogramming/db";
 import { scheduleS3ObjectDeletion } from "../../utils/scheduleS3ObjectDeletion.ts";
+
+const getGistById = createAppClient().getGistById;
 
 test("fetches the expected information for a successful gist response", async () => {
 	const gistUrl = new URL(

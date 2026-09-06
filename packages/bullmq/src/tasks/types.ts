@@ -15,6 +15,7 @@ import type {
 	DeleteS3ObjectInput,
 	DeleteS3ObjectOutput,
 } from "./delete-s3-object.ts";
+import type { WebhookInstallationInput } from "./webhook-installation.ts";
 
 export const Tasks = {
 	SYNC_ALL: "sync-all",
@@ -26,6 +27,7 @@ export const Tasks = {
 	GRANT_AUTHOR_ACHIEVEMENTS: "grant-author-achievements",
 	CLEANUP_ATTACHMENTS: "cleanup-attachments",
 	DELETE_S3_OBJECT: "delete-s3-object",
+	WEBHOOK_INSTALLATION: "webhook-installation",
 	WEBHOOK_PUSH: "webhook-push",
 	WEBHOOK_PULL_REQUEST: "webhook-pull-request",
 } as const;
@@ -43,6 +45,7 @@ export interface TaskInputs {
 	[Tasks.GRANT_AUTHOR_ACHIEVEMENTS]: GrantAuthorAchievementsInput;
 	[Tasks.CLEANUP_ATTACHMENTS]: object;
 	[Tasks.DELETE_S3_OBJECT]: DeleteS3ObjectInput;
+	[Tasks.WEBHOOK_INSTALLATION]: WebhookInstallationInput;
 	// Raw GitHub webhook payload. Interpreting its contents is #206's job, not #205's.
 	[Tasks.WEBHOOK_PUSH]: unknown;
 	[Tasks.WEBHOOK_PULL_REQUEST]: unknown;
@@ -58,6 +61,7 @@ export interface TaskOutputs {
 	[Tasks.GRANT_AUTHOR_ACHIEVEMENTS]: GrantAuthorAchievementsOutput;
 	[Tasks.CLEANUP_ATTACHMENTS]: void;
 	[Tasks.DELETE_S3_OBJECT]: DeleteS3ObjectOutput;
+	[Tasks.WEBHOOK_INSTALLATION]: object;
 	[Tasks.WEBHOOK_PUSH]: object;
 	[Tasks.WEBHOOK_PULL_REQUEST]: object;
 }
