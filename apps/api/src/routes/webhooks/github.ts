@@ -80,7 +80,6 @@ webhooks.registerWebhookListener(async (event) => {
 	console.log("Received GitHub webhook", {
 		id: event.id,
 		name: event.name,
-		payload: event.payload,
 	});
 
 	if (event.name === "installation") {
