@@ -2,7 +2,7 @@ import type { Parent } from "unist";
 import * as unified from "unified";
 import remarkParse from "remark-parse";
 import remarkToRehype from "remark-rehype";
-import { findAllAfter } from "unist-util-find-all-after";
+import { visit } from "unist-util-visit";
 import { toString } from "hast-util-to-string";
 import { type PostImageInput } from "@playfulprogramming/bullmq";
 import type { PostImageData } from "./types.ts";
@@ -13,12 +13,18 @@ import dayjs from "dayjs";
 import sharp from "sharp";
 import { createHash } from "crypto";
 
+type HastNode = Parameters<typeof toString>[0];
+
 const stringifyCodeTree: unified.Plugin<unknown[], Parent, string> =
 	function () {
 		this.compiler = function (tree) {
-			// extract code snippets from parsed markdown
-			const nodes = findAllAfter(tree as unknown as Parent, 0, {
-				tagName: "pre",
+			// extract code snippets from parsed markdown, wherever they're nested
+			// (e.g. inside blockquotes or list items)
+			const nodes: HastNode[] = [];
+			visit(tree as unknown as Parent, (node) => {
+				if ((node as unknown as { tagName?: string }).tagName === "pre") {
+					nodes.push(node as unknown as HastNode);
+				}
 			});
 
 			// join code parts into one element
