@@ -65,12 +65,5 @@ test("fetches and assembles post image data for the example post fixture", async
 		},
 	]);
 
-	// NOTE: findAllAfter(tree, 0, { tagName: "pre" }) only walks top-level siblings,
-	// so it does not descend into `pre` elements nested inside blockquotes or list
-	// items. The example post deliberately includes code blocks inside a blockquote
-	// and inside both an unordered and an ordered list item; those are silently
-	// dropped from `code` below. This is the known, current behavior being captured
-	// as a baseline here, not a fix - see https://github.com/playfulprogramming/hoof/issues/212
-	// for descending into nested code blocks.
 	expect(result.code).toMatchSnapshot();
 });

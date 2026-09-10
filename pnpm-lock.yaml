@@ -362,16 +362,16 @@ importers:
       unified:
         specifier: ^11.0.5
         version: 11.0.5
-      unist-util-find-all-after:
+      unist-util-visit:
         specifier: ^5.0.0
-        version: 5.0.0
+        version: 5.1.0
       xhtm:
         specifier: ^1.6.3
         version: 1.6.3
     devDependencies:
-      '@types/unist':
-        specifier: ^3.0.3
-        version: 3.0.3
+      '@types/hast':
+        specifier: 'catalog:'
+        version: 3.0.4
       looks-same:
         specifier: ^10.0.1
         version: 10.0.1
@@ -5034,9 +5034,6 @@ packages:
 
   unified@11.0.5:
     resolution: {integrity: sha512-xKvGhPWw3k84Qjh8bI3ZeJjqnyadK+GEFtazSfZv/rKeTkTjOJho6mFqh2SM96iIcZokxiOpg78GazTSg8+KHA==}
-
-  unist-util-find-all-after@5.0.0:
-    resolution: {integrity: sha512-nGmOYvTSdGcI4RvrUNfe0mOsqqbbJOtqCQsppsY9KZjmv3nwM3YRgNBwFPdZ8Y+iv9Z/2PDjR9u6u+uK62XTTg==}
 
   unist-util-find@3.0.0:
     resolution: {integrity: sha512-T7ZqS7immLjYyC4FCp2hDo3ksZ1v+qcbb+e5+iWxc2jONgHOLXPCpms1L8VV4hVxCXgWTxmBHDztuEZFVwC+Gg==}
@@ -10566,11 +10563,6 @@ snapshots:
       is-plain-obj: 4.1.0
       trough: 2.2.0
       vfile: 6.0.3
-
-  unist-util-find-all-after@5.0.0:
-    dependencies:
-      '@types/unist': 3.0.3
-      unist-util-is: 6.0.1
 
   unist-util-find@3.0.0:
     dependencies:
