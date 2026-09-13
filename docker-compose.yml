@@ -39,12 +39,12 @@ services:
       RUSTFS_ACCESS_KEY: ${S3_KEY_ID}
       RUSTFS_SECRET_KEY: ${S3_KEY_SECRET}
     healthcheck:
-      test:
-        [
+      test: [
           "CMD",
-          "sh", "-ec",
+          "sh",
+          "-ec",
           "curl \"http://127.0.0.1:9000/health\" && \
-          curl \"http://127.0.0.1:9001/rustfs/console/health\""
+          curl \"http://127.0.0.1:9001/rustfs/console/health\"",
         ]
       interval: 10s
       timeout: 5s
