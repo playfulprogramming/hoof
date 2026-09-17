@@ -53,18 +53,6 @@ export const relations = defineRelations(schema, (r) => ({
 		}),
 	},
 
-	// Posts authors junction
-	postAuthors: {
-		post: r.one.posts({
-			from: r.postAuthors.postId,
-			to: r.posts.id,
-		}),
-		author: r.many.authors({
-			from: r.postAuthors.authorSlug,
-			to: r.authors.slug,
-		}),
-	},
-
 	// Authors relations
 	authors: {
 		postsAuthored: r.many.posts({

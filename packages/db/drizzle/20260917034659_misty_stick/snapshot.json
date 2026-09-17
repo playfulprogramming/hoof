@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "43251d77-f3d2-46f3-8b33-237bed23af91",
+  "id": "97c1bdbb-4f41-4e07-bce8-a3098c96a9d1",
   "prevIds": [
     "8088207f-23f3-4832-9bd8-10ad857d438e"
   ],
@@ -2025,6 +2025,19 @@
       "entityType": "uniques",
       "schema": "public",
       "table": "authors"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "slug",
+        "locale",
+        "branch"
+      ],
+      "nullsNotDistinct": false,
+      "name": "collections_slug_locale_branch_unique",
+      "entityType": "uniques",
+      "schema": "public",
+      "table": "collections"
     },
     {
       "nameExplicit": false,

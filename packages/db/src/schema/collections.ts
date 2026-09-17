@@ -5,9 +5,9 @@ import {
 	jsonb,
 	primaryKey,
 	uuid,
+	unique,
 } from "drizzle-orm/pg-core";
 import { authorSlugs } from "./authors.ts";
-import { unique } from "drizzle-orm/cockroach-core";
 
 export const collectionSlugs = pgTable("collection_slugs", {
 	slug: text("slug").primaryKey(),

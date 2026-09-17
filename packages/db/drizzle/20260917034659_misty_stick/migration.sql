@@ -36,6 +36,7 @@ ALTER TABLE "collection_tags" DROP COLUMN "collection_slug";--> statement-breakp
 ALTER TABLE "collection_tags" ADD PRIMARY KEY ("collection_id","tag");--> statement-breakpoint
 ALTER TABLE "collections" ADD PRIMARY KEY ("id");--> statement-breakpoint
 ALTER TABLE "authors" ADD CONSTRAINT "authors_slug_branch_unique" UNIQUE("slug","branch");--> statement-breakpoint
+ALTER TABLE "collections" ADD CONSTRAINT "collections_slug_locale_branch_unique" UNIQUE("slug","locale","branch");--> statement-breakpoint
 ALTER TABLE "authors" ADD CONSTRAINT "authors_slug_author_slugs_slug_fkey" FOREIGN KEY ("slug") REFERENCES "author_slugs"("slug") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "collection_authors" ADD CONSTRAINT "collection_authors_collection_id_collections_id_fkey" FOREIGN KEY ("collection_id") REFERENCES "collections"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "collection_authors" ADD CONSTRAINT "collection_authors_author_slug_author_slugs_slug_fkey" FOREIGN KEY ("author_slug") REFERENCES "author_slugs"("slug") ON DELETE CASCADE;--> statement-breakpoint
