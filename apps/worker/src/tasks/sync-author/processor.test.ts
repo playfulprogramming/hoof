@@ -4,7 +4,7 @@ import { db, authors, authorRoles } from "@playfulprogramming/db";
 import { s3 } from "@playfulprogramming/s3";
 import { createInstallationClient } from "@playfulprogramming/github-api";
 import { Readable } from "node:stream";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { uploadProcessedImage } from "../../utils/uploadProcessedImage.ts";
 
 const github = await createInstallationClient(0);
@@ -207,7 +207,9 @@ test("Deletes an author record if it no longer exists", async () => {
 	);
 
 	// The author was deleted from the database
-	expect(deleteAuthorsWhere).toHaveBeenCalledWith(eq(authors.slug, "example"));
+	expect(deleteAuthorsWhere).toHaveBeenCalledWith(
+		and(eq(authors.slug, "example"), eq(authors.branch, "main")),
+	);
 });
 
 test("Rejects the profile image upload when the signal is already aborted", async () => {

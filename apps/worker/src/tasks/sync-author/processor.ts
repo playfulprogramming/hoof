@@ -38,7 +38,11 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 			console.log(
 				`Metadata for ${authorSlug} (${authorMetaUrl.pathname}) returned 404 - removing profile entry.`,
 			);
-			await db.delete(authors).where(eq(authors.slug, authorSlug));
+			await db
+				.delete(authors)
+				.where(
+					and(eq(authors.slug, authorSlug), eq(authors.branch, job.data.ref)),
+				);
 			return;
 		}
 
