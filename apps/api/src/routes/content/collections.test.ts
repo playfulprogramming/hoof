@@ -18,14 +18,10 @@ describe("Collections Routes Tests", () => {
 			vi.mocked(db.query.collections.findMany).mockResolvedValue([
 				{
 					slug: "harsh-leadership-truths",
-					data: [
-						{
-							title: "Harsh Leadership Truths",
-							description:
-								"Exploring the often overlooked realities of engineering leadership.",
-							coverImage: "content/cover.png",
-						},
-					],
+					title: "Harsh Leadership Truths",
+					description:
+						"Exploring the often overlooked realities of engineering leadership.",
+					coverImage: "content/cover.png",
 					authors: [
 						{
 							slug: "crutchcorn",
@@ -91,14 +87,10 @@ describe("Collections Routes Tests", () => {
 			vi.mocked(db.query.collections.findMany).mockResolvedValue([
 				{
 					slug: "harsh-leadership-truths",
-					data: [
-						{
-							title: "Harsh Leadership Truths",
-							description:
-								"Exploring the often overlooked realities of engineering leadership.",
-							coverImage: null,
-						},
-					],
+					title: "Harsh Leadership Truths",
+					description:
+						"Exploring the often overlooked realities of engineering leadership.",
+					coverImage: null,
 					authors: [
 						{
 							slug: "crutchcorn",

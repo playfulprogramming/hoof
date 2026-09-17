@@ -134,20 +134,26 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 				},
 				with: {
 					authors: { columns: { slug: true, name: true, profileImage: true } },
-					collection: {
+					collections: {
+						columns: { slug: true, title: true },
+						where: { locale, branch },
 						with: {
-							data: {
-								columns: { title: true },
-								where: { locale },
-							},
 							posts: {
 								columns: {
 									slug: true,
-									collectionOrder: true,
 									title: true,
-									publishedAt: true,
 								},
-								where: { locale, branch },
+								where: {
+									locale,
+									branch,
+									publishedAt: {
+										isNotNull: true,
+									},
+								},
+								orderBy: {
+									collectionOrder: "asc",
+									publishedAt: "asc",
+								},
 							},
 						},
 					},
@@ -178,20 +184,17 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 				return;
 			}
 
-			const collectionData = post.collection?.data[0];
+			const collectionData = post.collections[0];
 
 			const collection: PostResponse["collection"] =
-				post.collection && collectionData
+				post.collections && collectionData
 					? {
-							slug: post.collection.slug,
+							slug: collectionData.slug,
 							title: collectionData.title,
-							chapters: post.collection.posts
-								.filter((chapter) => chapter.publishedAt !== null)
-								.sort((a, b) => a.collectionOrder - b.collectionOrder)
-								.map((chapter) => ({
-									slug: chapter.slug,
-									title: chapter.title,
-								})),
+							chapters: collectionData.posts.map((chapter) => ({
+								slug: chapter.slug,
+								title: chapter.title,
+							})),
 						}
 					: undefined;
 

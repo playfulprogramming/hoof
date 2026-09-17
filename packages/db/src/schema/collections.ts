@@ -4,20 +4,24 @@ import {
 	timestamp,
 	jsonb,
 	primaryKey,
+	uuid,
 } from "drizzle-orm/pg-core";
-import { authors } from "./authors.ts";
+import { authorSlugs } from "./authors.ts";
+import { unique } from "drizzle-orm/cockroach-core";
 
-export const collections = pgTable("collections", {
+export const collectionSlugs = pgTable("collection_slugs", {
 	slug: text("slug").primaryKey(),
 });
 
-export const collectionData = pgTable(
-	"collection_data",
+export const collections = pgTable(
+	"collections",
 	{
+		id: uuid("id").primaryKey().defaultRandom(),
 		slug: text("slug")
 			.notNull()
-			.references(() => collections.slug, { onDelete: "cascade" }),
+			.references(() => collectionSlugs.slug, { onDelete: "cascade" }),
 		locale: text("locale").notNull(),
+		branch: text("branch").notNull(),
 		title: text("title").notNull(),
 		description: text("description").notNull().default(""),
 		publishedAt: timestamp("published_at", { withTimezone: true }),
@@ -25,22 +29,22 @@ export const collectionData = pgTable(
 		coverImage: text("cover_image"),
 		socialImage: text("social_image"),
 	},
-	(table) => [primaryKey({ columns: [table.slug, table.locale] })],
+	(table) => [unique().on(table.slug, table.locale, table.branch)],
 );
 
 export const collectionAuthors = pgTable(
 	"collection_authors",
 	{
-		collectionSlug: text("collection_slug")
+		collectionId: uuid("collection_id")
 			.notNull()
-			.references(() => collections.slug, { onDelete: "cascade" }),
+			.references(() => collections.id, { onDelete: "cascade" }),
 		authorSlug: text("author_slug")
 			.notNull()
-			.references(() => authors.slug, { onDelete: "cascade" }),
+			.references(() => authorSlugs.slug, { onDelete: "cascade" }),
 	},
 	(table) => [
 		primaryKey({
-			columns: [table.collectionSlug, table.authorSlug],
+			columns: [table.collectionId, table.authorSlug],
 		}),
 	],
 );
@@ -48,14 +52,14 @@ export const collectionAuthors = pgTable(
 export const collectionTags = pgTable(
 	"collection_tags",
 	{
-		collectionSlug: text("collection_slug")
+		collectionId: uuid("collection_id")
 			.notNull()
-			.references(() => collections.slug, { onDelete: "cascade" }),
+			.references(() => collections.id, { onDelete: "cascade" }),
 		tag: text("tag").notNull(),
 	},
 	(table) => [
 		primaryKey({
-			columns: [table.collectionSlug, table.tag],
+			columns: [table.collectionId, table.tag],
 		}),
 	],
 );

@@ -32,7 +32,7 @@ describe("Post Routes Tests", () => {
 				],
 				collection: {
 					slug: "example-collection",
-					data: [{ title: "Example Collection" }],
+					title: "Example Collection",
 					posts: [
 						{
 							slug: "chapter-two",
@@ -171,7 +171,7 @@ describe("Post Routes Tests", () => {
 				authors: [],
 				collection: {
 					slug: "example-collection",
-					data: [{ title: "Example Collection" }],
+					title: "Example Collection",
 					posts: [
 						{
 							slug: "chapter-one",

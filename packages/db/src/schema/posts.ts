@@ -9,8 +9,8 @@ import {
 	uuid,
 	unique,
 } from "drizzle-orm/pg-core";
-import { authors } from "./authors.ts";
-import { collections } from "./collections.ts";
+import { authorSlugs } from "./authors.ts";
+import { collectionSlugs } from "./collections.ts";
 import { attachments } from "./attachments.ts";
 
 export const postGroups = pgTable("post_groups", {
@@ -24,9 +24,12 @@ export const posts = pgTable(
 		slug: text("slug").notNull(),
 		locale: text("locale").notNull(),
 		branch: text("branch").notNull(),
-		collectionSlug: text("collection_slug").references(() => collections.slug, {
-			onDelete: "set null",
-		}),
+		collectionSlug: text("collection_slug").references(
+			() => collectionSlugs.slug,
+			{
+				onDelete: "set null",
+			},
+		),
 		collectionOrder: integer("collection_order").notNull().default(0),
 		groupId: uuid("group_id").references(() => postGroups.id, {
 			onDelete: "cascade",
@@ -57,7 +60,7 @@ export const postAuthors = pgTable(
 			}),
 		authorSlug: text("author_slug")
 			.notNull()
-			.references(() => authors.slug, {
+			.references(() => authorSlugs.slug, {
 				onDelete: "cascade",
 			}),
 	},
