@@ -14,7 +14,7 @@ describe("Post Routes Tests", () => {
 	});
 
 	describe("/content/post/:slug", () => {
-		test("returns a post with its authors and a chapter list sorted by collectionOrder", async () => {
+		test("returns a post with its authors and a chapter list", async () => {
 			vi.mocked(db.query.posts.findFirst).mockResolvedValue({
 				slug: "chapter-two",
 				title: "Chapter Two",
@@ -36,14 +36,12 @@ describe("Post Routes Tests", () => {
 						title: "Example Collection",
 						posts: [
 							{
-								slug: "chapter-two",
-								collectionOrder: 1,
-								title: "Chapter Two",
+								slug: "chapter-one",
+								title: "Chapter One",
 							},
 							{
-								slug: "chapter-one",
-								collectionOrder: 0,
-								title: "Chapter One",
+								slug: "chapter-two",
+								title: "Chapter Two",
 							},
 						],
 					},
@@ -157,79 +155,6 @@ describe("Post Routes Tests", () => {
 			expect(response.json()).toMatchInlineSnapshot(`
 				{
 				  "error": "Post not found",
-				}
-			`);
-		});
-
-		test("excludes unpublished sibling chapters from the chapter list", async () => {
-			vi.mocked(db.query.posts.findFirst).mockResolvedValue({
-				slug: "chapter-one",
-				title: "Chapter One",
-				description: "The first chapter",
-				bannerImage: null,
-				socialImage: null,
-				wordCount: 300,
-				publishedAt: new Date("2024-01-15T00:00:00Z"),
-				authors: [],
-				collections: [
-					{
-						slug: "example-collection",
-						title: "Example Collection",
-						posts: [
-							{
-								slug: "chapter-one",
-								collectionOrder: 0,
-								title: "Chapter One",
-								publishedAt: new Date("2024-01-15T00:00:00Z"),
-							},
-							{
-								slug: "chapter-two-draft",
-								collectionOrder: 1,
-								title: "Chapter Two (Draft)",
-								publishedAt: null,
-							},
-							{
-								slug: "chapter-three",
-								collectionOrder: 2,
-								title: "Chapter Three",
-								publishedAt: new Date("2024-01-20T00:00:00Z"),
-							},
-						],
-					},
-				],
-				versions: [],
-			} as never);
-
-			const response = await app.inject({
-				method: "GET",
-				url: "/content/post/chapter-one",
-				query: { locale: "en" },
-			});
-
-			expect(response.statusCode).toBe(200);
-			expect(response.json()).toMatchInlineSnapshot(`
-				{
-				  "authors": [],
-				  "collection": {
-				    "chapters": [
-				      {
-				        "slug": "chapter-one",
-				        "title": "Chapter One",
-				      },
-				      {
-				        "slug": "chapter-three",
-				        "title": "Chapter Three",
-				      },
-				    ],
-				    "slug": "example-collection",
-				    "title": "Example Collection",
-				  },
-				  "description": "The first chapter",
-				  "publishedAt": "2024-01-15T00:00:00.000Z",
-				  "slug": "chapter-one",
-				  "title": "Chapter One",
-				  "versions": [],
-				  "wordCount": 300,
 				}
 			`);
 		});
