@@ -30,22 +30,24 @@ describe("Post Routes Tests", () => {
 						profileImage: "content/profile.png",
 					},
 				],
-				collection: {
-					slug: "example-collection",
-					title: "Example Collection",
-					posts: [
-						{
-							slug: "chapter-two",
-							collectionOrder: 1,
-							title: "Chapter Two",
-						},
-						{
-							slug: "chapter-one",
-							collectionOrder: 0,
-							title: "Chapter One",
-						},
-					],
-				},
+				collections: [
+					{
+						slug: "example-collection",
+						title: "Example Collection",
+						posts: [
+							{
+								slug: "chapter-two",
+								collectionOrder: 1,
+								title: "Chapter Two",
+							},
+							{
+								slug: "chapter-one",
+								collectionOrder: 0,
+								title: "Chapter One",
+							},
+						],
+					},
+				],
 				versions: [],
 			} as never);
 
@@ -103,7 +105,7 @@ describe("Post Routes Tests", () => {
 				authors: [
 					{ slug: "crutchcorn", name: "Corbin Crutchley", profileImage: null },
 				],
-				collection: null,
+				collections: [],
 				versions: [],
 			} as never);
 
@@ -142,7 +144,7 @@ describe("Post Routes Tests", () => {
 				wordCount: 100,
 				publishedAt: null,
 				authors: [],
-				collection: null,
+				collections: [],
 			} as never);
 
 			const response = await app.inject({
@@ -169,30 +171,32 @@ describe("Post Routes Tests", () => {
 				wordCount: 300,
 				publishedAt: new Date("2024-01-15T00:00:00Z"),
 				authors: [],
-				collection: {
-					slug: "example-collection",
-					title: "Example Collection",
-					posts: [
-						{
-							slug: "chapter-one",
-							collectionOrder: 0,
-							title: "Chapter One",
-							publishedAt: new Date("2024-01-15T00:00:00Z"),
-						},
-						{
-							slug: "chapter-two-draft",
-							collectionOrder: 1,
-							title: "Chapter Two (Draft)",
-							publishedAt: null,
-						},
-						{
-							slug: "chapter-three",
-							collectionOrder: 2,
-							title: "Chapter Three",
-							publishedAt: new Date("2024-01-20T00:00:00Z"),
-						},
-					],
-				},
+				collections: [
+					{
+						slug: "example-collection",
+						title: "Example Collection",
+						posts: [
+							{
+								slug: "chapter-one",
+								collectionOrder: 0,
+								title: "Chapter One",
+								publishedAt: new Date("2024-01-15T00:00:00Z"),
+							},
+							{
+								slug: "chapter-two-draft",
+								collectionOrder: 1,
+								title: "Chapter Two (Draft)",
+								publishedAt: null,
+							},
+							{
+								slug: "chapter-three",
+								collectionOrder: 2,
+								title: "Chapter Three",
+								publishedAt: new Date("2024-01-20T00:00:00Z"),
+							},
+						],
+					},
+				],
 				versions: [],
 			} as never);
 
@@ -240,7 +244,7 @@ describe("Post Routes Tests", () => {
 				wordCount: 400,
 				publishedAt: new Date("2024-01-15T00:00:00Z"),
 				authors: [],
-				collection: null,
+				collections: [],
 				versions: [
 					{
 						slug: "example-post",
@@ -308,7 +312,7 @@ describe("Post Routes Tests", () => {
 				wordCount: 200,
 				publishedAt: new Date("2024-01-15T00:00:00Z"),
 				authors: [],
-				collection: null,
+				collections: [],
 				versions: [],
 			} as never);
 
