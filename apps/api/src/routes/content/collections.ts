@@ -6,6 +6,7 @@ import { createImageUrl } from "../../utils.ts";
 
 const CollectionsQueryParamsSchema = Type.Object({
 	locale: Type.String({ default: "en" }),
+	branch: Type.String({ default: "main" }),
 	page: Type.Number({ minimum: 0 }),
 	limit: Type.Number({ minimum: 1 }),
 	author: Type.Optional(Type.String()),
@@ -97,12 +98,13 @@ const collectionsRoutes: FastifyPluginAsync = async (fastify) => {
 			const queryParams = request.query;
 
 			const collections = await db.query.collections.findMany({
-				where: queryParams.author
-					? {
-							locale: queryParams.locale,
-							authors: { slug: queryParams.author },
-						}
-					: undefined,
+				where: {
+					locale: queryParams.locale,
+					branch: queryParams.branch,
+					authors: queryParams.author
+						? { slug: queryParams.author }
+						: undefined,
+				},
 				with: {
 					authors: { columns: { slug: true, name: true, profileImage: true } },
 				},
