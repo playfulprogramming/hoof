@@ -1,15 +1,13 @@
 import "./server.ts";
-import { vi, afterEach, beforeEach } from "vitest";
+import { vi, beforeEach } from "vitest";
 import { createDbMock } from "@playfulprogramming/test-fixtures";
 import { s3 } from "@playfulprogramming/s3";
 import { Readable } from "node:stream";
 
-afterEach(() => {
+beforeEach(() => {
 	vi.clearAllMocks();
 	vi.setSystemTime(new Date("2025-05-05"));
-});
 
-beforeEach(() => {
 	// pipeline() won't resolve until the transform's readable side is drained
 	vi.mocked(s3.upload).mockImplementation(async (_bucket, _key, _tag, file) => {
 		if (file instanceof Readable) {

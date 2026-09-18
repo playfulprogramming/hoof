@@ -151,6 +151,11 @@ export function createDbMock() {
 			locale: Symbol("collections.locale"),
 			branch: Symbol("collections.branch"),
 		},
+		collectionAttachments: {
+			collectionId: Symbol("collectionAttachments.collectionId"),
+			attachmentKey: Symbol("collectionAttachments.attachmentKey"),
+			attachmentName: Symbol("collectionAttachments.attachmentName"),
+		},
 		collectionAuthors: {
 			collectionSlug: {},
 			authorSlug: {},

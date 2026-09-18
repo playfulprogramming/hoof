@@ -5,17 +5,12 @@ import {
 	posts,
 	postAuthors,
 	postTags,
-	postAttachments,
 	db,
 	attachments,
+	postAttachments,
 } from "@playfulprogramming/db";
-import { s3 } from "@playfulprogramming/s3";
 import { createInstallationClient } from "@playfulprogramming/github-api";
 import { and, eq } from "drizzle-orm";
-import { Readable } from "node:stream";
-
-const ONE_PIXEL_PNG_BASE64 =
-	"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR42mMAAQAABQABoIJXOQAAAABJRU5ErkJggg==";
 
 const selectExistingAttachments = db
 	.select(expect.anything())
@@ -29,10 +24,15 @@ const selectPreviousAuthors = db
 const insertPostReturning = db
 	.insert(posts)
 	.values(expect.anything()).returning;
-const insertAttachmentOnConflictDoUpdate = db
-	.insert(attachments)
-	.values(expect.anything()).onConflictDoUpdate;
 const github = await createInstallationClient(0);
+
+vi.mock(import("../../sync/attachments.ts"), async (importOriginal) => {
+	const original = await importOriginal();
+	return {
+		syncAttachments: vi.fn(original.syncAttachmentsFake),
+		resolveAttachment: vi.fn(original.resolveAttachment),
+	};
+});
 
 function fakeJob<Data>(data: Data): Job<Data> {
 	return { data } as unknown as Job<Data>;
@@ -56,6 +56,8 @@ test("Syncs a standalone post successfully", async () => {
 						{
 							name: "index.md",
 							path: "content/example-author/posts/example-post/index.md",
+							type: "file",
+							sha: "index-sha",
 						},
 					],
 				},
@@ -98,15 +100,6 @@ This is the post content.
 		}),
 	);
 
-	// Assert: Markdown was uploaded to S3
-	expect(s3.upload).toHaveBeenCalledWith(
-		"example-bucket",
-		"posts/example-post/en/content.md",
-		undefined,
-		expect.anything(),
-		"text/markdown",
-	);
-
 	// Assert: Post metadata was saved to database
 	expect(db.insert(posts).values).toHaveBeenCalledWith({
 		slug: "example-post",
@@ -143,6 +136,15 @@ This is the post content.
 		{
 			postId,
 			tag: "tutorial",
+		},
+	]);
+
+	// Assert: Markdown was added as an attachment
+	expect(db.insert(postAttachments).values).toHaveBeenCalledWith([
+		{
+			postId,
+			attachmentKey: "posts/example-post/attachments/index-sha.md",
+			attachmentName: "index.md",
 		},
 	]);
 });
@@ -357,10 +359,12 @@ test("Syncs post with multiple locales", async () => {
 						{
 							name: "index.md",
 							path: "content/example-author/posts/multilang-post/index.md",
+							sha: "index-en-sha",
 						},
 						{
 							name: "index.es.md",
 							path: "content/example-author/posts/multilang-post/index.es.md",
+							sha: "index-es-sha",
 						},
 					],
 				},
@@ -407,21 +411,32 @@ published: "2024-01-15T00:00:00Z"
 		}),
 	);
 
-	// Assert: Both locales were uploaded to S3
-	expect(s3.upload).toHaveBeenCalledWith(
-		"example-bucket",
-		"posts/multilang-post/en/content.md",
-		undefined,
-		expect.anything(),
-		"text/markdown",
-	);
-	expect(s3.upload).toHaveBeenCalledWith(
-		"example-bucket",
-		"posts/multilang-post/es/content.md",
-		undefined,
-		expect.anything(),
-		"text/markdown",
-	);
+	// Assert: Both locales inserted as attachments
+	expect(db.insert(postAttachments).values).toHaveBeenCalledWith([
+		{
+			postId: postIdEn,
+			attachmentKey: "posts/multilang-post/attachments/index-en-sha.md",
+			attachmentName: "index.md",
+		},
+		{
+			postId: postIdEn,
+			attachmentKey: "posts/multilang-post/attachments/index-es-sha.md",
+			attachmentName: "index.es.md",
+		},
+	]);
+	expect(db.insert(postAttachments).values).toHaveBeenCalledWith([
+		{
+			postId: postIdEs,
+			attachmentKey: "posts/multilang-post/attachments/index-en-sha.md",
+			attachmentName: "index.md",
+		},
+		{
+			postId: postIdEs,
+			attachmentKey: "posts/multilang-post/attachments/index-es-sha.md",
+			attachmentName: "index.es.md",
+		},
+	]);
+	expect(db.insert(postAttachments).values).toHaveBeenCalledTimes(2);
 
 	// Assert: Both locales were saved to database
 	expect(db.insert(posts).values).toHaveBeenCalledWith(
@@ -603,444 +618,6 @@ tags:
 		{
 			postId: postIdEs,
 			tag: "espanol",
-		},
-	]);
-});
-
-test("Uploads post attachments, resizing images and content-addressing their keys by sha", async () => {
-	const postId = ":post-attachment-id:";
-	vi.mocked(selectExistingAttachments).mockResolvedValue([]);
-	vi.mocked(selectPreviousAuthors).mockResolvedValue([]);
-	vi.mocked(insertPostReturning).mockResolvedValue([{ id: postId }]);
-
-	const basePath = "/content/example-author/posts/attachment-post/";
-	const baseFolderPath = "content/example-author/posts/attachment-post/";
-
-	vi.mocked(github.getContents).mockImplementation(((params: {
-		path: string;
-	}) => {
-		if (params.path === basePath) {
-			return Promise.resolve({
-				data: {
-					entries: [
-						{
-							name: "index.md",
-							path: `${baseFolderPath}index.md`,
-							type: "file",
-							sha: "index-sha",
-						},
-						{
-							name: "notes.pdf",
-							path: `${baseFolderPath}notes.pdf`,
-							type: "file",
-							sha: "notes-sha",
-						},
-						{
-							name: "banner.png",
-							path: `${baseFolderPath}banner.png`,
-							type: "file",
-							sha: "banner-sha",
-						},
-					],
-				},
-				status: 200,
-			});
-		}
-		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
-	}) as never);
-
-	vi.mocked(github.getContentsRaw).mockImplementation((params) => {
-		if (params.path === `/${baseFolderPath}index.md`) {
-			return Promise.resolve({
-				data: `---
-title: "Attachment Post"
-published: "2024-01-15T00:00:00Z"
----
-`,
-				status: 200,
-			});
-		}
-		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
-	});
-
-	vi.mocked(github.getContentsRawStream).mockImplementation((params) => {
-		if (params.path === `${baseFolderPath}notes.pdf`) {
-			return Promise.resolve({
-				data: Readable.toWeb(Readable.from(Buffer.from("PDF-DATA"))) as never,
-				status: 200,
-			});
-		}
-		if (params.path === `${baseFolderPath}banner.png`) {
-			return Promise.resolve({
-				data: Readable.toWeb(
-					Readable.from(Buffer.from(ONE_PIXEL_PNG_BASE64, "base64")),
-				) as never,
-				status: 200,
-			});
-		}
-		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
-	});
-
-	await processor(
-		fakeJob({
-			author: "example-author",
-			post: "attachment-post",
-			ref: "main",
-			installation: { id: 0 },
-		}),
-	);
-
-	// Assert: Non-image attachment uploaded as-is, keyed by its sha and original extension
-	expect(s3.upload).toHaveBeenCalledWith(
-		"example-bucket",
-		"posts/attachment-post/attachments/notes-sha.pdf",
-		undefined,
-		expect.anything(),
-		"application/pdf",
-	);
-
-	// Assert: Image attachment resized and converted; key is the sha with a ".jpeg" extension
-	expect(s3.upload).toHaveBeenCalledWith(
-		"example-bucket",
-		"posts/attachment-post/attachments/banner-sha.jpeg",
-		undefined,
-		expect.anything(),
-		"image/jpeg",
-	);
-
-	// Assert: Attachment rows saved with resized image dimensions, null for non-images.
-	// The 1x1 fixture is already smaller than the max size, so withoutEnlargement
-	// keeps it at 1x1 instead of upscaling it.
-	expect(db.insert(attachments).values).toHaveBeenCalledWith({
-		attachmentKey: "posts/attachment-post/attachments/notes-sha.pdf",
-		sha: "notes-sha",
-		width: null,
-		height: null,
-		lastModified: expect.any(Date),
-	});
-	expect(db.insert(attachments).values).toHaveBeenCalledWith({
-		attachmentKey: "posts/attachment-post/attachments/banner-sha.jpeg",
-		sha: "banner-sha",
-		width: 1,
-		height: 1,
-		lastModified: expect.any(Date),
-	});
-	expect(db.insert(attachments).values).toHaveBeenCalledTimes(2);
-	expect(insertAttachmentOnConflictDoUpdate).toHaveBeenCalledWith({
-		target: attachments.attachmentKey,
-		set: { lastModified: expect.any(Date) },
-	});
-
-	expect(db.insert(postAttachments).values).toHaveBeenCalledExactlyOnceWith([
-		{
-			postId,
-			attachmentKey: "posts/attachment-post/attachments/notes-sha.pdf",
-			attachmentName: "notes.pdf",
-		},
-		{
-			postId,
-			attachmentKey: "posts/attachment-post/attachments/banner-sha.jpeg",
-			attachmentName: "banner.png",
-		},
-	]);
-});
-
-test("Passes attachment paths to GitHub unchanged, without URL-encoding special characters", async () => {
-	const postId = ":post-attachment-id:";
-	vi.mocked(selectExistingAttachments).mockResolvedValue([]);
-	vi.mocked(selectPreviousAuthors).mockResolvedValue([]);
-	vi.mocked(insertPostReturning).mockResolvedValue([{ id: postId }]);
-
-	const basePath = "/content/example-author/posts/special-chars-post/";
-	const baseFolderPath = "content/example-author/posts/special-chars-post/";
-	// A filename with a space and a "#" - naively round-tripping this through
-	// `new URL()` would percent-encode the space and treat "#" as a fragment
-	// delimiter, truncating the path GitHub actually receives.
-	const attachmentName = "my notes #1.txt";
-
-	vi.mocked(github.getContents).mockImplementation(((params: {
-		path: string;
-	}) => {
-		if (params.path === basePath) {
-			return Promise.resolve({
-				data: {
-					entries: [
-						{
-							name: "index.md",
-							path: `${baseFolderPath}index.md`,
-							type: "file",
-							sha: "index-sha",
-						},
-						{
-							name: attachmentName,
-							path: `${baseFolderPath}${attachmentName}`,
-							type: "file",
-							sha: "notes-sha",
-						},
-					],
-				},
-				status: 200,
-			});
-		}
-		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
-	}) as never);
-
-	vi.mocked(github.getContentsRaw).mockImplementation((params) => {
-		if (params.path === `/${baseFolderPath}index.md`) {
-			return Promise.resolve({
-				data: `---
-title: "Special Chars Post"
-published: "2024-01-15T00:00:00Z"
----
-`,
-				status: 200,
-			});
-		}
-		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
-	});
-
-	vi.mocked(github.getContentsRawStream).mockImplementation((params) => {
-		if (params.path === `${baseFolderPath}${attachmentName}`) {
-			return Promise.resolve({
-				data: Readable.toWeb(Readable.from(Buffer.from("notes"))) as never,
-				status: 200,
-			});
-		}
-		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
-	});
-
-	await processor(
-		fakeJob({
-			author: "example-author",
-			post: "special-chars-post",
-			ref: "main",
-			installation: { id: 0 },
-		}),
-	);
-
-	// Assert: the raw entry path (with its space and "#" intact) was passed
-	// straight through to getContentsRawStream, unencoded
-	expect(github.getContentsRawStream).toHaveBeenCalledWith(
-		expect.objectContaining({ path: `${baseFolderPath}${attachmentName}` }),
-	);
-});
-
-test("Diffs post attachments: skips unchanged sha, re-uploads changed sha under a new key, removes deleted", async () => {
-	const postId = ":post-attachment-id:";
-	vi.mocked(selectExistingAttachments).mockResolvedValue([
-		{
-			attachmentKey: "posts/diffing-post/attachments/old-file-sha.txt",
-		},
-		{
-			attachmentKey: "posts/diffing-post/attachments/unchanged-sha.txt",
-		},
-		{
-			attachmentKey: "posts/diffing-post/attachments/old-changed-sha.txt",
-		},
-	]);
-	vi.mocked(selectPreviousAuthors).mockResolvedValue([]);
-	vi.mocked(insertPostReturning).mockResolvedValue([{ id: postId }]);
-
-	const basePath = "/content/example-author/posts/diffing-post/";
-	const baseFolderPath = "content/example-author/posts/diffing-post/";
-
-	vi.mocked(github.getContents).mockImplementation(((params: {
-		path: string;
-	}) => {
-		if (params.path === basePath) {
-			return Promise.resolve({
-				data: {
-					entries: [
-						{
-							name: "index.md",
-							path: `${baseFolderPath}index.md`,
-							type: "file",
-							sha: "index-sha",
-						},
-						{
-							name: "unchanged.txt",
-							path: `${baseFolderPath}unchanged.txt`,
-							type: "file",
-							sha: "unchanged-sha",
-						},
-						{
-							name: "changed.txt",
-							path: `${baseFolderPath}changed.txt`,
-							type: "file",
-							sha: "new-changed-sha",
-						},
-					],
-				},
-				status: 200,
-			});
-		}
-		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
-	}) as never);
-
-	vi.mocked(github.getContentsRaw).mockImplementation((params) => {
-		if (params.path === `/${baseFolderPath}index.md`) {
-			return Promise.resolve({
-				data: `---
-title: "Diffing Post"
-published: "2024-01-15T00:00:00Z"
----
-`,
-				status: 200,
-			});
-		}
-		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
-	});
-
-	vi.mocked(github.getContentsRawStream).mockImplementation((params) => {
-		if (params.path === `${baseFolderPath}changed.txt`) {
-			return Promise.resolve({
-				data: Readable.toWeb(
-					Readable.from(Buffer.from("new content")),
-				) as never,
-				status: 200,
-			});
-		}
-		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
-	});
-
-	await processor(
-		fakeJob({
-			author: "example-author",
-			post: "diffing-post",
-			ref: "main",
-			installation: { id: 0 },
-		}),
-	);
-
-	// Assert: changed attachment's old sha-keyed object was removed, and the
-	// new sha-keyed object was uploaded in its place
-	expect(s3.upload).toHaveBeenCalledWith(
-		"example-bucket",
-		"posts/diffing-post/attachments/new-changed-sha.txt",
-		undefined,
-		expect.anything(),
-		"text/plain",
-	);
-
-	// Assert: unchanged attachment was NOT re-uploaded or removed
-	expect(s3.upload).not.toHaveBeenCalledWith(
-		"example-bucket",
-		"posts/diffing-post/attachments/unchanged-sha.txt",
-		undefined,
-		expect.anything(),
-		expect.anything(),
-	);
-
-	// Assert: only the two attachments still present in the repo are saved
-	expect(db.insert(attachments).values).toHaveBeenCalledWith({
-		attachmentKey: "posts/diffing-post/attachments/new-changed-sha.txt",
-		sha: "new-changed-sha",
-		width: null,
-		height: null,
-		lastModified: expect.any(Date),
-	});
-	expect(db.insert(attachments).values).toHaveBeenCalledTimes(1);
-
-	expect(db.insert(postAttachments).values).toHaveBeenCalledExactlyOnceWith([
-		{
-			attachmentKey: "posts/diffing-post/attachments/unchanged-sha.txt",
-			attachmentName: "unchanged.txt",
-			postId,
-		},
-		{
-			attachmentKey: "posts/diffing-post/attachments/new-changed-sha.txt",
-			attachmentName: "changed.txt",
-			postId,
-		},
-	]);
-});
-
-test("Skips an attachment entirely when its sha matches the stored value", async () => {
-	const postId = ":test-post-id:";
-	vi.mocked(selectExistingAttachments).mockResolvedValue([
-		{
-			attachmentKey: "posts/skip-post/attachments/unchanged-sha.txt",
-		},
-	]);
-	vi.mocked(selectPreviousAuthors).mockResolvedValue([]);
-	vi.mocked(insertPostReturning).mockResolvedValue([{ id: postId }]);
-
-	const basePath = "/content/example-author/posts/skip-post/";
-	const baseFolderPath = "content/example-author/posts/skip-post/";
-
-	vi.mocked(github.getContents).mockImplementation(((params: {
-		path: string;
-	}) => {
-		if (params.path === basePath) {
-			return Promise.resolve({
-				data: {
-					entries: [
-						{
-							name: "index.md",
-							path: `${baseFolderPath}index.md`,
-							type: "file",
-							sha: "index-sha",
-						},
-						{
-							name: "unchanged.txt",
-							path: `${baseFolderPath}unchanged.txt`,
-							type: "file",
-							sha: "unchanged-sha",
-						},
-					],
-				},
-				status: 200,
-			});
-		}
-		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
-	}) as never);
-
-	vi.mocked(github.getContentsRaw).mockImplementation((params) => {
-		if (params.path === `/${baseFolderPath}index.md`) {
-			return Promise.resolve({
-				data: `---
-title: "Skip Post"
-published: "2024-01-15T00:00:00Z"
----
-`,
-				status: 200,
-			});
-		}
-		return Promise.reject(new Error(`Unexpected path: ${params.path}`));
-	});
-
-	await processor(
-		fakeJob({
-			author: "example-author",
-			post: "skip-post",
-			ref: "main",
-			installation: { id: 0 },
-		}),
-	);
-
-	// Assert: the attachment's content was never fetched from GitHub, since its
-	// sha already matched the stored row
-	expect(github.getContentsRawStream).not.toHaveBeenCalledWith(
-		expect.objectContaining({ path: `${baseFolderPath}unchanged.txt` }),
-	);
-
-	// Assert: no S3 interaction happened for the attachment itself (content.md
-	// is still uploaded separately as part of every sync)
-	expect(s3.upload).not.toHaveBeenCalledWith(
-		"example-bucket",
-		"posts/skip-post/attachments/unchanged-sha.txt",
-		expect.anything(),
-		expect.anything(),
-		expect.anything(),
-	);
-
-	// Assert: the existing row was carried forward unchanged
-	expect(db.insert(attachments).values).not.toHaveBeenCalled();
-	expect(db.insert(postAttachments).values).toHaveBeenCalledExactlyOnceWith([
-		{
-			attachmentName: "unchanged.txt",
-			attachmentKey: "posts/skip-post/attachments/unchanged-sha.txt",
-			postId,
 		},
 	]);
 });
