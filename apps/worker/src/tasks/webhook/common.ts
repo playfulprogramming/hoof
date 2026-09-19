@@ -32,21 +32,29 @@ export async function enqueueSyncJobs(params: ProcessWebhookParams) {
 	for (const file of params.files) {
 		{
 			const [, author] = /^content\/([^/]+)\//.exec(file) ?? [];
-			authorEntries.getOrInsertComputed(author, newAuthorEntry);
+			if (author) {
+				authorEntries.getOrInsertComputed(author, newAuthorEntry);
+			}
 		}
 
 		{
 			const [, author, post] =
 				/^content\/([^/]+)\/posts\/([^/]+)\//.exec(file) ?? [];
-			authorEntries.getOrInsertComputed(author, newAuthorEntry).posts.add(post);
+			if (author && post) {
+				authorEntries
+					.getOrInsertComputed(author, newAuthorEntry)
+					.posts.add(post);
+			}
 		}
 
 		{
 			const [, author, collection] =
 				/^content\/([^/]+)\/collections\/([^/]+)\//.exec(file) ?? [];
-			authorEntries
-				.getOrInsertComputed(author, newAuthorEntry)
-				.collections.getOrInsertComputed(collection, newCollectionEntry);
+			if (author && collection) {
+				authorEntries
+					.getOrInsertComputed(author, newAuthorEntry)
+					.collections.getOrInsertComputed(collection, newCollectionEntry);
+			}
 		}
 
 		{
@@ -54,10 +62,12 @@ export async function enqueueSyncJobs(params: ProcessWebhookParams) {
 				/^content\/([^/]+)\/collections\/([^/]+)\/posts\/([^/]+)\//.exec(
 					file,
 				) ?? [];
-			authorEntries
-				.getOrInsertComputed(author, newAuthorEntry)
-				.collections.getOrInsertComputed(collection, newCollectionEntry)
-				.posts.add(post);
+			if (author && collection && post) {
+				authorEntries
+					.getOrInsertComputed(author, newAuthorEntry)
+					.collections.getOrInsertComputed(collection, newCollectionEntry)
+					.posts.add(post);
+			}
 		}
 	}
 

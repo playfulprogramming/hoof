@@ -1,0 +1,72 @@
+[
+  [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [
+                    {
+                      "children": undefined,
+                      "data": {
+                        "author": "author",
+                        "installation": {
+                          "id": 0,
+                        },
+                        "ref": "example-branch",
+                      },
+                      "name": "author:example-branch:example-ref",
+                      "queueName": "sync-author",
+                    },
+                  ],
+                  "data": {
+                    "author": "author",
+                    "installation": {
+                      "id": 0,
+                    },
+                    "post": "post",
+                    "ref": "example-branch",
+                  },
+                  "name": "author/post:example-branch:example-ref",
+                  "queueName": "sync-post",
+                },
+              ],
+              "data": {
+                "author": "someoneelse",
+                "installation": {
+                  "id": 0,
+                },
+                "ref": "example-branch",
+              },
+              "name": "someoneelse:example-branch:example-ref",
+              "queueName": "sync-author",
+            },
+          ],
+          "data": {
+            "author": "someoneelse",
+            "collection": "collection",
+            "installation": {
+              "id": 0,
+            },
+            "ref": "example-branch",
+          },
+          "name": "someoneelse/collection:example-branch:example-ref",
+          "queueName": "sync-collection",
+        },
+      ],
+      "data": {
+        "author": "someoneelse",
+        "collection": "collection",
+        "installation": {
+          "id": 0,
+        },
+        "post": "post",
+        "ref": "example-branch",
+      },
+      "name": "someoneelse/collection/post:example-branch:example-ref",
+      "queueName": "sync-post",
+    },
+  ],
+]
