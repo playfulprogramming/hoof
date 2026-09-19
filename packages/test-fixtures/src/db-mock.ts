@@ -23,6 +23,13 @@ export function createDbMock() {
 		};
 	};
 
+	const updateMap = new Map<unknown, unknown>();
+	const updateMockResponse = (name: string) => {
+		const where = vi.fn(() => ({})).mockName(`update(${name}).where`);
+		const set = vi.fn(() => ({ where })).mockName(`update(${name}).set`);
+		return { set };
+	};
+
 	const deleteMap = new Map<unknown, unknown>();
 	const deleteMockResponse = (name: string) => {
 		const returning = vi.fn().mockName(`delete(${name}).returning`);
@@ -52,6 +59,14 @@ export function createDbMock() {
 				);
 			})
 			.mockName("insert"),
+		update: vi
+			.fn((arg) => {
+				return (
+					updateMap.get(arg) ??
+					updateMap.set(arg, updateMockResponse(arg[tableName])).get(arg)
+				);
+			})
+			.mockName("update"),
 		delete: vi
 			.fn((arg) => {
 				return (
@@ -151,12 +166,17 @@ export function createDbMock() {
 			locale: Symbol("collections.locale"),
 			branch: Symbol("collections.branch"),
 		},
+		collectionAttachments: {
+			collectionId: Symbol("collectionAttachments.collectionId"),
+			attachmentKey: Symbol("collectionAttachments.attachmentKey"),
+			attachmentName: Symbol("collectionAttachments.attachmentName"),
+		},
 		collectionAuthors: {
-			collectionSlug: {},
+			collectionId: Symbol("collectionAuthors.collectionId"),
 			authorSlug: {},
 		},
 		collectionTags: {
-			collectionSlug: {},
+			collectionId: Symbol("collectionTags.collectionId"),
 			tag: {},
 		},
 		githubInstallations: {

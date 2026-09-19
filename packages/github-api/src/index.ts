@@ -27,6 +27,8 @@ function createClient(client: Octokit) {
 	};
 }
 
+export type GitHubClient = ReturnType<typeof createClient>;
+
 export function createAppClient() {
 	if (localClient) return createClient(localClient);
 	return createClient(app.octokit);

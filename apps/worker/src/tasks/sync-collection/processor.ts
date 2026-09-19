@@ -1,6 +1,7 @@
 import { env, CollectionMetaSchema } from "@playfulprogramming/common";
 import { Tasks, createJob } from "@playfulprogramming/bullmq";
 import {
+	collectionAttachments,
 	collectionAuthors,
 	collections,
 	collectionSlugs,
@@ -13,9 +14,7 @@ import { and, eq } from "drizzle-orm";
 import matter from "gray-matter";
 import { Value } from "typebox/value";
 import { extractLocale } from "../../utils/extractLocale.ts";
-import { uploadProcessedImage } from "../../utils/uploadProcessedImage.ts";
-
-const IMAGE_SIZE_MAX = 2048;
+import { resolveAttachment, syncAttachments } from "../../sync/attachments.ts";
 
 export default createProcessor(
 	Tasks.SYNC_COLLECTION,
@@ -29,7 +28,7 @@ export default createProcessor(
 			"http://localhost",
 		);
 
-		const collectionMetaResponse = await client.getContents({
+		const folderResponse = await client.getContents({
 			ref: job.data.ref,
 			path: collectionMetaUrl.pathname,
 			repoOwner: env.GITHUB_REPO_OWNER,
@@ -37,8 +36,8 @@ export default createProcessor(
 			signal,
 		});
 
-		if (collectionMetaResponse.data === undefined) {
-			if (collectionMetaResponse.status === 404) {
+		if (folderResponse.data === undefined) {
+			if (folderResponse.status === 404) {
 				console.log(
 					`Metadata for ${collectionSlug} (${collectionMetaUrl.pathname}) returned 404 - removing collection entry.`,
 				);
@@ -57,15 +56,15 @@ export default createProcessor(
 		}
 
 		if (
-			!collectionMetaResponse.data.entries ||
-			!Array.isArray(collectionMetaResponse.data.entries)
+			!folderResponse.data.entries ||
+			!Array.isArray(folderResponse.data.entries)
 		) {
 			throw new Error(`Unable to fetch collection data for ${collectionSlug}`);
 		}
 
-		type Entry = (typeof collectionMetaResponse.data.entries)[number];
+		type Entry = (typeof folderResponse.data.entries)[number];
 
-		const collectionEntries = collectionMetaResponse.data.entries.reduce(
+		const collectionEntries = folderResponse.data.entries.reduce(
 			(
 				prev,
 				// entry.name is `index.md` and path is `content/{authorId}/collections/{collectionId}/index.md`
@@ -82,6 +81,9 @@ export default createProcessor(
 			[] as Array<{ entry: Entry; locale: string }>,
 		);
 
+		// =========================================================================
+		// Phase 1: Collect all data from GitHub
+		// =========================================================================
 		const allTags = new Set<string>();
 
 		// Accumulate all unique author slugs touched across locale iterations
@@ -113,80 +115,27 @@ export default createProcessor(
 					collectionParsedData.tags.forEach((tag) => allTags.add(tag));
 				}
 
-				// Check if coverImg or socialImg have changed since last edit, if so upload to S3
-				let coverImgKey: string | null = null;
-				let socialImgKey: string | null = null;
-				if (collectionParsedData.coverImg) {
-					const coverImgUrl = new URL(
-						collectionParsedData.coverImg,
-						collectionMetaUrl,
-					);
-					const { data: coverImgStream } = await client.getContentsRawStream({
-						ref: job.data.ref,
-						path: coverImgUrl.pathname,
-						repoOwner: env.GITHUB_REPO_OWNER,
-						repoName: env.GITHUB_REPO_NAME,
-						signal,
-					});
-
-					if (
-						coverImgStream === null ||
-						typeof coverImgStream === "undefined"
-					) {
-						throw new Error(
-							`Unable to fetch cover image for ${collectionSlug} (${coverImgUrl.pathname})`,
-						);
-					}
-
-					coverImgKey = `collections/${collectionSlug}/${locale}/cover.jpg`;
-					await uploadProcessedImage(
-						coverImgStream,
-						coverImgKey,
-						IMAGE_SIZE_MAX,
-						signal,
-					);
-				}
-
-				if (collectionParsedData.socialImg) {
-					const socialImgUrl = new URL(
-						collectionParsedData.socialImg,
-						collectionMetaUrl,
-					);
-					const { data: socialImgStream } = await client.getContentsRawStream({
-						ref: job.data.ref,
-						path: socialImgUrl.pathname,
-						repoOwner: env.GITHUB_REPO_OWNER,
-						repoName: env.GITHUB_REPO_NAME,
-						signal,
-					});
-
-					if (
-						socialImgStream === null ||
-						typeof socialImgStream === "undefined"
-					) {
-						throw new Error(
-							`Unable to fetch social image for ${collectionSlug} (${socialImgUrl.pathname})`,
-						);
-					}
-
-					socialImgKey = `collections/${collectionSlug}/${locale}/social.jpg`;
-					await uploadProcessedImage(
-						socialImgStream,
-						socialImgKey,
-						IMAGE_SIZE_MAX,
-						signal,
-					);
-				}
-
 				return {
 					locale,
 					parsed: collectionParsedData,
-					coverImgKey,
-					socialImgKey,
 				};
 			}),
 		);
 
+		// =========================================================================
+		// Phase 2: Discover, resize, diff, and upload post attachments
+		// =========================================================================
+		const attachmentRows = await syncAttachments({
+			client,
+			ref: job.data.ref,
+			folder: folderResponse.data,
+			keyPrefix: `collections/${collectionSlug}`,
+			signal,
+		});
+
+		// =========================================================================
+		// Phase 3: Perform all database operations in a single transaction
+		// =========================================================================
 		await db.transaction(async (tx) => {
 			// Remove the existing collection records (relations are removed by cascading deletes)
 			await tx
@@ -204,15 +153,22 @@ export default createProcessor(
 				.values({ slug: collectionSlug })
 				.onConflictDoNothing();
 
-			for (const { locale, parsed, ...data } of localeData) {
+			for (const { locale, parsed } of localeData) {
+				const coverImage =
+					parsed.coverImg &&
+					resolveAttachment(parsed.coverImg, attachmentRows)?.attachmentKey;
+				const socialImage =
+					parsed.socialImg &&
+					resolveAttachment(parsed.socialImg, attachmentRows)?.attachmentKey;
+
 				const result = {
 					slug: collectionSlug,
 					locale: locale,
 					branch: job.data.ref,
 					title: parsed.title,
 					description: parsed.description,
-					coverImage: data.coverImgKey,
-					socialImage: data.socialImgKey,
+					coverImage: coverImage ?? null,
+					socialImage: socialImage ?? null,
 					meta: {
 						buttons: parsed.buttons,
 						tags: parsed.tags,
@@ -259,6 +215,18 @@ export default createProcessor(
 							collectionId: collectionRecord.id,
 							tag,
 						})),
+					);
+				}
+
+				if (attachmentRows.length > 0) {
+					await tx.insert(collectionAttachments).values(
+						Array.from(
+							attachmentRows.values().map((row) => ({
+								collectionId: collectionRecord.id,
+								attachmentKey: row.attachmentKey,
+								attachmentName: row.attachmentName,
+							})),
+						),
 					);
 				}
 			}

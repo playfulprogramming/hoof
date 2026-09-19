@@ -8,6 +8,7 @@ import {
 	unique,
 } from "drizzle-orm/pg-core";
 import { authorSlugs } from "./authors.ts";
+import { attachments } from "./attachments.ts";
 
 export const collectionSlugs = pgTable("collection_slugs", {
 	slug: text("slug").primaryKey(),
@@ -60,6 +61,26 @@ export const collectionTags = pgTable(
 	(table) => [
 		primaryKey({
 			columns: [table.collectionId, table.tag],
+		}),
+	],
+);
+
+export const collectionAttachments = pgTable(
+	"collection_attachments",
+	{
+		collectionId: uuid("collection_id")
+			.notNull()
+			.references(() => collections.id, { onDelete: "cascade" }),
+		attachmentKey: text("attachment_key")
+			.notNull()
+			.references(() => attachments.attachmentKey, {
+				onDelete: "cascade",
+			}),
+		attachmentName: text("attachment_name").notNull(),
+	},
+	(table) => [
+		primaryKey({
+			columns: [table.collectionId, table.attachmentName],
 		}),
 	],
 );
