@@ -2,7 +2,7 @@ import { env } from "@playfulprogramming/common";
 import { attachments, db } from "@playfulprogramming/db";
 import type { GitHubClient } from "@playfulprogramming/github-api";
 import { s3 } from "@playfulprogramming/s3";
-import { inArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { extname } from "path";
 import sharp from "sharp";
 import { Readable } from "stream";
@@ -142,8 +142,8 @@ export async function syncAttachments({
 
 	for (const {
 		attachmentKey,
-		isImage,
 		attachmentName,
+		isImage,
 		path,
 		sha,
 	} of attachmentEntries) {
@@ -151,6 +151,11 @@ export async function syncAttachments({
 		// object in S3 - carry the existing row forward without touching GitHub
 		// or S3 at all.
 		if (existingAttachmentKeys.has(attachmentKey)) {
+			await db
+				.update(attachments)
+				.set({ lastModified: new Date() })
+				.where(eq(attachments.attachmentKey, attachmentKey));
+
 			attachmentRows.push({
 				attachmentKey,
 				attachmentName,
@@ -228,6 +233,8 @@ export const syncAttachmentsFake: typeof syncAttachments = async (p) => {
 };
 
 export function resolveAttachment(path: string, rows: AttachmentRow[]) {
-	const attachmentName = new URL(path, "http://localhost").pathname.slice(1);
+	const attachmentName = decodeURIComponent(
+		new URL(path, "http://localhost").pathname.slice(1),
+	);
 	return rows.find((row) => row.attachmentName === attachmentName);
 }

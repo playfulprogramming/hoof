@@ -1,7 +1,7 @@
 import { attachments, db } from "@playfulprogramming/db";
 import { createInstallationClient } from "@playfulprogramming/github-api";
 import { Readable } from "stream";
-import { syncAttachments } from "./attachments.ts";
+import { resolveAttachment, syncAttachments } from "./attachments.ts";
 import { s3 } from "@playfulprogramming/s3";
 
 const ONE_PIXEL_PNG_BASE64 =
@@ -342,4 +342,22 @@ test("Skips an attachment entirely when its sha matches the stored value", async
 
 	// Assert: the existing row was carried forward unchanged
 	expect(insertAttachmentsValues).not.toHaveBeenCalled();
+});
+
+test("resolveAttachment matches URI-encoded file names", () => {
+	const attachment = {
+		attachmentKey: "fake-attachment-key",
+		attachmentName: "my notes #1.txt",
+	};
+	const result = resolveAttachment("./my%20notes%20%231.txt", [attachment]);
+	expect(result).toEqual(attachment);
+});
+
+test("resolveAttachment returns undefined when no match is found", () => {
+	const attachment = {
+		attachmentKey: "fake-attachment-key",
+		attachmentName: "example.txt",
+	};
+	const result = resolveAttachment("./doesnotexist.txt", [attachment]);
+	expect(result).toEqual(undefined);
 });
