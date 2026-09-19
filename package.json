@@ -27,9 +27,9 @@
 		]
 	},
 	"engines": {
-		"node": ">=24.0.0"
+		"node": "26.8.x"
 	},
-	"packageManager": "pnpm@11.4.0+sha512.f0febc7e37552ab485494a914241b338e0b3580b93d54ce31f00933015880863129038a1b4ae4e414a0ee63ac35bf21197e990172c4a68256450b5636310968f",
+	"packageManager": "pnpm@12.5.1+sha512.e3f305bc784a2bc89f5ad3b6138889470fae8d2af5f36b61216ec91c2c3d64089775f9de38aac331044ea40f245cb0d5666392dfdf65824e1907ef6a2c62de5f",
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
 		"@nx/vite": "22.7.2",
