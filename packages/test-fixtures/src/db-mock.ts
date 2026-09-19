@@ -157,11 +157,11 @@ export function createDbMock() {
 			attachmentName: Symbol("collectionAttachments.attachmentName"),
 		},
 		collectionAuthors: {
-			collectionSlug: {},
+			collectionId: Symbol("collectionAuthors.collectionId"),
 			authorSlug: {},
 		},
 		collectionTags: {
-			collectionSlug: {},
+			collectionId: Symbol("collectionTags.collectionId"),
 			tag: {},
 		},
 		githubInstallations: {
