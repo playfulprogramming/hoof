@@ -349,6 +349,11 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	);
 
 	await db.transaction(async (tx) => {
+		// Remove the existing post records (relations are removed by cascading deletes)
+		await tx
+			.delete(posts)
+			.where(and(eq(posts.slug, post), eq(posts.branch, ref)));
+
 		for (const { locale, parsed, wordCount } of localeData) {
 			let groupId: string | undefined;
 			if (parsed.upToDateSlug) {
@@ -370,17 +375,6 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 					groupId = newGroup.id;
 				}
 			}
-
-			// Remove the existing post record (relations are removed by cascading deletes)
-			await tx
-				.delete(posts)
-				.where(
-					and(
-						eq(posts.slug, post),
-						eq(posts.locale, locale),
-						eq(posts.branch, ref),
-					),
-				);
 
 			const postValues = {
 				slug: post,
@@ -412,9 +406,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 				.returning({ id: posts.id });
 
 			const authorSlugs = new Set<string>([author, ...(parsed.authors ?? [])]);
-			parsed.authors?.forEach((authorSlug) =>
-				affectedAuthorSlugs.add(authorSlug),
-			);
+			authorSlugs.forEach((authorSlug) => affectedAuthorSlugs.add(authorSlug));
 
 			await tx.insert(postAuthors).values(
 				Array.from(

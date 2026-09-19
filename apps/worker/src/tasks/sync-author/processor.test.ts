@@ -4,7 +4,7 @@ import { db, authors, authorRoles } from "@playfulprogramming/db";
 import { s3 } from "@playfulprogramming/s3";
 import { createInstallationClient } from "@playfulprogramming/github-api";
 import { Readable } from "node:stream";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { uploadProcessedImage } from "../../utils/uploadProcessedImage.ts";
 
 const github = await createInstallationClient(0);
@@ -13,27 +13,12 @@ function fakeJob<Data>(data: Data): Job<Data> {
 	return { data } as unknown as Job<Data>;
 }
 
+const insertAuthorsValues = db.insert(authors).values;
+const deleteAuthorsWhere = db.delete(authors).where;
+const insertAuthorRolesValues = db.insert(authorRoles).values;
+const deleteAuthorRolesWhere = db.delete(authorRoles).where;
+
 test("Creates an example author successfully", async () => {
-	const insertAuthorsValues = vi.fn().mockReturnValue({
-		onConflictDoUpdate: vi.fn(),
-	});
-	const insertAuthorRolesValues = vi.fn();
-
-	vi.mocked(db.insert).mockImplementation((table) => {
-		if (table === authors) {
-			return { values: insertAuthorsValues } as never;
-		}
-		if (table === authorRoles) {
-			return { values: insertAuthorRolesValues } as never;
-		}
-		throw new Error(`Unexpected table: ${table}`);
-	});
-
-	const deleteWhere = vi.fn();
-	vi.mocked(db.delete).mockReturnValue({
-		where: deleteWhere,
-	} as never);
-
 	vi.mocked(github.getContentsRaw).mockImplementation((params) => {
 		if (params.path === "/content/example/index.md") {
 			return Promise.resolve({
@@ -87,6 +72,7 @@ test("Creates an example author successfully", async () => {
 	expect(insertAuthorsValues).toHaveBeenCalledWith({
 		slug: "example",
 		name: "Example Person",
+		branch: "main",
 		description: "Hello",
 		profileImage: "profiles/example.jpeg",
 		meta: {
@@ -95,7 +81,7 @@ test("Creates an example author successfully", async () => {
 	});
 
 	// Old roles were deleted, new roles were inserted
-	expect(deleteWhere).toHaveBeenCalledWith(
+	expect(deleteAuthorRolesWhere).toHaveBeenCalledWith(
 		eq(authorRoles.authorSlug, "example"),
 	);
 	expect(insertAuthorRolesValues).toHaveBeenCalledWith([
@@ -105,26 +91,6 @@ test("Creates an example author successfully", async () => {
 });
 
 test("Replaces an existing author's roles on a subsequent sync with a different role set", async () => {
-	const insertAuthorsValues = vi.fn().mockReturnValue({
-		onConflictDoUpdate: vi.fn(),
-	});
-	const insertAuthorRolesValues = vi.fn();
-
-	vi.mocked(db.insert).mockImplementation((table) => {
-		if (table === authors) {
-			return { values: insertAuthorsValues } as never;
-		}
-		if (table === authorRoles) {
-			return { values: insertAuthorRolesValues } as never;
-		}
-		throw new Error(`Unexpected table: ${table}`);
-	});
-
-	const deleteWhere = vi.fn();
-	vi.mocked(db.delete).mockReturnValue({
-		where: deleteWhere,
-	} as never);
-
 	vi.mocked(github.getContentsRaw).mockImplementationOnce((params) => {
 		if (params.path === "/content/example/index.md") {
 			return Promise.resolve({
@@ -180,7 +146,7 @@ test("Replaces an existing author's roles on a subsequent sync with a different 
 	);
 
 	// Old roles were deleted again, and only the new role set was inserted
-	expect(deleteWhere).toHaveBeenCalledWith(
+	expect(deleteAuthorRolesWhere).toHaveBeenCalledWith(
 		eq(authorRoles.authorSlug, "example"),
 	);
 	expect(insertAuthorRolesValues).toHaveBeenLastCalledWith([
@@ -190,26 +156,6 @@ test("Replaces an existing author's roles on a subsequent sync with a different 
 });
 
 test("Inserts no rows for an author with an empty roles array", async () => {
-	const insertAuthorsValues = vi.fn().mockReturnValue({
-		onConflictDoUpdate: vi.fn(),
-	});
-	const insertAuthorRolesValues = vi.fn();
-
-	vi.mocked(db.insert).mockImplementation((table) => {
-		if (table === authors) {
-			return { values: insertAuthorsValues } as never;
-		}
-		if (table === authorRoles) {
-			return { values: insertAuthorRolesValues } as never;
-		}
-		throw new Error(`Unexpected table: ${table}`);
-	});
-
-	const deleteWhere = vi.fn();
-	vi.mocked(db.delete).mockReturnValue({
-		where: deleteWhere,
-	} as never);
-
 	vi.mocked(github.getContentsRaw).mockImplementation((params) => {
 		if (params.path === "/content/example/index.md") {
 			return Promise.resolve({
@@ -235,18 +181,13 @@ test("Inserts no rows for an author with an empty roles array", async () => {
 	);
 
 	// Roles were still deleted (in case any existed previously), but nothing was inserted
-	expect(deleteWhere).toHaveBeenCalledWith(
+	expect(deleteAuthorRolesWhere).toHaveBeenCalledWith(
 		eq(authorRoles.authorSlug, "example"),
 	);
 	expect(insertAuthorRolesValues).not.toHaveBeenCalled();
 });
 
 test("Deletes an author record if it no longer exists", async () => {
-	const deleteWhere = vi.fn();
-	vi.mocked(db.delete).mockReturnValue({
-		where: deleteWhere,
-	} as never);
-
 	vi.mocked(github.getContentsRaw).mockImplementation((params) => {
 		if (params.path === "/content/example/index.md") {
 			return Promise.resolve({
@@ -266,7 +207,9 @@ test("Deletes an author record if it no longer exists", async () => {
 	);
 
 	// The author was deleted from the database
-	expect(deleteWhere).toHaveBeenCalledWith(eq(authors.slug, "example"));
+	expect(deleteAuthorsWhere).toHaveBeenCalledWith(
+		and(eq(authors.slug, "example"), eq(authors.branch, "main")),
+	);
 });
 
 test("Rejects the profile image upload when the signal is already aborted", async () => {

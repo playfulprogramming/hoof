@@ -5,23 +5,29 @@ export const relations = defineRelations(schema, (r) => ({
 	// Collections relations
 	collections: {
 		authors: r.many.authors({
-			from: r.collections.slug.through(r.collectionAuthors.collectionSlug),
+			from: r.collections.id.through(r.collectionAuthors.collectionId),
 			to: r.authors.slug.through(r.collectionAuthors.authorSlug),
 		}),
-		posts: r.many.posts(),
-		data: r.many.collectionData({
+		posts: r.many.posts({
 			from: r.collections.slug,
-			to: r.collectionData.slug,
+			to: r.posts.collectionSlug,
+		}),
+	},
+
+	collectionSlugs: {
+		data: r.many.collections({
+			from: r.collectionSlugs.slug,
+			to: r.collections.slug,
 		}),
 	},
 
 	// Collection authors junction
 	collectionAuthors: {
 		collection: r.one.collections({
-			from: r.collectionAuthors.collectionSlug,
-			to: r.collections.slug,
+			from: r.collectionAuthors.collectionId,
+			to: r.collections.id,
 		}),
-		author: r.one.authors({
+		author: r.many.authors({
 			from: r.collectionAuthors.authorSlug,
 			to: r.authors.slug,
 		}),
@@ -33,7 +39,7 @@ export const relations = defineRelations(schema, (r) => ({
 			from: r.posts.id.through(r.postAuthors.postId),
 			to: r.authors.slug.through(r.postAuthors.authorSlug),
 		}),
-		collection: r.one.collections({
+		collections: r.many.collections({
 			from: r.posts.collectionSlug,
 			to: r.collections.slug,
 		}),
@@ -47,18 +53,6 @@ export const relations = defineRelations(schema, (r) => ({
 		}),
 	},
 
-	// Posts authors junction
-	postAuthors: {
-		post: r.one.posts({
-			from: r.postAuthors.postId,
-			to: r.posts.id,
-		}),
-		author: r.one.authors({
-			from: r.postAuthors.authorSlug,
-			to: r.authors.slug,
-		}),
-	},
-
 	// Authors relations
 	authors: {
 		postsAuthored: r.many.posts({
@@ -67,7 +61,7 @@ export const relations = defineRelations(schema, (r) => ({
 		}),
 		collectionsAuthored: r.many.collections({
 			from: r.authors.slug.through(r.collectionAuthors.authorSlug),
-			to: r.collections.slug.through(r.collectionAuthors.collectionSlug),
+			to: r.collections.id.through(r.collectionAuthors.collectionId),
 		}),
 		achievements: r.many.authorAchievements({
 			from: r.authors.slug,

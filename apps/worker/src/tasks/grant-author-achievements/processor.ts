@@ -4,7 +4,7 @@ import {
 	authorAchievements,
 	postAuthors,
 	collectionAuthors,
-	collectionData,
+	collections,
 	posts,
 } from "@playfulprogramming/db";
 import { createInstallationClient } from "@playfulprogramming/github-api";
@@ -91,16 +91,17 @@ export default createProcessor(Tasks.GRANT_AUTHOR_ACHIEVEMENTS, async (job) => {
 		.select({ value: count() })
 		.from(collectionAuthors)
 		.innerJoin(
-			collectionData,
+			collections,
 			and(
-				eq(collectionData.slug, collectionAuthors.collectionSlug),
-				eq(collectionData.locale, "en"),
+				eq(collections.id, collectionAuthors.collectionId),
+				eq(collections.branch, "main"),
+				eq(collections.locale, "en"),
 			),
 		)
 		.where(
 			and(
 				eq(collectionAuthors.authorSlug, authorSlug),
-				isNotNull(collectionData.publishedAt),
+				isNotNull(collections.publishedAt),
 			),
 		);
 	const collectionCount = collectionCountResult[0]?.value ?? 0;
