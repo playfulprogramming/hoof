@@ -105,7 +105,7 @@ export const postAttachments = pgTable(
 	},
 	(table) => [
 		primaryKey({
-			columns: [table.postId, table.attachmentKey],
+			columns: [table.postId, table.attachmentName],
 		}),
 	],
 );

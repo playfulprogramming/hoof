@@ -80,7 +80,7 @@ export const collectionAttachments = pgTable(
 	},
 	(table) => [
 		primaryKey({
-			columns: [table.collectionId, table.attachmentKey],
+			columns: [table.collectionId, table.attachmentName],
 		}),
 	],
 );

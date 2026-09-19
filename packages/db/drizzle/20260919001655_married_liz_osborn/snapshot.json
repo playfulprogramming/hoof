@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "43341ec8-1034-41a7-8b89-bd48810bf5d8",
+  "id": "d6877590-84a6-4280-889c-89c3f9579318",
   "prevIds": [
     "97c1bdbb-4f41-4e07-bce8-a3098c96a9d1"
   ],
@@ -1910,7 +1910,7 @@
     {
       "columns": [
         "collection_id",
-        "attachment_key"
+        "attachment_name"
       ],
       "nameExplicit": false,
       "name": "collection_attachments_pkey",
@@ -1943,7 +1943,7 @@
     {
       "columns": [
         "post_id",
-        "attachment_key"
+        "attachment_name"
       ],
       "nameExplicit": false,
       "name": "post_attachments_pkey",
