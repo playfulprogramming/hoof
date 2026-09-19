@@ -1,8 +1,8 @@
-import { Tasks } from "@playfulprogramming/bullmq";
+import { flowProducer, Tasks } from "@playfulprogramming/bullmq";
 import { createProcessor } from "../../createProcessor.ts";
 import { createInstallationClient } from "@playfulprogramming/github-api";
 import { env } from "@playfulprogramming/common";
-import { enqueueSyncJobs } from "./common.ts";
+import { constructSyncJobs } from "./common.ts";
 
 export default createProcessor(
 	Tasks.WEBHOOK_PULL_REQUEST,
@@ -19,12 +19,13 @@ export default createProcessor(
 
 		const comparisonFiles = comparison.files?.map((f) => f.filename) ?? [];
 
-		await enqueueSyncJobs({
+		const jobDef = constructSyncJobs({
 			files: comparisonFiles,
 			ref: job.data.commitHead,
 			branch: job.data.branch,
 			installation: job.data.installation,
 		});
+		if (jobDef) await flowProducer.add(jobDef);
 
 		return {};
 	},

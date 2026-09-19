@@ -4,7 +4,7 @@
 	"ignoreDependencies": ["@aws-sdk/types", "openapi-typescript"],
 	"workspaces": {
 		"apps/worker": {
-			"entry": ["src/tasks/*/processor.ts"]
+			"entry": ["src/tasks/*/*.ts"]
 		},
 		"packages/*": {
 			"includeEntryExports": true

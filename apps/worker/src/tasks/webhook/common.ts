@@ -1,8 +1,4 @@
-import {
-	flowProducer,
-	type TaskInputs,
-	Tasks,
-} from "@playfulprogramming/bullmq";
+import { type TaskInputs, Tasks } from "@playfulprogramming/bullmq";
 import type { FlowChildJob } from "bullmq";
 
 interface ProcessWebhookParams {
@@ -25,7 +21,9 @@ const newAuthorEntry = (): AuthorEntry => ({
 	posts: new Set(),
 });
 
-export async function enqueueSyncJobs(params: ProcessWebhookParams) {
+export function constructSyncJobs(
+	params: ProcessWebhookParams,
+): FlowChildJob | undefined {
 	// Assemble a "task graph" with author -> collection? -> post dependencies from the changed files
 	const authorEntries: Map<string, AuthorEntry> = new Map();
 
@@ -136,7 +134,5 @@ export async function enqueueSyncJobs(params: ProcessWebhookParams) {
 		}
 	}
 
-	if (jobDef !== undefined) {
-		await flowProducer.add(jobDef);
-	}
+	return jobDef;
 }

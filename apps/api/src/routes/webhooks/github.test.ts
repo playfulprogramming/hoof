@@ -4,6 +4,44 @@ import githubWebhookRoutes from "./github.ts";
 import { createJob } from "@playfulprogramming/bullmq";
 import { env } from "@playfulprogramming/common";
 
+vi.mock("@playfulprogramming/github-api", () => {
+	type WebhookListener = (payload: unknown) => Promise<unknown>;
+	const listeners: WebhookListener[] = [];
+
+	return {
+		webhooks: {
+			verifyAndReceive: vi.fn(
+				async ({
+					xGithubDelivery,
+					xGithubEvent,
+					xHubSignature256,
+					payload,
+				}) => {
+					if (xHubSignature256 === "invalid-signature") {
+						return {
+							status: 401,
+							error: new Error(
+								"signature does not match event payload and secret",
+							),
+						};
+					}
+
+					for (const listener of listeners) {
+						await listener({
+							id: xGithubDelivery,
+							name: xGithubEvent,
+							payload: JSON.parse(payload),
+						});
+					}
+					return { status: 200 };
+				},
+			),
+			registerWebhookListener: (listener: WebhookListener) =>
+				listeners.push(listener),
+		},
+	};
+});
+
 function sign(payload: string): string {
 	return (
 		"sha256=" +
@@ -97,6 +135,14 @@ test("pull_request webhook enqueues a job", async () => {
 		repository: {
 			full_name: `${env.GITHUB_REPO_OWNER}/${env.GITHUB_REPO_NAME}`,
 		},
+		pull_request: {
+			number: 1234,
+			base: { sha: "base-sha" },
+			head: { sha: "head-sha" },
+		},
+		installation: {
+			id: 0,
+		},
 	};
 
 	const payload = JSON.stringify(payloadObj);
@@ -118,7 +164,12 @@ test("pull_request webhook enqueues a job", async () => {
 	expect(createJob).toHaveBeenCalledWith(
 		"webhook-pull-request",
 		"test-delivery-id",
-		payloadObj,
+		{
+			commitBase: payloadObj.pull_request.base.sha,
+			commitHead: payloadObj.pull_request.head.sha,
+			branch: `pull/${payloadObj.pull_request.number}`,
+			installation: payloadObj.installation,
+		},
 	);
 });
 
@@ -130,6 +181,11 @@ test("push webhook enqueues a job", async () => {
 		ref: "refs/heads/main",
 		repository: {
 			full_name: `${env.GITHUB_REPO_OWNER}/${env.GITHUB_REPO_NAME}`,
+		},
+		before: "before-sha",
+		after: "after-sha",
+		installation: {
+			id: 0,
 		},
 	};
 
@@ -149,11 +205,11 @@ test("push webhook enqueues a job", async () => {
 
 	expect(response.statusCode).to.equal(200);
 	expect(response.json()).to.deep.equal({ enqueued: true });
-	expect(createJob).toHaveBeenCalledWith(
-		"webhook-push",
-		"test-delivery-id",
-		payloadObj,
-	);
+	expect(createJob).toHaveBeenCalledWith("webhook-push", "test-delivery-id", {
+		commitBefore: payloadObj.before,
+		commitAfter: payloadObj.after,
+		installation: payloadObj.installation,
+	});
 });
 
 test("webhook handler returns 401 for an invalid signature", async () => {
@@ -167,7 +223,7 @@ test("webhook handler returns 401 for an invalid signature", async () => {
 		url: "/webhooks/github",
 		headers: {
 			"content-type": "application/json",
-			"x-hub-signature-256": "sha256=deadbeef",
+			"x-hub-signature-256": "invalid-signature",
 			"x-github-delivery": "test-delivery-id",
 			"x-github-event": "pull_request",
 		},

@@ -113,7 +113,10 @@ webhooks.registerWebhookListener(async (event) => {
 				"Attempted pull_request on a non-playful repository/owner.",
 			);
 		}
-		if (event.payload.action === "synchronize") {
+		if (
+			event.payload.action === "opened" ||
+			event.payload.action === "synchronize"
+		) {
 			if (!event.payload.installation) {
 				throw new Error(`Missing installation on pull_request.synchronize`);
 			}
