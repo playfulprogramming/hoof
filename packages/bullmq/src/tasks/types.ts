@@ -1,11 +1,10 @@
 import type { UrlMetadataInput, UrlMetadataOutput } from "./url-metadata.ts";
 import type { PostImageInput, PostImageOutput } from "./post-image.ts";
-import type { SyncAuthorInput, SyncAuthorOutput } from "./sync-author.ts";
 import type {
+	SyncAuthorInput,
 	SyncCollectionInput,
-	SyncCollectionOutput,
-} from "./sync-collection.ts";
-import type { SyncPostInput, SyncPostOutput } from "./sync-post.ts";
+	SyncPostInput,
+} from "./sync.ts";
 import type { SyncAllInput } from "./sync-all.ts";
 import type {
 	GrantAuthorAchievementsInput,
@@ -56,9 +55,9 @@ export interface TaskInputs {
 
 export interface TaskOutputs {
 	[Tasks.SYNC_ALL]: object;
-	[Tasks.SYNC_AUTHOR]: SyncAuthorOutput;
-	[Tasks.SYNC_COLLECTION]: SyncCollectionOutput;
-	[Tasks.SYNC_POST]: SyncPostOutput;
+	[Tasks.SYNC_AUTHOR]: void;
+	[Tasks.SYNC_COLLECTION]: void;
+	[Tasks.SYNC_POST]: void;
 	[Tasks.URL_METADATA]: UrlMetadataOutput;
 	[Tasks.POST_IMAGES]: PostImageOutput;
 	[Tasks.GRANT_AUTHOR_ACHIEVEMENTS]: GrantAuthorAchievementsOutput;
