@@ -18,7 +18,7 @@ import { extractMarkdownExcerpt } from "../../utils/extractMarkdownExcerpt.ts";
 import { resolveAttachment, syncAttachments } from "../../sync/attachments.ts";
 
 export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
-	const { author, post, collection, ref, installation } = job.data;
+	const { author, post, collection, ref, branch, installation } = job.data;
 	const client = await createInstallationClient(installation.id);
 
 	const basePath = collection
@@ -48,7 +48,10 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			);
 
 			const removedAuthorRows = await db.transaction(async (tx) => {
-				const removalFilter = and(eq(posts.slug, post), eq(posts.branch, ref));
+				const removalFilter = and(
+					eq(posts.slug, post),
+					eq(posts.branch, branch),
+				);
 
 				const removedAuthorRows = await tx
 					.select({ authorSlug: postAuthors.authorSlug })
@@ -145,7 +148,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		.select({ authorSlug: postAuthors.authorSlug })
 		.from(posts)
 		.innerJoin(postAuthors, eq(posts.id, postAuthors.postId))
-		.where(and(eq(posts.slug, post), eq(posts.branch, ref)));
+		.where(and(eq(posts.slug, post), eq(posts.branch, branch)));
 	const affectedAuthorSlugs = new Set(
 		previousAuthorRows.map((r) => r.authorSlug),
 	);
@@ -154,7 +157,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		// Remove the existing post records (relations are removed by cascading deletes)
 		await tx
 			.delete(posts)
-			.where(and(eq(posts.slug, post), eq(posts.branch, ref)));
+			.where(and(eq(posts.slug, post), eq(posts.branch, branch)));
 
 		for (const { locale, parsed, wordCount } of localeData) {
 			let groupId: string | undefined;
@@ -188,7 +191,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			const postValues = {
 				slug: post,
 				locale,
-				branch: ref,
+				branch,
 				groupId,
 				collectionSlug: collection,
 				collectionOrder: localeData[0]?.parsed?.order,

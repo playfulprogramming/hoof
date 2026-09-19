@@ -95,7 +95,8 @@ This is the post content.
 		fakeJob({
 			author: "example-author",
 			post: "example-post",
-			ref: "main",
+			branch: "main",
+			ref: "ref",
 			installation: { id: 0 },
 		}),
 	);
@@ -200,7 +201,8 @@ This is the post content.
 		fakeJob({
 			author: "example-author",
 			post: "date-only-post",
-			ref: "main",
+			branch: "main",
+			ref: "ref",
 			installation: { id: 0 },
 		}),
 	);
@@ -242,7 +244,8 @@ test("Deletes a post record if it no longer exists", async () => {
 		fakeJob({
 			author: "example-author",
 			post: "example-post",
-			ref: "main",
+			branch: "main",
+			ref: "ref",
 			installation: { id: 0 },
 		}),
 	);
@@ -320,7 +323,8 @@ order: 1
 			author: "example-author",
 			collection: "example-collection",
 			post: "example-post",
-			ref: "main",
+			branch: "main",
+			ref: "ref",
 			installation: { id: 0 },
 		}),
 	);
@@ -406,7 +410,8 @@ published: "2024-01-15T00:00:00Z"
 		fakeJob({
 			author: "example-author",
 			post: "multilang-post",
-			ref: "main",
+			branch: "main",
+			ref: "ref",
 			installation: { id: 0 },
 		}),
 	);
@@ -501,7 +506,8 @@ authors:
 		fakeJob({
 			author: "example-author",
 			post: "collab-post",
-			ref: "main",
+			branch: "main",
+			ref: "ref",
 			installation: { id: 0 },
 		}),
 	);
@@ -593,7 +599,8 @@ tags:
 		fakeJob({
 			author: "example-author",
 			post: "multilang-tags-post",
-			ref: "main",
+			branch: "main",
+			ref: "ref",
 			installation: { id: 0 },
 		}),
 	);

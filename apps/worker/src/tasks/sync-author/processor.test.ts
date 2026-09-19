@@ -54,7 +54,8 @@ test("Creates an example author successfully", async () => {
 	await processor(
 		fakeJob({
 			author: "example",
-			ref: "main",
+			branch: "main",
+			ref: "ref",
 			installation: { id: 0 },
 		}),
 	);
@@ -111,7 +112,8 @@ test("Replaces an existing author's roles on a subsequent sync with a different 
 	await processor(
 		fakeJob({
 			author: "example",
-			ref: "main",
+			branch: "main",
+			ref: "ref",
 			installation: { id: 0 },
 		}),
 	);
@@ -140,7 +142,8 @@ test("Replaces an existing author's roles on a subsequent sync with a different 
 	await processor(
 		fakeJob({
 			author: "example",
-			ref: "main",
+			branch: "main",
+			ref: "ref",
 			installation: { id: 0 },
 		}),
 	);
@@ -175,7 +178,8 @@ test("Inserts no rows for an author with an empty roles array", async () => {
 	await processor(
 		fakeJob({
 			author: "example",
-			ref: "main",
+			branch: "main",
+			ref: "ref",
 			installation: { id: 0 },
 		}),
 	);
@@ -201,7 +205,8 @@ test("Deletes an author record if it no longer exists", async () => {
 	await processor(
 		fakeJob({
 			author: "example",
-			ref: "main",
+			branch: "main",
+			ref: "ref",
 			installation: { id: 0 },
 		}),
 	);
