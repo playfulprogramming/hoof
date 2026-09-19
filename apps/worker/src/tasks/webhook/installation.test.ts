@@ -1,4 +1,4 @@
-import processor from "./processor.ts";
+import processor from "./installation.ts";
 import { type TaskInputs } from "@playfulprogramming/bullmq";
 import type { Job } from "bullmq";
 import { db, githubInstallations } from "@playfulprogramming/db";
