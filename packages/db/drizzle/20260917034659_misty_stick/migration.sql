@@ -6,16 +6,16 @@ CREATE TABLE "collection_slugs" (
 	"slug" text PRIMARY KEY
 );
 --> statement-breakpoint
-ALTER TABLE "collection_authors" DROP CONSTRAINT "collection_authors_collection_slug_collections_slug_fk";--> statement-breakpoint
-ALTER TABLE "collection_authors" DROP CONSTRAINT "collection_authors_author_slug_profiles_slug_fk";--> statement-breakpoint
-ALTER TABLE "collection_tags" DROP CONSTRAINT "collection_tags_collection_slug_collections_slug_fkey";--> statement-breakpoint
-ALTER TABLE "post_authors" DROP CONSTRAINT "post_authors_author_slug_profiles_slug_fkey";--> statement-breakpoint
-ALTER TABLE "posts" DROP CONSTRAINT "posts_collection_slug_collections_slug_fkey";--> statement-breakpoint
-ALTER TABLE "author_achievements" DROP CONSTRAINT "profile_achievements_profile_slug_profiles_slug_fkey";--> statement-breakpoint
-ALTER TABLE "author_roles" DROP CONSTRAINT "author_roles_profile_slug_profiles_slug_fkey";--> statement-breakpoint
-DROP TABLE "collection_data";--> statement-breakpoint
-ALTER TABLE "collection_authors" DROP CONSTRAINT "collection_authors_collection_slug_author_slug_pk";--> statement-breakpoint
-ALTER TABLE "authors" DROP CONSTRAINT "profiles_pkey";--> statement-breakpoint
+ALTER TABLE "collection_authors" DROP CONSTRAINT IF EXISTS "collection_authors_collection_slug_collections_slug_fk";--> statement-breakpoint
+ALTER TABLE "collection_authors" DROP CONSTRAINT IF EXISTS "collection_authors_author_slug_profiles_slug_fk";--> statement-breakpoint
+ALTER TABLE "collection_tags" DROP CONSTRAINT IF EXISTS "collection_tags_collection_slug_collections_slug_fkey";--> statement-breakpoint
+ALTER TABLE "post_authors" DROP CONSTRAINT IF EXISTS "post_authors_author_slug_profiles_slug_fkey";--> statement-breakpoint
+ALTER TABLE "posts" DROP CONSTRAINT IF EXISTS "posts_collection_slug_collections_slug_fkey";--> statement-breakpoint
+ALTER TABLE "author_achievements" DROP CONSTRAINT IF EXISTS "profile_achievements_profile_slug_profiles_slug_fkey";--> statement-breakpoint
+ALTER TABLE "author_roles" DROP CONSTRAINT IF EXISTS "author_roles_profile_slug_profiles_slug_fkey";--> statement-breakpoint
+DROP TABLE IF EXISTS "collection_data";--> statement-breakpoint
+ALTER TABLE "collection_authors" DROP CONSTRAINT IF EXISTS "collection_authors_collection_slug_author_slug_pk";--> statement-breakpoint
+ALTER TABLE "authors" DROP CONSTRAINT IF EXISTS "profiles_pkey";--> statement-breakpoint
 ALTER TABLE "authors" ADD COLUMN "id" uuid DEFAULT gen_random_uuid();--> statement-breakpoint
 ALTER TABLE "authors" ADD COLUMN "branch" text NOT NULL;--> statement-breakpoint
 ALTER TABLE "collection_authors" ADD COLUMN "collection_id" uuid;--> statement-breakpoint
