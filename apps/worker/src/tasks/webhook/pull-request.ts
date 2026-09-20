@@ -4,6 +4,10 @@ import { createInstallationClient } from "@playfulprogramming/github-api";
 import { env } from "@playfulprogramming/common";
 import { constructSyncJobs } from "./common.ts";
 
+function isDefined<T>(value: T | undefined): value is T {
+	return typeof value !== "undefined";
+}
+
 export default createProcessor(
 	Tasks.WEBHOOK_PULL_REQUEST,
 	async (job, { signal }) => {
@@ -17,7 +21,12 @@ export default createProcessor(
 			signal,
 		});
 
-		const comparisonFiles = comparison.files?.map((f) => f.filename) ?? [];
+		const comparisonFiles = [
+			...(comparison.files?.map((f) => f.filename) ?? []),
+			...(comparison.files
+				?.map((f) => f.previous_filename)
+				?.filter(isDefined) ?? []),
+		];
 
 		const jobDef = constructSyncJobs({
 			files: comparisonFiles,
