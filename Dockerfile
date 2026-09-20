@@ -9,8 +9,9 @@ ENV NODE_ENV=production
 WORKDIR /var/app
 
 # Prepare pnpm according to the root package.json
-COPY package.json .
-RUN npm install --global corepack && corepack enable && corepack install
+COPY --parents package.json pnpm-installer .
+ENV PNPM_HOME=/pnpm PATH="/pnpm/bin:$PATH"
+RUN npm ci --prefix=pnpm-installer && env ENV="$HOME/.shrc" SHELL=/bin/sh node pnpm-installer/node_modules/.bin/get-pnpm
 
 # Install dependencies with pnpm
 COPY pnpm-lock.yaml pnpm-workspace.yaml .
