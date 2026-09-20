@@ -10,8 +10,7 @@ WORKDIR /var/app
 
 # Prepare pnpm according to the root package.json
 COPY package.json .
-RUN corepack enable
-RUN corepack install
+RUN npm install --global corepack && corepack enable && corepack install
 
 # Install dependencies with pnpm
 COPY pnpm-lock.yaml pnpm-workspace.yaml .
