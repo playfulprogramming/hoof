@@ -1,10 +1,10 @@
 {
-  "name": "pnpm-installer",
-  "version": "1.0.0",
-  "scripts": {
-    "get-pnpm": "get-pnpm"
-  },
-  "dependencies": {
-    "get-pnpm": "^0.0.5"
-  }
+	"name": "pnpm-installer",
+	"version": "1.0.0",
+	"scripts": {
+		"get-pnpm": "get-pnpm"
+	},
+	"dependencies": {
+		"get-pnpm": "^0.0.5"
+	}
 }
