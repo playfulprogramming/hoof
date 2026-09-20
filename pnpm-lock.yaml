@@ -275,8 +275,8 @@ importers:
         specifier: ^10.3.0
         version: 10.3.0
       '@fastify/sensible':
-        specifier: ^6.0.0
-        version: 6.0.4
+        specifier: ^6.0.5
+        version: 6.0.5
       '@fastify/swagger':
         specifier: ^9.7.0
         version: 9.7.0(supports-color@10.2.2)
@@ -1554,8 +1554,8 @@ packages:
   '@fastify/rate-limit@10.3.0':
     resolution: {integrity: sha512-eIGkG9XKQs0nyynatApA3EVrojHOuq4l6fhB4eeCk4PIOeadvOJz9/4w3vGI44Go17uaXOWEcPkaD8kuKm7g6Q==}
 
-  '@fastify/sensible@6.0.4':
-    resolution: {integrity: sha512-1vxcCUlPMew6WroK8fq+LVOwbsLtX+lmuRuqpcp6eYqu6vmkLwbKTdBWAZwbeaSgCfW4tzUpTIHLLvTiQQ1BwQ==}
+  '@fastify/sensible@6.0.5':
+    resolution: {integrity: sha512-v4mGejwT6EJA2zd2rS6XwlyUSva2ILsqzG0aGkyrlS7l2jIpUgFACclSPN3kDijX//cf8+GutRLhJVKx3ae2Cw==}
 
   '@fastify/swagger@9.7.0':
     resolution: {integrity: sha512-Vp1SC1GC2Hrkd3faFILv86BzUNyFz5N4/xdExqtCgkGASOzn/x+eMe4qXIGq7cdT6wif/P/oa6r1Ruqx19paZA==}
@@ -3587,6 +3587,9 @@ packages:
 
   fastify-plugin@5.1.0:
     resolution: {integrity: sha512-FAIDA8eovSt5qcDgcBvDuX/v0Cjz0ohGhENZ/wpc3y+oZCY2afZ9Baqql3g/lC+OHRnciQol4ww7tuthOb9idw==}
+
+  fastify-plugin@6.0.0:
+    resolution: {integrity: sha512-fZOty7z3O7vOliF6d8bHE3wiEh1KcNnKEQensSgTk9C1DvN6nRLS++XVd86v33Hw/8u9Un8A1zDrQ8ujcQDHEg==}
 
   fastify@5.12.1:
     resolution: {integrity: sha512-FWi+tQvwxR/PeRX7Z2mhfEF5ozJ3jn9asiiclzKXNSzJRHAYcU924aIOKAdHFJ+YIKieh3cqr1IwCOvTr41B3Q==}
@@ -6757,11 +6760,11 @@ snapshots:
       fastify-plugin: 5.1.0
       toad-cache: 3.7.0
 
-  '@fastify/sensible@6.0.4':
+  '@fastify/sensible@6.0.5':
     dependencies:
       '@lukeed/ms': 2.0.2
       dequal: 2.0.3
-      fastify-plugin: 5.1.0
+      fastify-plugin: 6.0.0
       forwarded: 0.2.0
       http-errors: 2.0.1
       type-is: 2.0.1
@@ -8628,6 +8631,8 @@ snapshots:
   fastify-plugin@4.5.1: {}
 
   fastify-plugin@5.1.0: {}
+
+  fastify-plugin@6.0.0: {}
 
   fastify@5.12.1:
     dependencies:
