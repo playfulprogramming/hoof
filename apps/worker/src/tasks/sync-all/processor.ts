@@ -4,11 +4,14 @@ import {
 	Tasks,
 	type TaskInputs,
 } from "@playfulprogramming/bullmq";
-import * as github from "@playfulprogramming/github-api";
+import { createAppClient } from "@playfulprogramming/github-api";
 import { createProcessor } from "../../createProcessor.ts";
 import type { FlowChildJob } from "bullmq";
 
 export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
+	const github = createAppClient();
+	const installation = {};
+
 	const rootTree = await github.getTree({
 		treeSha: job.data.ref,
 		repoOwner: env.GITHUB_REPO_OWNER,
@@ -41,6 +44,7 @@ export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
 			data: {
 				author: author.path,
 				ref: job.data.ref,
+				installation,
 			} satisfies TaskInputs[typeof Tasks.SYNC_AUTHOR],
 			queueName: Tasks.SYNC_AUTHOR,
 		};
@@ -62,6 +66,7 @@ export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
 					author: author.path,
 					post: post.path,
 					ref: job.data.ref,
+					installation,
 				} satisfies TaskInputs[typeof Tasks.SYNC_POST],
 				queueName: Tasks.SYNC_POST,
 				children: [authorJobDef],
@@ -106,6 +111,7 @@ export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
 					author: author.path,
 					collection: collection.path,
 					ref: job.data.ref,
+					installation,
 				} satisfies TaskInputs[typeof Tasks.SYNC_COLLECTION],
 				queueName: Tasks.SYNC_COLLECTION,
 				children: [authorJobDef],
@@ -119,6 +125,7 @@ export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
 						collection: collection.path,
 						post: post.path,
 						ref: job.data.ref,
+						installation,
 					} satisfies TaskInputs[typeof Tasks.SYNC_POST],
 					queueName: Tasks.SYNC_POST,
 					children: [collectionJobDef],

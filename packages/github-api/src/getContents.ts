@@ -1,4 +1,5 @@
-import { client, handleRequestError } from "./client.ts";
+import type { Octokit } from "octokit";
+import { handleRequestError } from "./client.ts";
 
 export interface GetContentsParams {
 	path: string;
@@ -8,7 +9,7 @@ export interface GetContentsParams {
 	signal?: AbortSignal;
 }
 
-export async function getContents(params: GetContentsParams) {
+export async function getContents(client: Octokit, params: GetContentsParams) {
 	const response = await client.rest.repos
 		.getContent({
 			ref: params.ref,

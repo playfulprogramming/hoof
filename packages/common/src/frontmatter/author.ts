@@ -7,6 +7,7 @@ export const AuthorMetaSchema = Type.Object(
 		profileImg: Type.Optional(Type.String()),
 		socials: Type.Record(Type.String(), Type.String(), { default: {} }),
 		roles: Type.Array(Type.String(), { default: [] }),
+		achievements: Type.Array(Type.String(), { default: [] }),
 	},
 	{
 		additionalProperties: false,

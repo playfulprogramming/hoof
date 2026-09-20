@@ -4,66 +4,76 @@ import * as schema from "./schema/index.ts";
 export const relations = defineRelations(schema, (r) => ({
 	// Collections relations
 	collections: {
-		authors: r.many.profiles({
-			from: r.collections.slug.through(r.collectionAuthors.collectionSlug),
-			to: r.profiles.slug.through(r.collectionAuthors.authorSlug),
+		authors: r.many.authors({
+			from: r.collections.id.through(r.collectionAuthors.collectionId),
+			to: r.authors.slug.through(r.collectionAuthors.authorSlug),
 		}),
-		posts: r.many.posts(),
-		data: r.many.collectionData({
+		posts: r.many.posts({
 			from: r.collections.slug,
-			to: r.collectionData.slug,
+			to: r.posts.collectionSlug,
+		}),
+	},
+
+	collectionSlugs: {
+		data: r.many.collections({
+			from: r.collectionSlugs.slug,
+			to: r.collections.slug,
 		}),
 	},
 
 	// Collection authors junction
 	collectionAuthors: {
 		collection: r.one.collections({
-			from: r.collectionAuthors.collectionSlug,
-			to: r.collections.slug,
+			from: r.collectionAuthors.collectionId,
+			to: r.collections.id,
 		}),
-		author: r.one.profiles({
+		author: r.many.authors({
 			from: r.collectionAuthors.authorSlug,
-			to: r.profiles.slug,
+			to: r.authors.slug,
 		}),
 	},
 
 	// Posts relations
 	posts: {
-		data: r.many.postData({
-			from: r.posts.slug,
-			to: r.postData.slug,
+		authors: r.many.authors({
+			from: r.posts.id.through(r.postAuthors.postId),
+			to: r.authors.slug.through(r.postAuthors.authorSlug),
 		}),
-		authors: r.many.profiles({
-			from: r.posts.slug.through(r.postAuthors.postSlug),
-			to: r.profiles.slug.through(r.postAuthors.authorSlug),
-		}),
-		collection: r.one.collections({
+		collections: r.many.collections({
 			from: r.posts.collectionSlug,
 			to: r.collections.slug,
 		}),
-	},
-
-	// Posts authors junction
-	postAuthors: {
-		post: r.one.posts({
-			from: r.postAuthors.postSlug,
-			to: r.posts.slug,
+		tags: r.many.postTags({
+			from: r.posts.id,
+			to: r.postTags.postId,
 		}),
-		author: r.one.profiles({
-			from: r.postAuthors.authorSlug,
-			to: r.profiles.slug,
+		versions: r.many.posts({
+			from: r.posts.groupId,
+			to: r.posts.groupId,
 		}),
 	},
 
-	// Profiles relations
-	profiles: {
+	// Authors relations
+	authors: {
 		postsAuthored: r.many.posts({
-			from: r.profiles.slug.through(r.postAuthors.authorSlug),
-			to: r.posts.slug.through(r.postAuthors.postSlug),
+			from: r.authors.slug.through(r.postAuthors.authorSlug),
+			to: r.posts.id.through(r.postAuthors.postId),
 		}),
 		collectionsAuthored: r.many.collections({
-			from: r.profiles.slug.through(r.collectionAuthors.authorSlug),
-			to: r.collections.slug.through(r.collectionAuthors.collectionSlug),
+			from: r.authors.slug.through(r.collectionAuthors.authorSlug),
+			to: r.collections.id.through(r.collectionAuthors.collectionId),
+		}),
+		achievements: r.many.authorAchievements({
+			from: r.authors.slug,
+			to: r.authorAchievements.authorSlug,
+		}),
+	},
+
+	// Author achievements relation
+	authorAchievements: {
+		author: r.one.authors({
+			from: r.authorAchievements.authorSlug,
+			to: r.authors.slug,
 		}),
 	},
 }));

@@ -1,7 +1,11 @@
 import { defineConfig } from "drizzle-kit";
 import { config } from "dotenv";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
 
-config({ path: "../../.env" });
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+config({ path: resolve(__dirname, "../../.env") });
 
 export default defineConfig({
 	out: "./drizzle",

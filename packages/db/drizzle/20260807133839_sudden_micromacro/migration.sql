@@ -1,0 +1,1 @@
+ALTER TABLE "attachments" ADD COLUMN "last_modified" timestamp with time zone DEFAULT now() NOT NULL;

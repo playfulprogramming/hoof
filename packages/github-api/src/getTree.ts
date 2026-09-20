@@ -1,4 +1,4 @@
-import { client } from "./client.ts";
+import type { Octokit } from "octokit";
 
 export interface GetTreeParams {
 	treeSha: string;
@@ -7,7 +7,7 @@ export interface GetTreeParams {
 	signal?: AbortSignal;
 }
 
-export async function getTree(params: GetTreeParams) {
+export async function getTree(client: Octokit, params: GetTreeParams) {
 	const response = await client.request(
 		"GET /repos/{owner}/{repo}/git/trees/{tree_sha}",
 		{

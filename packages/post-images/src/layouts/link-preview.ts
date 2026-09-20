@@ -37,10 +37,9 @@ function code(post: PostImageData) {
 				}}
 			>
 ${post.code
-					.split("\n")
-					.map((_, index) => String(index + 1).padStart(2))
-					.join("\n")}</pre
-			>
+	.split("\n")
+	.map((_, index) => String(index + 1).padStart(2))
+	.join("\n")}</pre>
 			<pre
 				style=${{
 					width: "80%",
@@ -49,8 +48,7 @@ ${post.code
 					fontFamily: "Roboto Mono",
 				}}
 			>
-${post.code}</pre
-			>
+${post.code}</pre>
 		</div>
 	`;
 }

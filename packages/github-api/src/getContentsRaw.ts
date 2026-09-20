@@ -1,8 +1,12 @@
 import { Response } from "undici";
-import { client, handleRequestError } from "./client.ts";
+import { handleRequestError } from "./client.ts";
 import type { GetContentsParams } from "./getContents.ts";
+import type { Octokit } from "octokit";
 
-export async function getContentsRawStream(params: GetContentsParams) {
+export async function getContentsRawStream(
+	client: Octokit,
+	params: GetContentsParams,
+) {
 	const response = await client.rest.repos
 		.getContent({
 			ref: params.ref,
@@ -27,8 +31,11 @@ export async function getContentsRawStream(params: GetContentsParams) {
 	} else return response;
 }
 
-export async function getContentsRaw(params: GetContentsParams) {
-	const response = await getContentsRawStream(params);
+export async function getContentsRaw(
+	client: Octokit,
+	params: GetContentsParams,
+) {
+	const response = await getContentsRawStream(client, params);
 	if (response.data !== undefined) {
 		return {
 			status: 200,

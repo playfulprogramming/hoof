@@ -6,9 +6,7 @@ export function createWorker<T extends TasksValues>(
 	task: T,
 	processor: string,
 ): Worker {
-	const processorFile = import.meta
-		.resolve(processor)
-		.replace(/^file:\/\//, "");
+	const processorFile = new URL(import.meta.resolve(processor));
 	const worker = new Worker(task, processorFile, {
 		connection: redis as never,
 		concurrency: 2,
@@ -35,6 +33,10 @@ export function createWorker<T extends TasksValues>(
 			{ id: job?.id, data: job?.data },
 			job?.stacktrace,
 		);
+	});
+
+	worker.on("stalled", (jobId) => {
+		console.warn("Job stalled:", { task, jobId });
 	});
 
 	return worker;

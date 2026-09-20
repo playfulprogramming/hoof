@@ -7,6 +7,15 @@ import type {
 } from "./sync-collection.ts";
 import type { SyncPostInput, SyncPostOutput } from "./sync-post.ts";
 import type { SyncAllInput } from "./sync-all.ts";
+import type {
+	GrantAuthorAchievementsInput,
+	GrantAuthorAchievementsOutput,
+} from "./grant-author-achievements.ts";
+import type {
+	DeleteS3ObjectInput,
+	DeleteS3ObjectOutput,
+} from "./delete-s3-object.ts";
+import type { WebhookInstallationInput } from "./webhook-installation.ts";
 
 export const Tasks = {
 	SYNC_ALL: "sync-all",
@@ -15,9 +24,15 @@ export const Tasks = {
 	SYNC_POST: "sync-post",
 	URL_METADATA: "url-metadata",
 	POST_IMAGES: "post-images",
+	GRANT_AUTHOR_ACHIEVEMENTS: "grant-author-achievements",
+	CLEANUP_ATTACHMENTS: "cleanup-attachments",
+	DELETE_S3_OBJECT: "delete-s3-object",
+	WEBHOOK_INSTALLATION: "webhook-installation",
+	WEBHOOK_PUSH: "webhook-push",
+	WEBHOOK_PULL_REQUEST: "webhook-pull-request",
 } as const;
 
-export type TasksKeys = keyof typeof Tasks;
+type TasksKeys = keyof typeof Tasks;
 export type TasksValues = (typeof Tasks)[TasksKeys];
 
 export interface TaskInputs {
@@ -27,9 +42,14 @@ export interface TaskInputs {
 	[Tasks.SYNC_POST]: SyncPostInput;
 	[Tasks.URL_METADATA]: UrlMetadataInput;
 	[Tasks.POST_IMAGES]: PostImageInput;
+	[Tasks.GRANT_AUTHOR_ACHIEVEMENTS]: GrantAuthorAchievementsInput;
+	[Tasks.CLEANUP_ATTACHMENTS]: object;
+	[Tasks.DELETE_S3_OBJECT]: DeleteS3ObjectInput;
+	[Tasks.WEBHOOK_INSTALLATION]: WebhookInstallationInput;
+	// Raw GitHub webhook payload. Interpreting its contents is #206's job, not #205's.
+	[Tasks.WEBHOOK_PUSH]: unknown;
+	[Tasks.WEBHOOK_PULL_REQUEST]: unknown;
 }
-
-export type TaskInputsValues = TaskInputs[TasksValues];
 
 export interface TaskOutputs {
 	[Tasks.SYNC_ALL]: object;
@@ -38,6 +58,10 @@ export interface TaskOutputs {
 	[Tasks.SYNC_POST]: SyncPostOutput;
 	[Tasks.URL_METADATA]: UrlMetadataOutput;
 	[Tasks.POST_IMAGES]: PostImageOutput;
+	[Tasks.GRANT_AUTHOR_ACHIEVEMENTS]: GrantAuthorAchievementsOutput;
+	[Tasks.CLEANUP_ATTACHMENTS]: void;
+	[Tasks.DELETE_S3_OBJECT]: DeleteS3ObjectOutput;
+	[Tasks.WEBHOOK_INSTALLATION]: object;
+	[Tasks.WEBHOOK_PUSH]: object;
+	[Tasks.WEBHOOK_PULL_REQUEST]: object;
 }
-
-export type TaskOutputsValues = TaskOutputs[TasksValues];

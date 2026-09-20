@@ -1,4 +1,7 @@
+export * from "./delete-s3-object.ts";
+export * from "./grant-author-achievements.ts";
 export * from "./post-image.ts";
 export * from "./sync-all.ts";
 export * from "./types.ts";
 export * from "./url-metadata.ts";
+export * from "./webhook-installation.ts";

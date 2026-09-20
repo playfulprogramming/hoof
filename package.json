@@ -5,7 +5,6 @@
 	"type": "module",
 	"scripts": {
 		"prepare": "husky",
-		"preinstall": "node -e \"if(process.env.CI == 'true') {console.log('Skipping preinstall...')} else {process.exit(1)}\" || npx -y only-allow pnpm",
 		"test": "pnpm test:unit && pnpm test:e2e",
 		"test:unit": "nx run-many --targets=test:sherif,test:knip,test:eslint,test:publint,test --exclude=e2e",
 		"test:e2e": "nx run e2e:test",
@@ -28,33 +27,28 @@
 		]
 	},
 	"engines": {
-		"node": ">=24.0.0"
+		"node": "26.8.x"
 	},
-	"packageManager": "pnpm@10.28.2",
+	"packageManager": "pnpm@12.5.1+sha512.e3f305bc784a2bc89f5ad3b6138889470fae8d2af5f36b61216ec91c2c3d64089775f9de38aac331044ea40f245cb0d5666392dfdf65824e1907ef6a2c62de5f",
 	"devDependencies": {
-		"@eslint/js": "^9.37.0",
-		"@nx/vite": "22.5.4",
-		"@nx/vitest": "22.4.5",
-		"@types/node": "^24.3.1",
+		"@eslint/js": "^10.0.1",
+		"@nx/vite": "22.7.2",
+		"@nx/vitest": "22.7.2",
+		"@types/node": "^26.4.1",
 		"@vitest/coverage-v8": "catalog:",
-		"eslint": "^9.38.0",
-		"globals": "^17.0.0",
+		"eslint": "^10.4.0",
+		"globals": "^17.6.0",
 		"husky": "^9.1.7",
-		"jsonc-eslint-parser": "^2.1.0",
-		"knip": "^5.80.2",
-		"lint-staged": "^16.2.0",
-		"nx": "22.5.4",
-		"prettier": "^3.7.4",
-		"publint": "^0.3.18",
-		"sherif": "^1.6.1",
-		"typescript": "^5.9.2",
-		"typescript-eslint": "^8.57.0",
+		"jsonc-eslint-parser": "^3.1.0",
+		"knip": "^6.14.1",
+		"lint-staged": "^17.0.5",
+		"nx": "23.1.2",
+		"prettier": "^3.9.6",
+		"publint": "^0.3.21",
+		"sherif": "^1.11.1",
+		"typescript": "^6.0.3",
+		"typescript-eslint": "^8.59.4",
 		"vite": "catalog:",
 		"vitest": "catalog:"
-	},
-	"pnpm": {
-		"overrides": {
-			"ioredis": "catalog:"
-		}
 	}
 }

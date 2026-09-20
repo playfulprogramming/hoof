@@ -1,0 +1,1 @@
+ALTER TABLE "post_attachments" ADD COLUMN "sha" text NOT NULL;

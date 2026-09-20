@@ -1,18 +1,25 @@
-import { env } from "@playfulprogramming/common";
-import { Tasks } from "@playfulprogramming/bullmq";
-import { db, posts, postData, postAuthors } from "@playfulprogramming/db";
-import * as github from "@playfulprogramming/github-api";
-import { s3 } from "@playfulprogramming/s3";
+import { env, PostMetaSchema } from "@playfulprogramming/common";
+import { Tasks, createJob } from "@playfulprogramming/bullmq";
+import {
+	db,
+	posts,
+	postAuthors,
+	postTags,
+	postAttachments,
+	postGroups,
+} from "@playfulprogramming/db";
+import { createInstallationClient } from "@playfulprogramming/github-api";
 import { createProcessor } from "../../createProcessor.ts";
-import { eq } from "drizzle-orm";
+import { and, eq, isNotNull } from "drizzle-orm";
 import matter from "gray-matter";
 import { Value } from "typebox/value";
-import { PostMetaSchema } from "./types.ts";
 import { extractLocale } from "../../utils/extractLocale.ts";
 import { extractMarkdownExcerpt } from "../../utils/extractMarkdownExcerpt.ts";
+import { resolveAttachment, syncAttachments } from "../../sync/attachments.ts";
 
 export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
-	const { author, post, collection, ref } = job.data;
+	const { author, post, collection, ref, installation } = job.data;
+	const client = await createInstallationClient(installation.id);
 
 	const basePath = collection
 		? new URL(
@@ -26,7 +33,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 
 	console.log(`Syncing post: ${basePath}`);
 
-	const folderResponse = await github.getContents({
+	const folderResponse = await client.getContents({
 		ref,
 		path: basePath,
 		repoOwner: env.GITHUB_REPO_OWNER,
@@ -40,7 +47,26 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 				`Post ${post} (${basePath}) returned 404 - removing from database.`,
 			);
 
-			await db.delete(posts).where(eq(posts.slug, post));
+			const removedAuthorRows = await db.transaction(async (tx) => {
+				const removalFilter = and(eq(posts.slug, post), eq(posts.branch, ref));
+
+				const removedAuthorRows = await tx
+					.select({ authorSlug: postAuthors.authorSlug })
+					.from(postAuthors)
+					.innerJoin(posts, eq(posts.id, postAuthors.postId))
+					.where(removalFilter);
+
+				await tx.delete(posts).where(removalFilter);
+				return removedAuthorRows;
+			});
+
+			for (const { authorSlug } of removedAuthorRows) {
+				await createJob(
+					Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
+					`grant-author-achievements:${authorSlug}`,
+					{ authorSlug, installation: job.data.installation },
+				);
+			}
 
 			return;
 		}
@@ -69,14 +95,12 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	// =========================================================================
 	// Phase 1: Collect all data from GitHub
 	// =========================================================================
-	const allAuthorSlugs = new Set<string>([author]);
-
 	const localeData = await Promise.all(
 		localeFiles.map(async (file) => {
 			const locale = extractLocale(file.name);
 
 			const contentUrl = new URL(file.path, "http://localhost");
-			const contentResponse = await github.getContentsRaw({
+			const contentResponse = await client.getContentsRaw({
 				ref,
 				path: contentUrl.pathname,
 				repoOwner: env.GITHUB_REPO_OWNER,
@@ -94,10 +118,6 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 			const { data: frontmatter, content } = matter(rawMarkdown);
 			const parsed = Value.Parse(PostMetaSchema, frontmatter);
 
-			if (parsed.authors) {
-				parsed.authors.forEach((a) => allAuthorSlugs.add(a));
-			}
-
 			// If the description is missing, populate it from the content
 			parsed.description ??= extractMarkdownExcerpt(content, 150);
 			// calculate a (very) approximate word count
@@ -107,50 +127,77 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		}),
 	);
 
-	const authorSlugs = [...allAuthorSlugs];
-
 	// =========================================================================
-	// Phase 2: Upload all markdown to S3
+	// Phase 2: Discover, resize, diff, and upload post attachments
 	// =========================================================================
-	const bucket = await s3.ensureBucket(env.S3_BUCKET);
-
-	await Promise.all(
-		localeData.map(async ({ locale, rawMarkdown }) => {
-			const s3Key = `posts/${post}/${locale}/content.md`;
-			await s3.upload(
-				bucket,
-				s3Key,
-				undefined,
-				Buffer.from(rawMarkdown),
-				"text/markdown",
-			);
-			console.log(`Uploaded ${s3Key} to S3`);
-		}),
-	);
+	const attachmentRows = await syncAttachments({
+		client,
+		ref,
+		folder: folderResponse.data,
+		keyPrefix: `posts/${post}`,
+		signal,
+	});
 
 	// =========================================================================
 	// Phase 3: Perform all database operations in a single transaction
 	// =========================================================================
+	const previousAuthorRows = await db
+		.select({ authorSlug: postAuthors.authorSlug })
+		.from(posts)
+		.innerJoin(postAuthors, eq(posts.id, postAuthors.postId))
+		.where(and(eq(posts.slug, post), eq(posts.branch, ref)));
+	const affectedAuthorSlugs = new Set(
+		previousAuthorRows.map((r) => r.authorSlug),
+	);
+
 	await db.transaction(async (tx) => {
+		// Remove the existing post records (relations are removed by cascading deletes)
 		await tx
-			.insert(posts)
-			.values({
-				slug: post,
-				collectionSlug: collection,
-				collectionOrder: localeData[0]?.parsed?.order,
-			})
-			.onConflictDoNothing();
+			.delete(posts)
+			.where(and(eq(posts.slug, post), eq(posts.branch, ref)));
 
 		for (const { locale, parsed, wordCount } of localeData) {
-			const postDataRecord = {
+			let groupId: string | undefined;
+			if (parsed.upToDateSlug) {
+				const upToDatePosts = await tx
+					.select({ groupId: posts.groupId })
+					.from(posts)
+					.where(
+						and(eq(posts.slug, parsed.upToDateSlug), isNotNull(posts.groupId)),
+					)
+					.limit(1);
+
+				groupId = upToDatePosts[0]?.groupId || undefined;
+
+				if (!groupId) {
+					const [newGroup] = await tx
+						.insert(postGroups)
+						.values({})
+						.returning({ id: postGroups.id });
+					groupId = newGroup.id;
+				}
+			}
+
+			const socialImage =
+				parsed.socialImg &&
+				resolveAttachment(parsed.socialImg, attachmentRows)?.attachmentKey;
+			const bannerImage =
+				parsed.bannerImg &&
+				resolveAttachment(parsed.bannerImg, attachmentRows)?.attachmentKey;
+
+			const postValues = {
 				slug: post,
 				locale,
+				branch: ref,
+				groupId,
+				collectionSlug: collection,
+				collectionOrder: localeData[0]?.parsed?.order,
+				versionName: parsed.version,
 				title: parsed.title,
-				version: parsed.version,
 				description: parsed.description,
 				wordCount,
-				socialImage: parsed.socialImg ?? null,
-				bannerImage: parsed.bannerImg ?? null,
+				socialImage: socialImage ?? null,
+				bannerImage: bannerImage ?? null,
 				originalLink: parsed.originalLink ?? null,
 				noindex: parsed.noindex,
 				editedAt: parsed.edited ? new Date(parsed.edited) : null,
@@ -162,24 +209,57 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 				},
 			};
 
-			await tx
-				.insert(postData)
-				.values(postDataRecord)
-				.onConflictDoUpdate({
-					target: [postData.slug, postData.locale, postData.version],
-					set: postDataRecord,
-				});
+			const [postRecord] = await tx
+				.insert(posts)
+				.values(postValues)
+				.returning({ id: posts.id });
+
+			const authorSlugs = new Set<string>([author, ...(parsed.authors ?? [])]);
+			authorSlugs.forEach((authorSlug) => affectedAuthorSlugs.add(authorSlug));
+
+			await tx.insert(postAuthors).values(
+				Array.from(
+					authorSlugs.values().map((authorSlug) => ({
+						postId: postRecord.id,
+						authorSlug,
+					})),
+				),
+			);
+
+			if (parsed.tags && parsed.tags.length > 0) {
+				await tx.insert(postTags).values(
+					parsed.tags.map((tag) => ({
+						postId: postRecord.id,
+						tag,
+					})),
+				);
+			}
+
+			if (attachmentRows.length > 0) {
+				await tx.insert(postAttachments).values(
+					Array.from(
+						attachmentRows.values().map((row) => ({
+							postId: postRecord.id,
+							attachmentKey: row.attachmentKey,
+							attachmentName: row.attachmentName,
+						})),
+					),
+				);
+			}
 
 			console.log(`Saved post metadata for ${post} (${locale})`);
 		}
-
-		await tx.delete(postAuthors).where(eq(postAuthors.postSlug, post));
-
-		await tx.insert(postAuthors).values(
-			authorSlugs.map((authorSlug) => ({
-				postSlug: post,
-				authorSlug,
-			})),
-		);
 	});
+
+	// Re-evaluate achievements for every author touched by this post, including
+	// authors removed from the frontmatter so their stats are recomputed too.
+	// createJob deduplicates by key, so concurrent post syncs for the same
+	// author collapse into a single achievements job.
+	for (const authorSlug of affectedAuthorSlugs) {
+		await createJob(
+			Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
+			`grant-author-achievements:${authorSlug}`,
+			{ authorSlug, installation: job.data.installation },
+		);
+	}
 });
