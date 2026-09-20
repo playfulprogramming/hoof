@@ -3,13 +3,9 @@ import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
 import { nxCopyAssetsPlugin } from "@nx/vite/plugins/nx-copy-assets.plugin";
 
 export default defineConfig(() => ({
-	root: __dirname,
+	root: import.meta.dirname,
 	cacheDir: "../../node_modules/.vite/apps/e2e",
 	plugins: [nxViteTsPaths(), nxCopyAssetsPlugin(["*.md"])],
-	// Uncomment this if you are using workers.
-	// worker: {
-	//  plugins: [ nxViteTsPaths() ],
-	// },
 	test: {
 		name: "e2e",
 		watch: false,
@@ -18,7 +14,7 @@ export default defineConfig(() => ({
 		include: ["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
 		reporters: ["default"],
 		coverage: {
-			reportsDirectory: "../../coverage/apps/e2e",
+			reportsDirectory: "coverage",
 			provider: "v8" as const,
 		},
 	},

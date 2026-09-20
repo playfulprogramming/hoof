@@ -1,7 +1,7 @@
-import { vi, afterEach } from "vitest";
+import { vi, beforeEach } from "vitest";
 import { createDbMock } from "@playfulprogramming/test-fixtures";
 
-afterEach(() => {
+beforeEach(() => {
 	vi.clearAllMocks();
 	vi.setSystemTime(new Date("2025-05-05"));
 });

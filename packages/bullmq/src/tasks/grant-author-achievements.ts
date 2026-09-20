@@ -1,5 +1,8 @@
+import type { InstallationData } from "../types/common.ts";
+
 export interface GrantAuthorAchievementsInput {
-	profileSlug: string;
+	authorSlug: string;
+	installation: InstallationData;
 }
 
 export type GrantAuthorAchievementsOutput = void;

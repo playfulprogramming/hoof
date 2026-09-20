@@ -1,6 +1,11 @@
 import { env } from "@playfulprogramming/common";
 import { Tasks } from "@playfulprogramming/bullmq";
-import { db, attachments, postAttachments } from "@playfulprogramming/db";
+import {
+	db,
+	attachments,
+	postAttachments,
+	collectionAttachments,
+} from "@playfulprogramming/db";
 import { s3 } from "@playfulprogramming/s3";
 import { and, eq, inArray, lt, notExists } from "drizzle-orm";
 import { createProcessor } from "../../createProcessor.ts";
@@ -35,6 +40,17 @@ export default createProcessor(
 								.from(postAttachments)
 								.where(
 									eq(postAttachments.attachmentKey, attachments.attachmentKey),
+								),
+						),
+						notExists(
+							db
+								.select({ attachmentKey: collectionAttachments.attachmentKey })
+								.from(collectionAttachments)
+								.where(
+									eq(
+										collectionAttachments.attachmentKey,
+										attachments.attachmentKey,
+									),
 								),
 						),
 						lt(attachments.lastModified, staleBefore),

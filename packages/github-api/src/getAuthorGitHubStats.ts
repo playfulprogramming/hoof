@@ -1,6 +1,6 @@
-import { client } from "./client.ts";
 import { env } from "@playfulprogramming/common";
 import { contributorYears } from "./contributorYears.ts";
+import type { Octokit } from "octokit";
 
 export interface AuthorGitHubStats {
 	issueCount: number;
@@ -49,10 +49,9 @@ type StatsResponse = {
 };
 
 export async function getAuthorGitHubStats(
+	client: Octokit,
 	githubLogin: string,
 ): Promise<AuthorGitHubStats | undefined> {
-	if (!env.GITHUB_TOKEN) return undefined;
-
 	const userResult = (await client.graphql<Record<string, { id: string }>>(
 		`query($login: String!) { user(login: $login) { id } }`,
 		{ login: githubLogin },

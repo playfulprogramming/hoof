@@ -1,8 +1,8 @@
-import type { Parent } from "unist";
+import type { Root, Element } from "hast";
 import * as unified from "unified";
 import remarkParse from "remark-parse";
 import remarkToRehype from "remark-rehype";
-import { findAllAfter } from "unist-util-find-all-after";
+import { visit } from "unist-util-visit";
 import { toString } from "hast-util-to-string";
 import { type PostImageInput } from "@playfulprogramming/bullmq";
 import type { PostImageData } from "./types.ts";
@@ -13,33 +13,38 @@ import dayjs from "dayjs";
 import sharp from "sharp";
 import { createHash } from "crypto";
 
-const stringifyCodeTree: unified.Plugin<unknown[], Parent, string> =
-	function () {
-		this.compiler = function (tree) {
-			// extract code snippets from parsed markdown
-			const nodes = findAllAfter(tree as unknown as Parent, 0, {
-				tagName: "pre",
-			});
+const stringifyCodeTree: unified.Plugin<unknown[], Root, string> = function () {
+	this.compiler = function (tree) {
+		const root = tree as Root;
 
-			// join code parts into one element
-			const value =
-				nodes
-					.map((node) => toString(node))
-					.join("\n")
-					.trim() +
-				"\n" +
-				fetchPostData.toString().replace(/([;,])/g, (s) => s + "\n");
+		// extract code snippets from parsed markdown, wherever they're nested
+		// (e.g. inside blockquotes or list items)
+		const nodes: Element[] = [];
+		visit(root, "element", (node) => {
+			if (node.tagName === "pre") {
+				nodes.push(node);
+			}
+		});
 
-			return (
-				value
-					.split("\n")
-					.filter((s) => !!s)
-					// resvg will just outright crash if you throw too many code snippets at it
-					.slice(0, 40)
-					.join("\n")
-			);
-		};
+		// join code parts into one element
+		const value =
+			nodes
+				.map((node) => toString(node))
+				.join("\n")
+				.trim() +
+			"\n" +
+			fetchPostData.toString().replace(/([;,])/g, (s) => s + "\n");
+
+		return (
+			value
+				.split("\n")
+				.filter((s) => !!s)
+				// resvg will just outright crash if you throw too many code snippets at it
+				.slice(0, 40)
+				.join("\n")
+		);
 	};
+};
 
 const unifiedChain = unified
 	.unified()

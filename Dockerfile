@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7-labs
-FROM node:24-alpine3.22 AS base
+FROM node:26.8-alpine3.24 AS base
 
 # Install postgres client dependencies
 RUN apk --update add make g++ python3 libpq libpq-dev parallel
@@ -9,9 +9,13 @@ ENV NODE_ENV=production
 WORKDIR /var/app
 
 # Prepare pnpm according to the root package.json
-COPY package.json .
-RUN corepack enable
-RUN corepack install
+COPY --parents package.json pnpm-installer .
+ENV PNPM_HOME=/pnpm PATH="/pnpm/bin:$PATH"
+RUN npm ci --prefix=pnpm-installer && env \
+    ENV="$HOME/.shrc" \
+    SHELL=/bin/sh \
+    PNPM_VERSION=$(node -p '/@([^\+]+)\+/.exec(require("./package.json").packageManager)[1]') \
+    node pnpm-installer/node_modules/.bin/get-pnpm
 
 # Install dependencies with pnpm
 COPY pnpm-lock.yaml pnpm-workspace.yaml .

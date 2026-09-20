@@ -6,7 +6,7 @@ import {
 import { s3 } from "@playfulprogramming/s3";
 import { fetchAsBot } from "../../utils/fetchAsBot.ts";
 import { scheduleS3ObjectDeletion } from "../../utils/scheduleS3ObjectDeletion.ts";
-import * as github from "@playfulprogramming/github-api";
+import { createAppClient } from "@playfulprogramming/github-api";
 import { and, eq, inArray, not } from "drizzle-orm";
 import { type EmbedData, BUCKET } from "./common.ts";
 import * as crypto from "crypto";
@@ -28,10 +28,12 @@ export async function getEmbedDataFromGist(
 		error = true;
 	}
 
-	const data = await github.getGistById({ gistId, signal }).catch((e) => {
-		console.error(`Unable to fetch gist data for '${inputUrl}'`, e);
-		return undefined;
-	});
+	const data = await createAppClient()
+		.getGistById({ gistId, signal })
+		.catch((e) => {
+			console.error(`Unable to fetch gist data for '${inputUrl}'`, e);
+			return undefined;
+		});
 
 	if (!data) return { error: true };
 

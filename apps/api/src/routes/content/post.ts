@@ -31,6 +31,13 @@ const PostResponseSchema = Type.Intersect(
 					),
 				}),
 			),
+			versions: Type.Array(
+				Type.Object({
+					slug: Type.String(),
+					versionName: Type.String(),
+					publishedAt: Type.String({ format: "date-time" }),
+				}),
+			),
 		}),
 	],
 	{
@@ -58,6 +65,18 @@ const PostResponseSchema = Type.Intersect(
 						{ slug: "example-post-2", title: "Example Post 2" },
 					],
 				},
+				versions: [
+					{
+						slug: "example-post",
+						versionName: "",
+						publishedAt: "2024-01-15T00:00:00.000Z",
+					},
+					{
+						slug: "example-post-rewrite",
+						versionName: "rewrite",
+						publishedAt: "2024-06-01T00:00:00.000Z",
+					},
+				],
 			},
 		],
 	},
@@ -79,7 +98,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 		{
 			schema: {
 				description:
-					"Fetch a single post, its authors, and its collection chapter list",
+					"Fetch a single post, its authors, its collection chapter list, and its other versions",
 				params: PostParamsSchema,
 				querystring: PostQueryParamsSchema,
 				response: {
@@ -115,21 +134,45 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 				},
 				with: {
 					authors: { columns: { slug: true, name: true, profileImage: true } },
-					collection: {
+					collections: {
+						columns: { slug: true, title: true },
+						where: { locale, branch },
 						with: {
-							data: {
-								columns: { title: true },
-								where: { locale },
-							},
 							posts: {
 								columns: {
 									slug: true,
-									collectionOrder: true,
 									title: true,
-									publishedAt: true,
 								},
-								where: { locale, branch },
+								where: {
+									locale,
+									branch,
+									publishedAt: {
+										isNotNull: true,
+									},
+								},
+								orderBy: {
+									collectionOrder: "asc",
+									publishedAt: "asc",
+								},
 							},
+						},
+					},
+					versions: {
+						columns: {
+							slug: true,
+							versionName: true,
+							publishedAt: true,
+						},
+						where: {
+							locale,
+							branch,
+							publishedAt: {
+								isNotNull: true,
+							},
+						},
+						orderBy: {
+							versionOrder: "asc",
+							publishedAt: "asc",
 						},
 					},
 				},
@@ -141,22 +184,27 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 				return;
 			}
 
-			const collectionData = post.collection?.data[0];
+			const collectionData = post.collections[0];
 
 			const collection: PostResponse["collection"] =
-				post.collection && collectionData
+				post.collections && collectionData
 					? {
-							slug: post.collection.slug,
+							slug: collectionData.slug,
 							title: collectionData.title,
-							chapters: post.collection.posts
-								.filter((chapter) => chapter.publishedAt !== null)
-								.sort((a, b) => a.collectionOrder - b.collectionOrder)
-								.map((chapter) => ({
-									slug: chapter.slug,
-									title: chapter.title,
-								})),
+							chapters: collectionData.posts.map((chapter) => ({
+								slug: chapter.slug,
+								title: chapter.title,
+							})),
 						}
 					: undefined;
+
+			const versions: PostResponse["versions"] = post.versions.map(
+				(version) => ({
+					slug: version.slug,
+					versionName: version.versionName,
+					publishedAt: version.publishedAt!.toISOString(),
+				}),
+			);
 
 			const response: PostResponse = {
 				slug: post.slug,
@@ -180,6 +228,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 						: undefined,
 				})),
 				collection,
+				versions,
 			};
 
 			reply.code(200);

@@ -2,11 +2,12 @@ import { env, AuthorMetaSchema } from "@playfulprogramming/common";
 import { Tasks, createJob } from "@playfulprogramming/bullmq";
 import {
 	db,
-	profiles,
-	profileAchievements,
+	authors,
+	authorAchievements,
 	authorRoles,
+	authorSlugs,
 } from "@playfulprogramming/db";
-import * as github from "@playfulprogramming/github-api";
+import { createInstallationClient } from "@playfulprogramming/github-api";
 import { createProcessor } from "../../createProcessor.ts";
 import matter from "gray-matter";
 import { Value } from "typebox/value";
@@ -17,11 +18,12 @@ import { uploadProcessedImage } from "../../utils/uploadProcessedImage.ts";
 const PROFILE_IMAGE_SIZE_MAX = 2048;
 
 export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
-	const authorId = job.data.author;
+	const authorSlug = job.data.author;
 	const authorMetaUrl = new URL(
-		`content/${encodeURIComponent(authorId)}/index.md`,
+		`content/${encodeURIComponent(authorSlug)}/index.md`,
 		"http://localhost",
 	);
+	const github = await createInstallationClient(job.data.installation.id);
 
 	const authorMetaResponse = await github.getContentsRaw({
 		ref: job.data.ref,
@@ -34,13 +36,17 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 	if (authorMetaResponse.data === undefined) {
 		if (authorMetaResponse.status == 404) {
 			console.log(
-				`Metadata for ${authorId} (${authorMetaUrl.pathname}) returned 404 - removing profile entry.`,
+				`Metadata for ${authorSlug} (${authorMetaUrl.pathname}) returned 404 - removing profile entry.`,
 			);
-			await db.delete(profiles).where(eq(profiles.slug, authorId));
+			await db
+				.delete(authors)
+				.where(
+					and(eq(authors.slug, authorSlug), eq(authors.branch, job.data.ref)),
+				);
 			return;
 		}
 
-		throw new Error(`Unable to fetch author data for ${authorId}`);
+		throw new Error(`Unable to fetch author data for ${authorSlug}`);
 	}
 
 	const { data } = matter(authorMetaResponse.data);
@@ -59,11 +65,11 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 
 		if (profileImgStream === null || typeof profileImgStream === "undefined") {
 			throw new Error(
-				`Unable to fetch profile image for ${authorId} (${profileImgUrl.pathname})`,
+				`Unable to fetch profile image for ${authorSlug} (${profileImgUrl.pathname})`,
 			);
 		}
 
-		profileImgKey = `profiles/${authorId}.jpeg`;
+		profileImgKey = `profiles/${authorSlug}.jpeg`;
 		await uploadProcessedImage(
 			profileImgStream,
 			profileImgKey,
@@ -73,7 +79,8 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 	}
 
 	const result = {
-		slug: authorId,
+		slug: authorSlug,
+		branch: job.data.ref,
 		name: authorData.name,
 		description: authorData.description,
 		profileImage: profileImgKey,
@@ -89,46 +96,61 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 
 	await db.transaction(async (tx) => {
 		await tx
-			.insert(profiles)
-			.values(result)
-			.onConflictDoUpdate({ target: profiles.slug, set: result });
+			.insert(authorSlugs)
+			.values({ slug: authorSlug })
+			.onConflictDoNothing();
 
 		await tx
-			.delete(profileAchievements)
-			.where(
-				and(
-					eq(profileAchievements.profileSlug, authorId),
-					inArray(
-						profileAchievements.achievementId,
-						MANUAL_ACHIEVEMENT_IDS as unknown as string[],
+			.insert(authors)
+			.values(result)
+			.onConflictDoUpdate({
+				target: [authors.slug, authors.branch],
+				set: result,
+			})
+			.returning({ id: authors.id });
+
+		if (job.data.ref === "main") {
+			await tx
+				.delete(authorAchievements)
+				.where(
+					and(
+						eq(authorAchievements.authorSlug, authorSlug),
+						inArray(
+							authorAchievements.achievementId,
+							MANUAL_ACHIEVEMENT_IDS as unknown as string[],
+						),
 					),
-				),
-			);
+				);
 
-		if (earnedManualIds.length > 0) {
-			await tx.insert(profileAchievements).values(
-				earnedManualIds.map((achievementId) => ({
-					profileSlug: authorId,
-					achievementId,
-				})),
-			);
-		}
+			if (earnedManualIds.length > 0) {
+				await tx.insert(authorAchievements).values(
+					earnedManualIds.map((achievementId: string) => ({
+						authorSlug,
+						achievementId,
+					})),
+				);
+			}
 
-		await tx.delete(authorRoles).where(eq(authorRoles.profileSlug, authorId));
+			await tx
+				.delete(authorRoles)
+				.where(eq(authorRoles.authorSlug, authorSlug));
 
-		if (authorData.roles.length > 0) {
-			await tx.insert(authorRoles).values(
-				authorData.roles.map((role) => ({
-					profileSlug: authorId,
-					role,
-				})),
-			);
+			if (authorData.roles.length > 0) {
+				await tx.insert(authorRoles).values(
+					authorData.roles.map((role) => ({
+						authorSlug,
+						role,
+					})),
+				);
+			}
 		}
 	});
 
-	await createJob(
-		Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
-		`grant-author-achievements:${authorId}`,
-		{ profileSlug: authorId },
-	);
+	if (job.data.ref === "main") {
+		await createJob(
+			Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
+			`grant-author-achievements:${authorSlug}`,
+			{ authorSlug, installation: job.data.installation },
+		);
+	}
 });

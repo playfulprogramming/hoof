@@ -1,34 +1,34 @@
 import { env, CollectionMetaSchema } from "@playfulprogramming/common";
 import { Tasks, createJob } from "@playfulprogramming/bullmq";
 import {
+	collectionAttachments,
 	collectionAuthors,
-	collectionData,
 	collections,
+	collectionSlugs,
 	collectionTags,
 	db,
 } from "@playfulprogramming/db";
-import * as github from "@playfulprogramming/github-api";
+import { createInstallationClient } from "@playfulprogramming/github-api";
 import { createProcessor } from "../../createProcessor.ts";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import matter from "gray-matter";
 import { Value } from "typebox/value";
 import { extractLocale } from "../../utils/extractLocale.ts";
-import { uploadProcessedImage } from "../../utils/uploadProcessedImage.ts";
-
-const IMAGE_SIZE_MAX = 2048;
+import { resolveAttachment, syncAttachments } from "../../sync/attachments.ts";
 
 export default createProcessor(
 	Tasks.SYNC_COLLECTION,
 	async (job, { signal }) => {
-		const authorId = job.data.author;
-		const collectionId = job.data.collection;
+		const authorSlug = job.data.author;
+		const collectionSlug = job.data.collection;
+		const client = await createInstallationClient(job.data.installation.id);
 
 		const collectionMetaUrl = new URL(
-			`content/${encodeURIComponent(authorId)}/collections/${encodeURIComponent(collectionId)}/`,
+			`content/${encodeURIComponent(authorSlug)}/collections/${encodeURIComponent(collectionSlug)}/`,
 			"http://localhost",
 		);
 
-		const collectionMetaResponse = await github.getContents({
+		const folderResponse = await client.getContents({
 			ref: job.data.ref,
 			path: collectionMetaUrl.pathname,
 			repoOwner: env.GITHUB_REPO_OWNER,
@@ -36,30 +36,35 @@ export default createProcessor(
 			signal,
 		});
 
-		if (collectionMetaResponse.data === undefined) {
-			if (collectionMetaResponse.status === 404) {
+		if (folderResponse.data === undefined) {
+			if (folderResponse.status === 404) {
 				console.log(
-					`Metadata for ${collectionId} (${collectionMetaUrl.pathname}) returned 404 - removing collection entry.`,
+					`Metadata for ${collectionSlug} (${collectionMetaUrl.pathname}) returned 404 - removing collection entry.`,
 				);
 				await db
-					.delete(collectionData)
-					.where(eq(collectionData.slug, collectionId));
+					.delete(collections)
+					.where(
+						and(
+							eq(collections.slug, collectionSlug),
+							eq(collections.branch, job.data.ref),
+						),
+					);
 				return;
 			}
 
-			throw new Error(`Unable to fetch collection data for ${collectionId}`);
+			throw new Error(`Unable to fetch collection data for ${collectionSlug}`);
 		}
 
 		if (
-			!collectionMetaResponse.data.entries ||
-			!Array.isArray(collectionMetaResponse.data.entries)
+			!folderResponse.data.entries ||
+			!Array.isArray(folderResponse.data.entries)
 		) {
-			throw new Error(`Unable to fetch collection data for ${collectionId}`);
+			throw new Error(`Unable to fetch collection data for ${collectionSlug}`);
 		}
 
-		type Entry = (typeof collectionMetaResponse.data.entries)[number];
+		type Entry = (typeof folderResponse.data.entries)[number];
 
-		const collectionEntries = collectionMetaResponse.data.entries.reduce(
+		const collectionEntries = folderResponse.data.entries.reduce(
 			(
 				prev,
 				// entry.name is `index.md` and path is `content/{authorId}/collections/{collectionId}/index.md`
@@ -76,166 +81,154 @@ export default createProcessor(
 			[] as Array<{ entry: Entry; locale: string }>,
 		);
 
+		// =========================================================================
+		// Phase 1: Collect all data from GitHub
+		// =========================================================================
 		const allTags = new Set<string>();
 
 		// Accumulate all unique author slugs touched across locale iterations
 		// so we can enqueue achievements for each of them after the loop.
 		const touchedAuthorSlugs = new Set<string>();
 
-		// Check if coverImg or socialImg have changed since last edit, if so upload to S3
-		for (const { entry, locale } of collectionEntries) {
-			const contentUrl = new URL(entry.path, "http://localhost");
+		const localeData = await Promise.all(
+			collectionEntries.map(async ({ entry, locale }) => {
+				const contentUrl = new URL(entry.path, "http://localhost");
 
-			const contentResponse = await github.getContentsRaw({
-				ref: job.data.ref,
-				path: contentUrl.pathname,
-				repoOwner: env.GITHUB_REPO_OWNER,
-				repoName: env.GITHUB_REPO_NAME,
-				signal,
-			});
-
-			if (contentResponse.data === undefined) {
-				throw new Error(
-					`Unable to fetch collection content for ${collectionId} locale ${locale}`,
-				);
-			}
-
-			const { data } = matter(contentResponse.data);
-			const collectionParsedData = Value.Parse(CollectionMetaSchema, data);
-
-			if (collectionParsedData.tags) {
-				collectionParsedData.tags.forEach((tag) => allTags.add(tag));
-			}
-
-			let coverImgKey: string | null = null;
-			let socialImgKey: string | null = null;
-			if (collectionParsedData.coverImg) {
-				const coverImgUrl = new URL(
-					collectionParsedData.coverImg,
-					collectionMetaUrl,
-				);
-				const { data: coverImgStream } = await github.getContentsRawStream({
+				const contentResponse = await client.getContentsRaw({
 					ref: job.data.ref,
-					path: coverImgUrl.pathname,
+					path: contentUrl.pathname,
 					repoOwner: env.GITHUB_REPO_OWNER,
 					repoName: env.GITHUB_REPO_NAME,
 					signal,
 				});
 
-				if (coverImgStream === null || typeof coverImgStream === "undefined") {
+				if (contentResponse.data === undefined) {
 					throw new Error(
-						`Unable to fetch cover image for ${collectionId} (${coverImgUrl.pathname})`,
+						`Unable to fetch collection content for ${collectionSlug} locale ${locale}`,
 					);
 				}
 
-				coverImgKey = `collections/${collectionId}/${locale}/cover.jpg`;
-				await uploadProcessedImage(
-					coverImgStream,
-					coverImgKey,
-					IMAGE_SIZE_MAX,
-					signal,
-				);
-			}
+				const { data } = matter(contentResponse.data);
+				const collectionParsedData = Value.Parse(CollectionMetaSchema, data);
 
-			if (collectionParsedData.socialImg) {
-				const socialImgUrl = new URL(
-					collectionParsedData.socialImg,
-					collectionMetaUrl,
-				);
-				const { data: socialImgStream } = await github.getContentsRawStream({
-					ref: job.data.ref,
-					path: socialImgUrl.pathname,
-					repoOwner: env.GITHUB_REPO_OWNER,
-					repoName: env.GITHUB_REPO_NAME,
-					signal,
-				});
-
-				if (
-					socialImgStream === null ||
-					typeof socialImgStream === "undefined"
-				) {
-					throw new Error(
-						`Unable to fetch social image for ${collectionId} (${socialImgUrl.pathname})`,
-					);
+				if (collectionParsedData.tags) {
+					collectionParsedData.tags.forEach((tag) => allTags.add(tag));
 				}
 
-				socialImgKey = `collections/${collectionId}/${locale}/social.jpg`;
-				await uploadProcessedImage(
-					socialImgStream,
-					socialImgKey,
-					IMAGE_SIZE_MAX,
-					signal,
+				return {
+					locale,
+					parsed: collectionParsedData,
+				};
+			}),
+		);
+
+		// =========================================================================
+		// Phase 2: Discover, resize, diff, and upload post attachments
+		// =========================================================================
+		const attachmentRows = await syncAttachments({
+			client,
+			ref: job.data.ref,
+			folder: folderResponse.data,
+			keyPrefix: `collections/${collectionSlug}`,
+			signal,
+		});
+
+		// =========================================================================
+		// Phase 3: Perform all database operations in a single transaction
+		// =========================================================================
+		await db.transaction(async (tx) => {
+			// Remove the existing collection records (relations are removed by cascading deletes)
+			await tx
+				.delete(collections)
+				.where(
+					and(
+						eq(collections.slug, collectionSlug),
+						eq(collections.branch, job.data.ref),
+					),
 				);
-			}
 
-			const result = {
-				slug: collectionId,
-				locale: locale,
-				title: collectionParsedData.title,
-				description: collectionParsedData.description,
-				coverImage: coverImgKey,
-				socialImage: socialImgKey,
-				meta: {
-					buttons: collectionParsedData.buttons,
-					tags: collectionParsedData.tags,
-					chapterList: collectionParsedData.chapterList,
-				},
-			};
+			// Create a slug record (if it doesn't already exist)
+			await tx
+				.insert(collectionSlugs)
+				.values({ slug: collectionSlug })
+				.onConflictDoNothing();
 
-			// Handle authors
-			const authorSlugs = collectionParsedData.authors
-				? [...new Set([...collectionParsedData.authors, authorId])]
-				: [authorId];
+			for (const { locale, parsed } of localeData) {
+				const coverImage =
+					parsed.coverImg &&
+					resolveAttachment(parsed.coverImg, attachmentRows)?.attachmentKey;
+				const socialImage =
+					parsed.socialImg &&
+					resolveAttachment(parsed.socialImg, attachmentRows)?.attachmentKey;
 
-			authorSlugs.forEach((s) => touchedAuthorSlugs.add(s));
+				const result = {
+					slug: collectionSlug,
+					locale: locale,
+					branch: job.data.ref,
+					title: parsed.title,
+					description: parsed.description,
+					coverImage: coverImage ?? null,
+					socialImage: socialImage ?? null,
+					meta: {
+						buttons: parsed.buttons,
+						tags: parsed.tags,
+						chapterList: parsed.chapterList,
+					},
+				};
 
-			await db.transaction(async (tx) => {
-				await tx
+				// Handle authors
+				const authorSlugs = parsed.authors
+					? [...new Set([...parsed.authors, authorSlug])]
+					: [authorSlug];
+
+				authorSlugs.forEach((s) => touchedAuthorSlugs.add(s));
+
+				const [collectionRecord] = await tx
 					.insert(collections)
-					.values({ slug: collectionId })
-					.onConflictDoNothing();
-
-				await tx
-					.insert(collectionData)
 					.values(result)
-					.onConflictDoUpdate({
-						target: [collectionData.slug, collectionData.locale],
-						set: result,
-					});
+					.returning({ id: collections.id });
 
 				// Delete existing author associations for this collection
 				await tx
 					.delete(collectionAuthors)
-					.where(eq(collectionAuthors.collectionSlug, collectionId));
+					.where(eq(collectionAuthors.collectionId, collectionRecord.id));
 
 				// Insert new author associations
 				if (authorSlugs.length > 0) {
 					await tx.insert(collectionAuthors).values(
 						authorSlugs.map((authorSlug) => ({
-							collectionSlug: collectionId,
+							collectionId: collectionRecord.id,
 							authorSlug,
 						})),
 					);
 				}
-			});
-		}
 
-		const tags = [...allTags];
+				// Delete existing tag associations for this collection
+				await tx
+					.delete(collectionTags)
+					.where(eq(collectionTags.collectionId, collectionRecord.id));
 
-		await db.transaction(async (tx) => {
-			// Delete existing tag associations for this collection
-			await tx
-				.delete(collectionTags)
-				.where(eq(collectionTags.collectionSlug, collectionId));
+				// Insert new tag associations
+				if (allTags.size > 0) {
+					await tx.insert(collectionTags).values(
+						[...allTags].map((tag) => ({
+							collectionId: collectionRecord.id,
+							tag,
+						})),
+					);
+				}
 
-			// Insert new tag associations
-			if (tags.length > 0) {
-				await tx.insert(collectionTags).values(
-					tags.map((tag) => ({
-						collectionSlug: collectionId,
-						tag,
-					})),
-				);
+				if (attachmentRows.length > 0) {
+					await tx.insert(collectionAttachments).values(
+						Array.from(
+							attachmentRows.values().map((row) => ({
+								collectionId: collectionRecord.id,
+								attachmentKey: row.attachmentKey,
+								attachmentName: row.attachmentName,
+							})),
+						),
+					);
+				}
 			}
 		});
 
@@ -243,7 +236,7 @@ export default createProcessor(
 			await createJob(
 				Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
 				`grant-author-achievements:${authorSlug}`,
-				{ profileSlug: authorSlug },
+				{ authorSlug, installation: job.data.installation },
 			);
 		}
 	},
