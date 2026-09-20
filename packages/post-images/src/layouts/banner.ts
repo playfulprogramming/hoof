@@ -31,10 +31,9 @@ function code(post: PostImageData) {
 				}}
 			>
 ${post.code
-					.split("\n")
-					.map((_, index) => String(index + 1).padStart(2))
-					.join("\n")}</pre
-			>
+	.split("\n")
+	.map((_, index) => String(index + 1).padStart(2))
+	.join("\n")}</pre>
 			<pre
 				style=${{
 					width: "80%",
@@ -43,8 +42,7 @@ ${post.code
 					fontFamily: "Roboto Mono",
 				}}
 			>
-${post.code}</pre
-			>
+${post.code}</pre>
 		</div>
 	`;
 }
@@ -131,20 +129,22 @@ export const banner: LayoutFunction = async (post) => {
 					boxShadow: "0 0 48px #000a",
 				}}
 			>
-				${tagSvg &&
-				tagEmoji === undefined &&
-				html`
-					<img
-						width="160"
-						height="160"
-						style=${{
-							width: 160,
-							height: 160,
-							filter: "grayscale(1)",
-						}}
-						src=${tagSvg}
-					/>
-				`}
+				${
+					tagSvg &&
+					tagEmoji === undefined &&
+					html`
+						<img
+							width="160"
+							height="160"
+							style=${{
+								width: 160,
+								height: 160,
+								filter: "grayscale(1)",
+							}}
+							src=${tagSvg}
+						/>
+					`
+				}
 				${tagEmoji}
 			</div>
 		</div>

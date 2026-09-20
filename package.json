@@ -43,7 +43,7 @@
 		"knip": "^6.14.1",
 		"lint-staged": "^17.0.5",
 		"nx": "23.1.2",
-		"prettier": "^3.8.3",
+		"prettier": "^3.9.6",
 		"publint": "^0.3.21",
 		"sherif": "^1.11.1",
 		"typescript": "^6.0.3",
