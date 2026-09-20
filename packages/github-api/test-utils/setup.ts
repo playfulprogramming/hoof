@@ -1,4 +1,3 @@
-import "./server.ts";
 import { vi, beforeEach } from "vitest";
 import "@playfulprogramming/test-fixtures";
 
