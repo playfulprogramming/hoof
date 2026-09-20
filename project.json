@@ -1,0 +1,76 @@
+{
+	"$schema": "./node_modules/nx/schemas/project-schema.json",
+	"root": ".",
+	"targets": {
+		"dev": {
+			"dependsOn": [
+				{
+					"projects": "*",
+					"target": "dev"
+				},
+				"dev:libs"
+			]
+		},
+		"dev:libs": {
+			"dependsOn": [
+				{
+					"projects": "packages/*",
+					"target": "build"
+				}
+			],
+			"command": "nx watch --projects=packages/* -- nx run-many --targets=build --projects=packages/*",
+			"continuous": true
+		},
+		"prettier": {
+			"cache": true,
+			"inputs": ["{workspaceRoot}/**/*"]
+		},
+		"test": {
+			"dependsOn": [
+				"test:unit",
+				{
+					"projects": "apps/e2e",
+					"target": "test"
+				}
+			]
+		},
+		"test:unit": {
+			"dependsOn": [
+				"prettier",
+				{
+					"projects": "*",
+					"target": "test:build"
+				},
+				"test:sherif",
+				"test:knip",
+				{
+					"projects": "*",
+					"target": "test:eslint"
+				},
+				{
+					"projects": ["apps/api", "apps/worker"],
+					"target": "test"
+				},
+				{
+					"projects": "packages/*",
+					"target": "test"
+				}
+			]
+		},
+		"test:build": {
+			"cache": true,
+			"inputs": ["{workspaceRoot}/**/*"],
+			"command": "publint --strict"
+		},
+		"test:sherif": {
+			"cache": true,
+			"inputs": ["{workspaceRoot}/**/package.json"],
+			"command": "sherif"
+		},
+		"test:knip": {
+			"cache": true,
+			"inputs": ["{workspaceRoot}/**/*"],
+			"command": "knip"
+		}
+	}
+}

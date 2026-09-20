@@ -5,25 +5,17 @@
 	"type": "module",
 	"scripts": {
 		"prepare": "husky",
-		"test": "pnpm test:unit && pnpm test:e2e",
-		"test:unit": "nx run-many --targets=test:sherif,test:knip,test:eslint,test:publint,test --exclude=e2e",
+		"test": "nx run test",
+		"test:unit": "nx run test:unit",
 		"test:e2e": "nx run e2e:test",
-		"test:eslint": "nx affected --target=test:eslint",
-		"test:publint": "publint --strict",
-		"test:sherif": "sherif",
-		"test:knip": "knip",
-		"build": "nx affected --target=build",
 		"build:all": "nx run-many --target=build",
-		"dev:libs": "nx watch --all -- nx run-many --targets=build --exclude=api,worker",
-		"dev": "pnpm run build:all && nx drizzle:push db && nx run-many --targets=dev,dev:libs",
+		"dev": "nx run dev",
 		"prettier": "prettier . --check --ignore-unknown",
 		"prettier:write": "prettier . --write --ignore-unknown"
 	},
 	"nx": {
 		"includedScripts": [
-			"test:knip",
-			"test:sherif",
-			"test:publint"
+			"prettier"
 		]
 	},
 	"engines": {
