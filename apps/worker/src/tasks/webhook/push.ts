@@ -2,7 +2,7 @@ import { flowProducer, Tasks } from "@playfulprogramming/bullmq";
 import { createProcessor } from "../../createProcessor.ts";
 import { createInstallationClient } from "@playfulprogramming/github-api";
 import { BRANCH_MAIN, env } from "@playfulprogramming/common";
-import { constructSyncJobs } from "./common.ts";
+import { constructSyncJobs, collectFileNames } from "./common.ts";
 
 export default createProcessor(Tasks.WEBHOOK_PUSH, async (job, { signal }) => {
 	const client = await createInstallationClient(job.data.installation.id);
@@ -15,10 +15,8 @@ export default createProcessor(Tasks.WEBHOOK_PUSH, async (job, { signal }) => {
 		signal,
 	});
 
-	const comparisonFiles = comparison.files?.map((f) => f.filename) ?? [];
-
 	const jobDef = constructSyncJobs({
-		files: comparisonFiles,
+		files: collectFileNames(comparison),
 		ref: job.data.commitAfter,
 		branch: BRANCH_MAIN,
 		installation: job.data.installation,

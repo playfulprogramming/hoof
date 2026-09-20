@@ -2,11 +2,7 @@ import { flowProducer, Tasks } from "@playfulprogramming/bullmq";
 import { createProcessor } from "../../createProcessor.ts";
 import { createInstallationClient } from "@playfulprogramming/github-api";
 import { env } from "@playfulprogramming/common";
-import { constructSyncJobs } from "./common.ts";
-
-function isDefined<T>(value: T | undefined): value is T {
-	return typeof value !== "undefined";
-}
+import { constructSyncJobs, collectFileNames } from "./common.ts";
 
 export default createProcessor(
 	Tasks.WEBHOOK_PULL_REQUEST,
@@ -21,15 +17,8 @@ export default createProcessor(
 			signal,
 		});
 
-		const comparisonFiles = [
-			...(comparison.files?.map((f) => f.filename) ?? []),
-			...(comparison.files
-				?.map((f) => f.previous_filename)
-				?.filter(isDefined) ?? []),
-		];
-
 		const jobDef = constructSyncJobs({
-			files: comparisonFiles,
+			files: collectFileNames(comparison),
 			ref: job.data.commitHead,
 			branch: job.data.branch,
 			installation: job.data.installation,

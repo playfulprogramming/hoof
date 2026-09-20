@@ -140,3 +140,17 @@ export function constructSyncJobs(
 
 	return jobDef;
 }
+
+function isDefined<T>(value: T | undefined): value is T {
+	return typeof value !== "undefined";
+}
+
+export function collectFileNames(comparison: {
+	files?: Array<{ filename: string; previous_filename?: string }>;
+}) {
+	return [
+		...(comparison.files?.map((f) => f.filename) ?? []),
+		...(comparison.files?.map((f) => f.previous_filename)?.filter(isDefined) ??
+			[]),
+	];
+}
