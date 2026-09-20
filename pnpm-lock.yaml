@@ -248,8 +248,8 @@ importers:
         specifier: 23.1.2
         version: 23.1.2
       prettier:
-        specifier: ^3.8.3
-        version: 3.8.3
+        specifier: ^3.9.6
+        version: 3.9.6
       publint:
         specifier: ^0.3.21
         version: 0.3.21
@@ -2651,9 +2651,6 @@ packages:
   '@types/mssql@9.1.9':
     resolution: {integrity: sha512-P0nCgw6vzY23UxZMnbI4N7fnLGANt4LI4yvxze1paPj+LuN28cFv5EI+QidP8udnId/BKhkcRhm/BleNsjK65A==}
 
-  '@types/node@25.9.1':
-    resolution: {integrity: sha512-xfrlY7UD5rMJk3ZVJP8BNzS28J36YJg+xp+LPXV1TdWxr8uMH5A860QNxYDGQe/ylDSgjxE52Q9VnO7p75tJxg==}
-
   '@types/node@26.5.1':
     resolution: {integrity: sha512-CzNm2FezW4VR/LjG6yUdiEgLE/rAQ9Slj5gCu/C2VrdcW7I0ahNZ8DRbHT7zOZ6r3ONgd/bsQIeSaoDGrd1C6g==}
 
@@ -4660,8 +4657,8 @@ packages:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
 
-  prettier@3.8.3:
-    resolution: {integrity: sha512-7igPTM53cGHMW8xWuVTydi2KO233VFiTNyF5hLJqpilHfmn8C8gPf+PS7dUT64YcXFbiMGZxS9pCSxL/Dxm/Jw==}
+  prettier@3.9.6:
+    resolution: {integrity: sha512-OpN0zzVdiaiAhxpuuj5efpIS4sY9j7bY6uR5mnj5yPzGkdkjNKSJeUThPb60Jw29QuAZgA4o+/iB49kFiaBX6g==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -5177,9 +5174,6 @@ packages:
   unbash@3.0.0:
     resolution: {integrity: sha512-FeFPZ/WFT0mbRCuydiZzpPFlrYN8ZUpphQKoq4EeElVIYjYyGzPMxQR/simUwCOJIyVhpFk4RbtyO7RuMpMnHA==}
     engines: {node: '>=14'}
-
-  undici-types@7.24.6:
-    resolution: {integrity: sha512-WRNW+sJgj5OBN4/0JpHFqtqzhpbnV0GuB+OozA9gCL7a993SmU+1JBZCzLNxYsbMfIeDL+lTsphD5jN5N+n0zg==}
 
   undici-types@8.9.0:
     resolution: {integrity: sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==}
@@ -7733,15 +7727,11 @@ snapshots:
 
   '@types/mssql@9.1.9(supports-color@10.2.2)':
     dependencies:
-      '@types/node': 25.9.1
+      '@types/node': 26.5.1
       tarn: 3.1.2
       tedious: 20.0.0(supports-color@10.2.2)
     transitivePeerDependencies:
       - supports-color
-
-  '@types/node@25.9.1':
-    dependencies:
-      undici-types: 7.24.6
 
   '@types/node@26.5.1':
     dependencies:
@@ -7751,13 +7741,13 @@ snapshots:
 
   '@types/pg@8.20.0':
     dependencies:
-      '@types/node': 25.9.1
+      '@types/node': 26.5.1
       pg-protocol: 1.14.0
       pg-types: 2.2.0
 
   '@types/readable-stream@4.0.24':
     dependencies:
-      '@types/node': 25.9.1
+      '@types/node': 26.5.1
 
   '@types/unist@3.0.3': {}
 
@@ -10200,7 +10190,7 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier@3.8.3: {}
+  prettier@3.9.6: {}
 
   process-warning@4.0.1: {}
 
@@ -10614,7 +10604,7 @@ snapshots:
       '@azure/identity': 4.13.2(supports-color@10.2.2)
       '@azure/keyvault-keys': 4.10.2(supports-color@10.2.2)
       '@js-joda/core': 5.7.0
-      '@types/node': 25.9.1
+      '@types/node': 26.5.1
       bl: 6.1.6
       iconv-lite: 0.6.3
       js-md4: 0.3.2
@@ -10629,7 +10619,7 @@ snapshots:
       '@azure/identity': 4.13.2(supports-color@10.2.2)
       '@azure/keyvault-keys': 4.10.2(supports-color@10.2.2)
       '@js-joda/core': 6.1.0
-      '@types/node': 25.9.1
+      '@types/node': 26.5.1
       bl: 6.1.6
       iconv-lite: 0.7.3
       js-md4: 0.3.2
@@ -10720,8 +10710,6 @@ snapshots:
   typescript@6.0.3: {}
 
   unbash@3.0.0: {}
-
-  undici-types@7.24.6: {}
 
   undici-types@8.9.0: {}
 
