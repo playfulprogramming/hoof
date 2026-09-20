@@ -149,7 +149,7 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 		}
 	});
 
-	if (job.data.ref === BRANCH_MAIN) {
+	if (job.data.branch === BRANCH_MAIN) {
 		await createJob(
 			Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
 			`grant-author-achievements:${authorSlug}`,
