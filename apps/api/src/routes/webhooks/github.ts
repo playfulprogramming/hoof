@@ -144,6 +144,11 @@ webhooks.registerWebhookListener(async (event) => {
 			});
 			return;
 		}
+		if (event.payload.created || event.payload.deleted) {
+			console.log("Ignoring push webhook for a created/deleted ref", {
+				ref: event.payload.ref,
+			});
+		}
 		if (!event.payload.installation) {
 			throw new Error(`Missing installation on push`);
 		}
