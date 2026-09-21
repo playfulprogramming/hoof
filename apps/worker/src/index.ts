@@ -17,10 +17,9 @@ createWorker(
 	"./tasks/cleanup-attachments/processor.ts",
 );
 createWorker(Tasks.DELETE_S3_OBJECT, "./tasks/delete-s3-object/processor.ts");
-createWorker(
-	Tasks.WEBHOOK_INSTALLATION,
-	"./tasks/webhook-installation/processor.ts",
-);
+createWorker(Tasks.WEBHOOK_INSTALLATION, "./tasks/webhook/installation.ts");
+createWorker(Tasks.WEBHOOK_PULL_REQUEST, "./tasks/webhook/pull-request.ts");
+createWorker(Tasks.WEBHOOK_PUSH, "./tasks/webhook/push.ts");
 createHealthcheck();
 
 // Repeatable job: BullMQ dedupes repeatable schedulers by name + repeat

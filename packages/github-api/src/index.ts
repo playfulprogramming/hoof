@@ -5,6 +5,7 @@ import { getContents } from "./getContents.ts";
 import { getContentsRaw, getContentsRawStream } from "./getContentsRaw.ts";
 import { getGistById } from "./getGistById.ts";
 import { getTree } from "./getTree.ts";
+import { getComparisonWithBasehead } from "./getComparisonWithBasehead.ts";
 
 export * from "./contributorYears.ts";
 export * as webhooks from "./webhooks.ts";
@@ -19,6 +20,7 @@ function injectClient<T extends unknown[], R>(
 function createClient(client: Octokit) {
 	return {
 		getAuthorGitHubStats: injectClient(client, getAuthorGitHubStats),
+		getComparisonWithBasehead: injectClient(client, getComparisonWithBasehead),
 		getContents: injectClient(client, getContents),
 		getContentsRawStream: injectClient(client, getContentsRawStream),
 		getContentsRaw: injectClient(client, getContentsRaw),

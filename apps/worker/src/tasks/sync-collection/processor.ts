@@ -46,7 +46,7 @@ export default createProcessor(
 					.where(
 						and(
 							eq(collections.slug, collectionSlug),
-							eq(collections.branch, job.data.ref),
+							eq(collections.branch, job.data.branch),
 						),
 					);
 				return;
@@ -143,7 +143,7 @@ export default createProcessor(
 				.where(
 					and(
 						eq(collections.slug, collectionSlug),
-						eq(collections.branch, job.data.ref),
+						eq(collections.branch, job.data.branch),
 					),
 				);
 
@@ -164,7 +164,7 @@ export default createProcessor(
 				const result = {
 					slug: collectionSlug,
 					locale: locale,
-					branch: job.data.ref,
+					branch: job.data.branch,
 					title: parsed.title,
 					description: parsed.description,
 					coverImage: coverImage ?? null,

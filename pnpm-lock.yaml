@@ -481,6 +481,9 @@ importers:
         specifier: 'catalog:'
         version: 8.10.0
     devDependencies:
+      '@playfulprogramming/test-fixtures':
+        specifier: workspace:*
+        version: link:../test-fixtures
       vitest:
         specifier: 'catalog:'
         version: 4.1.7(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))

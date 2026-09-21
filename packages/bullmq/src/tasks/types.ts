@@ -1,11 +1,10 @@
 import type { UrlMetadataInput, UrlMetadataOutput } from "./url-metadata.ts";
 import type { PostImageInput, PostImageOutput } from "./post-image.ts";
-import type { SyncAuthorInput, SyncAuthorOutput } from "./sync-author.ts";
 import type {
+	SyncAuthorInput,
 	SyncCollectionInput,
-	SyncCollectionOutput,
-} from "./sync-collection.ts";
-import type { SyncPostInput, SyncPostOutput } from "./sync-post.ts";
+	SyncPostInput,
+} from "./sync.ts";
 import type { SyncAllInput } from "./sync-all.ts";
 import type {
 	GrantAuthorAchievementsInput,
@@ -15,7 +14,11 @@ import type {
 	DeleteS3ObjectInput,
 	DeleteS3ObjectOutput,
 } from "./delete-s3-object.ts";
-import type { WebhookInstallationInput } from "./webhook-installation.ts";
+import type {
+	WebhookInstallationInput,
+	WebhookPullRequestInput,
+	WebhookPushInput,
+} from "./webhook.ts";
 
 export const Tasks = {
 	SYNC_ALL: "sync-all",
@@ -46,16 +49,15 @@ export interface TaskInputs {
 	[Tasks.CLEANUP_ATTACHMENTS]: object;
 	[Tasks.DELETE_S3_OBJECT]: DeleteS3ObjectInput;
 	[Tasks.WEBHOOK_INSTALLATION]: WebhookInstallationInput;
-	// Raw GitHub webhook payload. Interpreting its contents is #206's job, not #205's.
-	[Tasks.WEBHOOK_PUSH]: unknown;
-	[Tasks.WEBHOOK_PULL_REQUEST]: unknown;
+	[Tasks.WEBHOOK_PUSH]: WebhookPushInput;
+	[Tasks.WEBHOOK_PULL_REQUEST]: WebhookPullRequestInput;
 }
 
 export interface TaskOutputs {
 	[Tasks.SYNC_ALL]: object;
-	[Tasks.SYNC_AUTHOR]: SyncAuthorOutput;
-	[Tasks.SYNC_COLLECTION]: SyncCollectionOutput;
-	[Tasks.SYNC_POST]: SyncPostOutput;
+	[Tasks.SYNC_AUTHOR]: void;
+	[Tasks.SYNC_COLLECTION]: void;
+	[Tasks.SYNC_POST]: void;
 	[Tasks.URL_METADATA]: UrlMetadataOutput;
 	[Tasks.POST_IMAGES]: PostImageOutput;
 	[Tasks.GRANT_AUTHOR_ACHIEVEMENTS]: GrantAuthorAchievementsOutput;

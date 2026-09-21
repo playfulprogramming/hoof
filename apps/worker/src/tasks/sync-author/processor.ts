@@ -1,4 +1,4 @@
-import { env, AuthorMetaSchema } from "@playfulprogramming/common";
+import { env, AuthorMetaSchema, BRANCH_MAIN } from "@playfulprogramming/common";
 import { Tasks, createJob } from "@playfulprogramming/bullmq";
 import {
 	db,
@@ -41,7 +41,10 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 			await db
 				.delete(authors)
 				.where(
-					and(eq(authors.slug, authorSlug), eq(authors.branch, job.data.ref)),
+					and(
+						eq(authors.slug, authorSlug),
+						eq(authors.branch, job.data.branch),
+					),
 				);
 			return;
 		}
@@ -80,7 +83,7 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 
 	const result = {
 		slug: authorSlug,
-		branch: job.data.ref,
+		branch: job.data.branch,
 		name: authorData.name,
 		description: authorData.description,
 		profileImage: profileImgKey,
@@ -109,7 +112,7 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 			})
 			.returning({ id: authors.id });
 
-		if (job.data.ref === "main") {
+		if (job.data.branch === BRANCH_MAIN) {
 			await tx
 				.delete(authorAchievements)
 				.where(
@@ -146,7 +149,7 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 		}
 	});
 
-	if (job.data.ref === "main") {
+	if (job.data.branch === BRANCH_MAIN) {
 		await createJob(
 			Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
 			`grant-author-achievements:${authorSlug}`,

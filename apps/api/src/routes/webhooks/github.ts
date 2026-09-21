@@ -113,7 +113,23 @@ webhooks.registerWebhookListener(async (event) => {
 				"Attempted pull_request on a non-playful repository/owner.",
 			);
 		}
-		await createJob(Tasks.WEBHOOK_PULL_REQUEST, event.id, event.payload);
+		if (
+			event.payload.action === "opened" ||
+			event.payload.action === "synchronize"
+		) {
+			if (!event.payload.installation) {
+				throw new Error(`Missing installation on pull_request.synchronize`);
+			}
+			await createJob(Tasks.WEBHOOK_PULL_REQUEST, event.id, {
+				commitBase: event.payload.pull_request.base.sha,
+				commitHead: event.payload.pull_request.head.sha,
+				branch: `pull/${event.payload.pull_request.number}`,
+				installation: event.payload.installation,
+			});
+		} else {
+			// We only need to observe the installation created event for now
+			console.log(`Ignoring unhandled action ${event.payload.action}`);
+		}
 	}
 	if (event.name === "push") {
 		if (
@@ -128,7 +144,19 @@ webhooks.registerWebhookListener(async (event) => {
 			});
 			return;
 		}
-		await createJob(Tasks.WEBHOOK_PUSH, event.id, event.payload);
+		if (event.payload.created || event.payload.deleted) {
+			console.log("Ignoring push webhook for a created/deleted ref", {
+				ref: event.payload.ref,
+			});
+		}
+		if (!event.payload.installation) {
+			throw new Error(`Missing installation on push`);
+		}
+		await createJob(Tasks.WEBHOOK_PUSH, event.id, {
+			commitBefore: event.payload.before,
+			commitAfter: event.payload.after,
+			installation: event.payload.installation,
+		});
 	}
 });
 

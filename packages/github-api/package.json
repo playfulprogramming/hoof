@@ -16,6 +16,7 @@
 		"undici": "catalog:"
 	},
 	"devDependencies": {
+		"@playfulprogramming/test-fixtures": "workspace:*",
 		"vitest": "catalog:"
 	}
 }

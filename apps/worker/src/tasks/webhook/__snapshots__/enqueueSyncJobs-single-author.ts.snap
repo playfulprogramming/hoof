@@ -1,0 +1,13 @@
+{
+  "children": undefined,
+  "data": {
+    "author": "example-author",
+    "branch": "example-branch",
+    "installation": {
+      "id": 0,
+    },
+    "ref": "example-ref",
+  },
+  "name": "example-author:example-branch:example-ref",
+  "queueName": "sync-author",
+}

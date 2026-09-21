@@ -1,0 +1,73 @@
+{
+  "children": [
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": undefined,
+                  "data": {
+                    "author": "author",
+                    "branch": "example-branch",
+                    "installation": {
+                      "id": 0,
+                    },
+                    "ref": "example-ref",
+                  },
+                  "name": "author:example-branch:example-ref",
+                  "queueName": "sync-author",
+                },
+              ],
+              "data": {
+                "author": "author",
+                "branch": "example-branch",
+                "installation": {
+                  "id": 0,
+                },
+                "post": "post",
+                "ref": "example-ref",
+              },
+              "name": "author/post:example-branch:example-ref",
+              "queueName": "sync-post",
+            },
+          ],
+          "data": {
+            "author": "someoneelse",
+            "branch": "example-branch",
+            "installation": {
+              "id": 0,
+            },
+            "ref": "example-ref",
+          },
+          "name": "someoneelse:example-branch:example-ref",
+          "queueName": "sync-author",
+        },
+      ],
+      "data": {
+        "author": "someoneelse",
+        "branch": "example-branch",
+        "collection": "collection",
+        "installation": {
+          "id": 0,
+        },
+        "ref": "example-ref",
+      },
+      "name": "someoneelse/collection:example-branch:example-ref",
+      "queueName": "sync-collection",
+    },
+  ],
+  "data": {
+    "author": "someoneelse",
+    "branch": "example-branch",
+    "collection": "collection",
+    "installation": {
+      "id": 0,
+    },
+    "post": "post",
+    "ref": "example-ref",
+  },
+  "name": "someoneelse/collection/post:example-branch:example-ref",
+  "queueName": "sync-post",
+}

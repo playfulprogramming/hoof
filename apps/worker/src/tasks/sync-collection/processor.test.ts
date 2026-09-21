@@ -100,7 +100,8 @@ tags:
 		fakeJob({
 			author: "example-author",
 			collection: "example-collection",
-			ref: "main",
+			branch: "main",
+			ref: "ref",
 			installation: { id: 0 },
 		}),
 	);
@@ -185,7 +186,8 @@ test("Deletes a collection record if it no longer exists", async () => {
 		fakeJob({
 			author: "example-author",
 			collection: "example-collection",
-			ref: "main",
+			branch: "main",
+			ref: "ref",
 			installation: { id: 0 },
 		}),
 	);
@@ -254,7 +256,8 @@ published: "2023-01-01T00:00:00Z"
 			fakeJob({
 				author: "example-author",
 				collection: "example-collection",
-				ref: "main",
+				branch: "main",
+				ref: "ref",
 				installation: { id: 0 },
 			}),
 		),
@@ -313,7 +316,8 @@ published: "2023-01-01T00:00:00Z"
 		fakeJob({
 			author: "example-author",
 			collection: "example-collection",
-			ref: "main",
+			branch: "main",
+			ref: "ref",
 			installation: { id: 0 },
 		}),
 	);
@@ -385,7 +389,8 @@ tags:
 		fakeJob({
 			author: "example-author",
 			collection: "example-collection",
-			ref: "main",
+			branch: "main",
+			ref: "ref",
 			installation: { id: 0 },
 		}),
 	);
@@ -430,7 +435,8 @@ tags:
 		fakeJob({
 			author: "example-author",
 			collection: "example-collection",
-			ref: "main",
+			branch: "main",
+			ref: "ref",
 			installation: { id: 0 },
 		}),
 	);
@@ -533,7 +539,8 @@ tags:
 		fakeJob({
 			author: "example-author",
 			collection: "multilang-tags-collection",
-			ref: "main",
+			branch: "main",
+			ref: "ref",
 			installation: { id: 0 },
 		}),
 	);

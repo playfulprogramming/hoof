@@ -1,4 +1,4 @@
-import { env } from "@playfulprogramming/common";
+import { BRANCH_MAIN, env } from "@playfulprogramming/common";
 import {
 	flowProducer,
 	Tasks,
@@ -43,6 +43,7 @@ export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
 			name: author.path,
 			data: {
 				author: author.path,
+				branch: BRANCH_MAIN,
 				ref: job.data.ref,
 				installation,
 			} satisfies TaskInputs[typeof Tasks.SYNC_AUTHOR],
@@ -65,6 +66,7 @@ export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
 				data: {
 					author: author.path,
 					post: post.path,
+					branch: BRANCH_MAIN,
 					ref: job.data.ref,
 					installation,
 				} satisfies TaskInputs[typeof Tasks.SYNC_POST],
@@ -110,6 +112,7 @@ export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
 				data: {
 					author: author.path,
 					collection: collection.path,
+					branch: BRANCH_MAIN,
 					ref: job.data.ref,
 					installation,
 				} satisfies TaskInputs[typeof Tasks.SYNC_COLLECTION],
@@ -124,6 +127,7 @@ export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
 						author: author.path,
 						collection: collection.path,
 						post: post.path,
+						branch: BRANCH_MAIN,
 						ref: job.data.ref,
 						installation,
 					} satisfies TaskInputs[typeof Tasks.SYNC_POST],
