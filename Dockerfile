@@ -23,8 +23,7 @@ COPY --parents apps/*/package.json .
 COPY --parents packages/*/package.json .
 RUN pnpm install
 
-# Copy & build the app
+# Copy the app
 COPY . .
-RUN pnpm build:all
 
-CMD [ "/bin/sh", "-c", "parallel --jobs 2 --line-buffer --halt now,done=1 node --experimental-strip-types {} ::: apps/api/src/index.ts apps/worker/src/index.ts" ]
+CMD [ "/bin/sh", "-c", "parallel --jobs 2 --line-buffer --halt now,done=1 node {} ::: apps/api/src/index.ts apps/worker/src/index.ts" ]

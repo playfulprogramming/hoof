@@ -1,10 +1,12 @@
 {
-	"$schema": "https://unpkg.com/knip@5/schema.json",
-	"ignore": ["*/*/scripts/*"],
+	"$schema": "./node_modules/knip/schema.json",
 	"ignoreDependencies": ["@aws-sdk/types", "openapi-typescript"],
 	"workspaces": {
 		"apps/worker": {
 			"entry": ["src/tasks/*/*.ts"]
+		},
+		"packages/db": {
+			"entry": ["scripts/migrate.ts"]
 		},
 		"packages/*": {
 			"includeEntryExports": true

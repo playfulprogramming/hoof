@@ -2,7 +2,6 @@ import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 import { execSync } from "child_process";
-import { spawnApp } from "../src/lib/spawn-app.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,8 +12,7 @@ const outputFile = path.join(outputDir, "api-schema.d.ts");
 export default async function generateTypes() {
 	await fs.mkdir(outputDir, { recursive: true });
 
-	await using app = await spawnApp();
-	const swaggerUrl = `${app.baseUrl}/openapi.json`;
+	const swaggerUrl = `http://localhost:3000/openapi.json`;
 
 	const response = await fetch(swaggerUrl);
 	if (!response.ok) {
