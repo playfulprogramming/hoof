@@ -21,7 +21,12 @@
 			"outputs": ["{projectRoot}/src/generated/api-schema.d.ts"],
 			"cache": true,
 			"inputs": ["{workspaceRoot}/apps/api/**/*"],
-			"dependsOn": ["test:docker"]
+			"dependsOn": [
+				{
+					"projects": "api",
+					"target": "dev"
+				}
+			]
 		},
 		"build:cert": {
 			"executor": "nx:run-commands",
