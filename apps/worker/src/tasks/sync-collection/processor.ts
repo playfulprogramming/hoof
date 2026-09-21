@@ -188,6 +188,8 @@ export default createProcessor(
 					.values(result)
 					.returning({ id: collections.id });
 
+				if (!collectionRecord) throw new Error("undefined collectionRecord");
+
 				// Delete existing author associations for this collection
 				await tx
 					.delete(collectionAuthors)
