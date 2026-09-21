@@ -17,15 +17,13 @@ export async function getEmbedDataFromGist(
 	inputUrl: URL,
 	signal: AbortSignal,
 ): Promise<EmbedData> {
-	let error = false;
-
 	// https://gist.github.com/crutchcorn/36fe5553219c05ea38bacf1c7396085b
 	const gistPathParts = inputUrl.pathname.split("/").filter(Boolean);
 	const githubUsername = gistPathParts[0];
 	const gistId = gistPathParts[1];
 	if (!githubUsername || !gistId) {
 		console.error(`Invalid gist URL: ${inputUrl}`);
-		error = true;
+		return { error: true };
 	}
 
 	const data = await createAppClient()
@@ -114,6 +112,6 @@ export async function getEmbedDataFromGist(
 
 	return {
 		gistId,
-		error,
+		error: false,
 	};
 }

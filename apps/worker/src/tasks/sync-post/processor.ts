@@ -177,6 +177,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 						.insert(postGroups)
 						.values({})
 						.returning({ id: postGroups.id });
+					if (!newGroup) throw new Error("undefined newGroup");
 					groupId = newGroup.id;
 				}
 			}
@@ -216,6 +217,8 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 				.insert(posts)
 				.values(postValues)
 				.returning({ id: posts.id });
+
+			if (!postRecord) throw new Error("undefined postRecord");
 
 			const authorSlugs = new Set<string>([author, ...(parsed.authors ?? [])]);
 			authorSlugs.forEach((authorSlug) => affectedAuthorSlugs.add(authorSlug));
