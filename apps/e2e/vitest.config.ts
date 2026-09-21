@@ -6,5 +6,6 @@ export default defineConfig({
 		watch: false,
 		globals: true,
 		fileParallelism: false,
+		maxWorkers: 1,
 	},
 });

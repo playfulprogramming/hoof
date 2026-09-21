@@ -1,5 +1,4 @@
-import { describe, test, expect } from "vitest";
-import { setTimeout } from "node:timers/promises";
+import { describe, test, expect, vi } from "vitest";
 
 describe("url-metadata", () => {
 	test("returns url-metadata", async () => {
@@ -32,13 +31,18 @@ describe("url-metadata", () => {
 		expect(enqueueRes.response.status).toBe(201);
 
 		// Wait for the task to be processed
-		await setTimeout(2000);
+		const res = await vi.waitFor(
+			async () => {
+				// Fetch the processed result
+				const res = await client.POST("/tasks/url-metadata", {
+					body: { url },
+				});
+				expect(res.response.status).toBe(200);
+				return res;
+			},
+			{ timeout: 3000, interval: 100 },
+		);
 
-		// Fetch the processed result
-		const res = await client.POST("/tasks/url-metadata", {
-			body: { url },
-		});
-		expect(res.response.status).toBe(200);
 		expect(res.data).toStrictEqual({
 			title: "Example Title",
 			error: false,
