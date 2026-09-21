@@ -16,8 +16,8 @@ export async function fetchPageIcons(
 
 	// Try getting icon from link tags first
 	visit(headNode, { type: "element", tagName: "link" }, (node: Element) => {
-		const rel = String(node.properties?.rel ?? "");
-		const href = String(node.properties?.href ?? "");
+		const rel = String(node.properties?.["rel"] ?? "");
+		const href = String(node.properties?.["href"] ?? "");
 		if (!rel.includes("icon")) return;
 
 		try {
@@ -34,11 +34,11 @@ export async function fetchPageIcons(
 		(node) =>
 			isElement(node) &&
 			node.tagName === "link" &&
-			String(node.properties.rel).includes("manifest"),
+			String(node.properties["rel"]).includes("manifest"),
 	);
 
-	if (manifestLink?.properties?.href) {
-		const manifestUrl = new URL(String(manifestLink.properties.href), src);
+	if (manifestLink?.properties?.["href"]) {
+		const manifestUrl = new URL(String(manifestLink.properties["href"]), src);
 		const manifest = await fetchAsBot({
 			url: manifestUrl,
 			method: "GET",
