@@ -34,6 +34,7 @@ ALTER TABLE "authors" ADD PRIMARY KEY ("id");--> statement-breakpoint
 ALTER TABLE "collection_authors" DROP COLUMN "collection_slug";--> statement-breakpoint
 ALTER TABLE "collection_tags" DROP COLUMN "collection_slug";--> statement-breakpoint
 ALTER TABLE "collection_tags" ADD PRIMARY KEY ("collection_id","tag");--> statement-breakpoint
+ALTER TABLE "collections" DROP CONSTRAINT IF EXISTS "collections_pkey";--> statement-breakpoint
 ALTER TABLE "collections" ADD PRIMARY KEY ("id");--> statement-breakpoint
 ALTER TABLE "authors" ADD CONSTRAINT "authors_slug_branch_unique" UNIQUE("slug","branch");--> statement-breakpoint
 ALTER TABLE "collections" ADD CONSTRAINT "collections_slug_locale_branch_unique" UNIQUE("slug","locale","branch");--> statement-breakpoint
