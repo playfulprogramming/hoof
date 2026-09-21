@@ -3,10 +3,6 @@
 	"version": "0.0.1",
 	"private": true,
 	"type": "module",
-	"scripts": {
-		"typegen": "node scripts/typegen.ts",
-		"test": "vitest run"
-	},
 	"dependencies": {
 		"@jaredwray/mockhttp": "^1.9.0",
 		"openapi-fetch": "catalog:",

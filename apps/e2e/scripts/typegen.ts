@@ -8,11 +8,19 @@ const __dirname = path.dirname(__filename);
 
 const outputDir = path.join(__dirname, "../src/generated");
 const outputFile = path.join(outputDir, "api-schema.d.ts");
+const baseUrl = "http://localhost:3000";
+
+console.log("Waiting for the dev server to start...");
+while (
+	await fetch(baseUrl)
+		.then((r) => r.status === 200)
+		.catch((_) => true)
+);
 
 export default async function generateTypes() {
 	await fs.mkdir(outputDir, { recursive: true });
 
-	const swaggerUrl = `http://localhost:3000/openapi.json`;
+	const swaggerUrl = `${baseUrl}/openapi.json`;
 
 	const response = await fetch(swaggerUrl);
 	if (!response.ok) {
