@@ -20,7 +20,8 @@
 			},
 			"outputs": ["{projectRoot}/src/generated/api-schema.d.ts"],
 			"cache": true,
-			"inputs": ["{workspaceRoot}/apps/api/**/*"]
+			"inputs": ["{workspaceRoot}/apps/api/**/*"],
+			"dependsOn": ["^build"]
 		},
 		"test": {
 			"executor": "@nx/vitest:test",

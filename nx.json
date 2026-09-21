@@ -24,14 +24,6 @@
 		]
 	},
 	"targetDefaults": {
-		"test:knip": {
-			"cache": true,
-			"inputs": ["{workspaceRoot}/**/*"]
-		},
-		"test:sherif": {
-			"cache": true,
-			"inputs": ["{workspaceRoot}/**/package.json"]
-		},
 		"test:eslint": {
 			"cache": true,
 			"dependsOn": ["^build"],
@@ -42,6 +34,10 @@
 			"dependsOn": ["^build"],
 			"inputs": ["production", "^production"],
 			"outputs": ["{projectRoot}/build", "{projectRoot}/dist"]
+		},
+		"dev": {
+			"dependsOn": ["^build", "^drizzle:push"],
+			"continuous": true
 		},
 		"test:build": {
 			"cache": true,
