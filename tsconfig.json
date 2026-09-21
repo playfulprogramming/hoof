@@ -15,7 +15,6 @@
 		"noImplicitOverride": true,
 		"noImplicitReturns": true,
 		"noFallthroughCasesInSwitch": true,
-		"noPropertyAccessFromIndexSignature": true,
 		"forceConsistentCasingInFileNames": true,
 		"allowJs": true
 	},
