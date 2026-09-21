@@ -15,21 +15,41 @@
 		"typegen": {
 			"executor": "nx:run-commands",
 			"options": {
-				"command": "node --experimental-strip-types scripts/typegen.ts",
+				"command": "node scripts/typegen.ts",
 				"cwd": "apps/e2e"
 			},
 			"outputs": ["{projectRoot}/src/generated/api-schema.d.ts"],
 			"cache": true,
 			"inputs": ["{workspaceRoot}/apps/api/**/*"],
-			"dependsOn": ["^build"]
+			"dependsOn": ["test:docker"]
+		},
+		"build:cert": {
+			"executor": "nx:run-commands",
+			"options": {
+				"command": "node scripts/generate-cert.ts",
+				"cwd": "apps/e2e"
+			},
+			"cache": true,
+			"inputs": ["{projectRoot}/scripts/generate-cert.ts"],
+			"outputs": ["{projectRoot}/src/generated/*.pem"]
+		},
+		"build:docker": {
+			"dependsOn": ["build:cert"],
+			"command": "docker compose --profile e2e build"
+		},
+		"test:docker:clean": {
+			"executor": "nx:run-commands",
+			"options": {
+				"commands": [
+					"docker compose down -v",
+					"docker compose up -d --wait"
+				],
+				"parallel": false
+			}
 		},
 		"test": {
-			"executor": "@nx/vitest:test",
-			"outputs": ["{options.reportsDirectory}"],
-			"options": {
-				"reportsDirectory": "coverage"
-			},
-			"dependsOn": ["typegen"]
+			"dependsOn": ["build:docker", "test:docker:clean"],
+			"command": "docker compose --profile e2e up e2e --abort-on-container-exit --attach-dependencies"
 		}
 	}
 }

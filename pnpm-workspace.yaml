@@ -18,14 +18,6 @@ catalog:
   vite: ^8.2.2
   vitest: ^4.1.7
 
-onlyBuiltDependencies:
-  - esbuild
-  - libpq
-  - msgpackr-extract
-  - msw
-  - nx
-  - sharp
-
 minimumReleaseAge: 10080 # 7 days
 
 overrides:
@@ -36,3 +28,4 @@ allowBuilds:
   msgpackr-extract: true
   nx: true
   sharp: true
+  vue-demi: false

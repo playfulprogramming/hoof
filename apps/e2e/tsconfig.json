@@ -1,19 +1,4 @@
 {
 	"extends": "../../tsconfig.json",
-	"compilerOptions": {
-		"module": "NodeNext",
-		"forceConsistentCasingInFileNames": true,
-		"strict": true,
-		"noImplicitOverride": true,
-		"noImplicitReturns": true,
-		"noFallthroughCasesInSwitch": true,
-		"noPropertyAccessFromIndexSignature": true,
-		"verbatimModuleSyntax": true,
-		"isolatedModules": true,
-		"moduleDetection": "force",
-		"noUncheckedIndexedAccess": true,
-		"allowJs": true,
-		"resolveJsonModule": true
-	},
-	"include": ["src/**/*", "scripts/**/*"]
+	"include": ["src/**/*", "scripts/**/*", "test-utils/*"]
 }

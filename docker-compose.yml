@@ -1,4 +1,4 @@
-name: playful-programming-cms
+name: playful-programming-hoof
 
 services:
   pgsql:
@@ -52,27 +52,44 @@ services:
 
   app:
     build: .
+    image: playful-programming-hoof:latest
     env_file:
       - .env
     environment:
+      NODE_USE_ENV_PROXY: 1
+      NODE_EXTRA_CA_CERTS: /var/app/apps/e2e/src/generated/cert.pem
+      HTTP_PROXY: http://e2e:3999
+      HTTPS_PROXY: http://e2e:3999
+      NO_PROXY: "localhost, 127.0.0.1"
       S3_ENDPOINT: http://rustfs:9000
       POSTGRES_URL: postgresql://postgres:unicorn@pgsql:5432/postgres
       REDIS_URL: redis://redis:6379
-    ports:
-      - "3000:3000"
-    depends_on: [pgsql, redis, rustfs]
-    profiles: [app]
+    depends_on:
+      pgsql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rustfs:
+        condition: service_healthy
+    profiles: [e2e]
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://0.0.0.0:3000 && wget --no-verbose --tries=1 --spider http://0.0.0.0:3001 || exit 1
       interval: 10s
       timeout: 5s
       retries: 5
-    develop:
-      watch:
-        - path: .
-          action: rebuild
     post_start:
-      - command: node --experimental-strip-types packages/db/scripts/migrate.ts
+      - command: node packages/db/scripts/migrate.ts
+
+  e2e:
+    image: playful-programming-hoof:latest
+    environment:
+      MOCK_PROXY_PORT: 3999
+      API_URL: http://app:3000
+    depends_on:
+      app:
+        condition: service_healthy
+    profiles: [e2e]
+    command: pnpm -C apps/e2e vitest
 
 volumes:
   pgsql_storage: {}
