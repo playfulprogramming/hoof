@@ -3,5 +3,5 @@
 	"compilerOptions": {
 		"types": ["node", "vitest/globals"]
 	},
-	"include": ["src", "scripts", "test-utils"]
+	"include": ["src", "scripts", "test-utils", "eslint.config.mjs"]
 }
