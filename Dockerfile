@@ -23,7 +23,19 @@ COPY --parents apps/*/package.json .
 COPY --parents packages/*/package.json .
 RUN pnpm install
 
-# Copy the app
+FROM base AS e2e-proxy
+
+# Additionally install e2e dependencies
+COPY --parents e2e/mocks/package.json .
+RUN pnpm install
+
 COPY . .
+
+CMD [ "/bin/sh", "-c", "node --watch e2e/mocks/src/index.ts" ]
+
+FROM base AS app
+
+# Copy the app
+COPY --exclude=e2e . .
 
 CMD [ "/bin/sh", "-c", "parallel --jobs 2 --line-buffer --halt now,done=1 node {} ::: apps/api/src/index.ts apps/worker/src/index.ts" ]

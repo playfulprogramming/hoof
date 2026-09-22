@@ -2,7 +2,7 @@ import http from "http";
 import net from "net";
 import { mock, MOCK_HTTP_PORT } from "./mock.ts";
 import "./url-metadata.ts";
-import { env } from "../src/util/env.ts";
+import { env } from "./env.ts";
 
 await mock.start();
 

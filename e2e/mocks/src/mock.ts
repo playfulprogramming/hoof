@@ -8,7 +8,7 @@ export const mock = new MockHttp({
 	autoDetectPort: false,
 	apiDocs: false,
 	https: {
-		cert: path.join(import.meta.dirname, "../src/generated/cert.pem"),
-		key: path.join(import.meta.dirname, "../src/generated/key.pem"),
+		cert: path.join(import.meta.dirname, "./generated/cert.pem"),
+		key: path.join(import.meta.dirname, "./generated/key.pem"),
 	},
 });

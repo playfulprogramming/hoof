@@ -1,0 +1,29 @@
+{
+	"name": "e2e-mocks",
+	"$schema": "../../node_modules/nx/schemas/project-schema.json",
+	"sourceRoot": "apps/e2e/src",
+	"projectType": "application",
+	"tags": [],
+	"targets": {
+		"lint": {
+			"executor": "nx:run-commands",
+			"options": {
+				"command": "eslint ./src",
+				"cwd": "{projectRoot}"
+			}
+		},
+		"build:cert": {
+			"executor": "nx:run-commands",
+			"options": {
+				"command": "node scripts/generate-cert.ts",
+				"cwd": "{projectRoot}"
+			},
+			"cache": true,
+			"inputs": ["{projectRoot}/scripts/generate-cert.ts"],
+			"outputs": ["{projectRoot}/src/generated/*.pem"]
+		},
+		"build": {
+			"dependsOn": ["build:cert"]
+		}
+	}
+}
