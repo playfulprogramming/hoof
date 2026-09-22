@@ -50,6 +50,19 @@ services:
       timeout: 5s
       retries: 5
 
+  proxy:
+    image: playful-programming-hoof:latest
+    environment:
+      MOCK_PROXY_PORT: 3999
+      IN_DOCKER: true
+    profiles: [e2e]
+    command: node apps/e2e/mocks/index.ts
+    healthcheck:
+      test: netstat -tln | grep :3999
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   app:
     build: .
     image: playful-programming-hoof:latest
@@ -58,8 +71,8 @@ services:
     environment:
       NODE_USE_ENV_PROXY: 1
       NODE_EXTRA_CA_CERTS: /var/app/apps/e2e/src/generated/cert.pem
-      HTTP_PROXY: http://e2e:3999
-      HTTPS_PROXY: http://e2e:3999
+      HTTP_PROXY: http://proxy:3999
+      HTTPS_PROXY: http://proxy:3999
       NO_PROXY: "localhost, 127.0.0.1"
       S3_ENDPOINT: http://rustfs:9000
       POSTGRES_URL: postgresql://postgres:unicorn@pgsql:5432/postgres
@@ -71,7 +84,11 @@ services:
         condition: service_healthy
       rustfs:
         condition: service_healthy
+      proxy:
+        condition: service_healthy
     profiles: [e2e]
+    ports:
+      - "3333:3000"
     healthcheck:
       test: wget --no-verbose --tries=1 --spider http://0.0.0.0:3000 && wget --no-verbose --tries=1 --spider http://0.0.0.0:3001 || exit 1
       interval: 10s
@@ -83,8 +100,8 @@ services:
   e2e:
     image: playful-programming-hoof:latest
     environment:
-      MOCK_PROXY_PORT: 3999
       API_URL: http://app:3000
+      IN_DOCKER: true
     depends_on:
       app:
         condition: service_healthy
