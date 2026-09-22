@@ -26,33 +26,43 @@
 			"inputs": ["{workspaceRoot}/**/*"]
 		},
 		"test": {
-			"dependsOn": [
-				"test:unit",
-				{
-					"projects": "e2e-tests",
-					"target": "test"
-				}
-			]
+			"dependsOn": ["test:unit", "test:e2e"]
 		},
 		"test:unit": {
 			"dependsOn": [
 				"prettier",
 				{
-					"projects": "*",
+					"projects": ["apps/*", "packages/*"],
 					"target": "test:build"
 				},
 				"test:sherif",
 				"test:knip",
 				{
-					"projects": "*",
+					"projects": ["apps/*", "packages/*"],
 					"target": "test:eslint"
 				},
 				{
-					"projects": ["apps/api", "apps/worker"],
+					"projects": "apps/*",
 					"target": "test"
 				},
 				{
 					"projects": "packages/*",
+					"target": "test"
+				}
+			]
+		},
+		"test:e2e": {
+			"dependsOn": [
+				{
+					"projects": "e2e/*",
+					"target": "test:build"
+				},
+				{
+					"projects": "e2e/*",
+					"target": "test:eslint"
+				},
+				{
+					"projects": "e2e/*",
 					"target": "test"
 				}
 			]
