@@ -1,9 +1,8 @@
 {
-	"name": "@playfulprogramming/bullmq",
-	"private": true,
+	"name": "@playfulprogramming/e2e-tests",
 	"version": "0.0.1",
+	"private": true,
 	"type": "module",
-	"main": "src/index.ts",
 	"scripts": {
 		"test:eslint": "eslint ./src",
 		"test:build": "publint --strict",
@@ -11,12 +10,11 @@
 		"build": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@playfulprogramming/common": "workspace:*",
-		"@playfulprogramming/redis": "workspace:*",
-		"bullmq": "catalog:",
-		"typebox": "catalog:"
+		"@playfulprogramming/db": "workspace:*",
+		"openapi-fetch": "catalog:"
 	},
 	"devDependencies": {
+		"openapi-typescript": "catalog:",
 		"vitest": "catalog:"
 	}
 }

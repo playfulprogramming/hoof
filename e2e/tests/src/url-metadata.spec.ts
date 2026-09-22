@@ -1,5 +1,3 @@
-import { describe, test, expect, vi } from "vitest";
-
 describe("url-metadata", () => {
 	test("returns url-metadata", async () => {
 		const url = `https://example.com/`;

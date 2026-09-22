@@ -1,0 +1,17 @@
+{
+	"name": "@playfulprogramming/e2e-mocks",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"main": "src/index.ts",
+	"scripts": {
+		"test:eslint": "eslint ./src",
+		"test:build": "publint --strict",
+		"build": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@jaredwray/mockhttp": "^1.9.0",
+		"selfsigned": "^5.5.0",
+		"typebox": "^1.3.30"
+	}
+}

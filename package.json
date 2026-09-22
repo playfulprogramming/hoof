@@ -7,7 +7,7 @@
 		"prepare": "husky",
 		"test": "nx run test",
 		"test:unit": "nx run test:unit",
-		"test:e2e": "nx run e2e:test",
+		"test:e2e": "nx run e2e-tests:test",
 		"build:all": "nx run-many --target=build",
 		"dev": "nx run dev",
 		"prettier": "prettier . --check --ignore-unknown",

@@ -22,6 +22,7 @@ const EnvSchema = Type.Object({
 
 	REDIS_URL: Type.String({ pattern: "^redis://.+$" }),
 	REDIS_PASSWORD: Type.Optional(Type.String()),
+	BULLMQ_PREFIX: Type.Optional(Type.String()),
 
 	// Rate limiting configuration
 	RATE_LIMIT_MAX: Type.Integer({ default: 10_000 }),

@@ -13,6 +13,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+      start_interval: 500ms
+    networks: [shared]
     ports:
       - "5432:5432"
 
@@ -20,6 +23,7 @@ services:
     image: redis:8.2.1-alpine3.22
     volumes:
       - redis_storage:/data
+    networks: [shared]
     ports:
       - "6379:6379"
     healthcheck:
@@ -27,9 +31,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+      start_interval: 500ms
 
   rustfs:
     image: rustfs/rustfs
+    networks: [shared]
     ports:
       - "9000:9000" # API Port
       - "9001:9001" # Web UI Port
@@ -49,67 +56,33 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+      start_interval: 500ms
 
   proxy:
-    image: playful-programming-hoof:latest
+    build:
+      context: .
+      target: e2e-proxy
+    image: playful-programming-hoof-e2e-proxy:latest
     environment:
       MOCK_PROXY_PORT: 3999
-      IN_DOCKER: true
-    profiles: [e2e]
-    command: node apps/e2e/mocks/index.ts
+    volumes:
+      - ./e2e/mocks/src:/var/app/e2e/mocks/src:ro
+    networks: [shared]
     healthcheck:
       test: netstat -tln | grep :3999
       interval: 10s
       timeout: 5s
       retries: 5
-
-  app:
-    build: .
-    image: playful-programming-hoof:latest
-    env_file:
-      - .env
-    environment:
-      NODE_USE_ENV_PROXY: 1
-      NODE_EXTRA_CA_CERTS: /var/app/apps/e2e/src/generated/cert.pem
-      HTTP_PROXY: http://proxy:3999
-      HTTPS_PROXY: http://proxy:3999
-      NO_PROXY: "localhost, 127.0.0.1"
-      S3_ENDPOINT: http://rustfs:9000
-      POSTGRES_URL: postgresql://postgres:unicorn@pgsql:5432/postgres
-      REDIS_URL: redis://redis:6379
-    depends_on:
-      pgsql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      rustfs:
-        condition: service_healthy
-      proxy:
-        condition: service_healthy
-    profiles: [e2e]
-    ports:
-      - "3333:3000"
-    healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://0.0.0.0:3000 && wget --no-verbose --tries=1 --spider http://0.0.0.0:3001 || exit 1
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    post_start:
-      - command: node packages/db/scripts/migrate.ts
-
-  e2e:
-    image: playful-programming-hoof:latest
-    environment:
-      API_URL: http://app:3000
-      IN_DOCKER: true
-    depends_on:
-      app:
-        condition: service_healthy
-    profiles: [e2e]
-    command: pnpm -C apps/e2e vitest
+      start_period: 10s
+      start_interval: 100ms
 
 volumes:
   pgsql_storage: {}
   pgsql_backups: {}
   redis_storage: {}
   rustfs_storage: {}
+
+networks:
+  shared:
+    name: hoof_shared_network
