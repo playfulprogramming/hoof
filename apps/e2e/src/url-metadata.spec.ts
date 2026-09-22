@@ -2,26 +2,6 @@ import { describe, test, expect, vi } from "vitest";
 
 describe("url-metadata", () => {
 	test("returns url-metadata", async () => {
-		const tap = mock.taps.inject(
-			{
-				response: `
-				<!DOCTYPE html>
-				<html lang="en">
-					<head>
-						<title>Example Title</title>
-					</head>
-				</html>
-				`,
-				statusCode: 200,
-				headers: { "Content-Type": "text/html" },
-			},
-			{
-				url: "/",
-				hostname: "example.com",
-				method: "GET",
-			},
-		);
-
 		const url = `https://example.com/`;
 
 		// Enqueue the URL metadata task
@@ -47,7 +27,5 @@ describe("url-metadata", () => {
 			title: "Example Title",
 			error: false,
 		});
-
-		mock.taps.removeInjection(tap);
 	});
 });
