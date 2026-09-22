@@ -13,7 +13,7 @@ const baseUrl = "http://localhost:3000";
 console.log("Waiting for the dev server to start...");
 while (
 	await fetch(baseUrl)
-		.then((r) => r.status === 200)
+		.then((r) => r.status !== 200)
 		.catch((_) => true)
 );
 
