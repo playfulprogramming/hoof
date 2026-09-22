@@ -1,5 +1,3 @@
-import { describe, it, expect } from "vitest";
-
 describe("E2E: Health Check", () => {
 	it.each(["/", "/health/postgres", "/health/redis"] as const)(
 		"should respond 200 for %s",

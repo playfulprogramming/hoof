@@ -1,6 +1,6 @@
 {
 	"$schema": "./node_modules/knip/schema.json",
-	"ignoreDependencies": ["@aws-sdk/types", "openapi-typescript"],
+	"ignoreDependencies": ["@aws-sdk/types"],
 	"workspaces": {
 		"apps/worker": {
 			"entry": ["src/tasks/*/*.ts"]

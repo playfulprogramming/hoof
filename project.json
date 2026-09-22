@@ -29,7 +29,7 @@
 			"dependsOn": [
 				"test:unit",
 				{
-					"projects": "apps/e2e",
+					"projects": "e2e-tests",
 					"target": "test"
 				}
 			]
