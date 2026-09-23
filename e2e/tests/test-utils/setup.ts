@@ -1,11 +1,7 @@
-import { spawnApp } from "./spawnApp.ts";
-
-const app = await spawnApp();
+import { spawnApp as spawnAppImpl } from "./spawnApp.ts";
 
 declare global {
-	var client: typeof app.client;
+	var spawnApp: typeof spawnAppImpl;
 }
 
-globalThis.client = app.client;
-
-afterAll(app.close);
+globalThis.spawnApp = spawnAppImpl;

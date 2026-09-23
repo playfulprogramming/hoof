@@ -9,7 +9,7 @@ const outputFile = path.join(outputDir, "api-schema.d.ts");
 export default async function generateTypes() {
 	await fs.mkdir(outputDir, { recursive: true });
 
-	const app = await spawnApp();
+	await using app = await spawnApp();
 	const response = await fetch(`${app.baseUrl}/openapi.json`);
 	if (!response.ok) {
 		throw new Error(
@@ -17,7 +17,6 @@ export default async function generateTypes() {
 		);
 	}
 	const spec = await response.json();
-	await app.close();
 
 	console.log("Generating types");
 	await fs.writeFile(
