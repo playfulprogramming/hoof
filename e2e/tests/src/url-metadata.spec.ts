@@ -1,9 +1,11 @@
+await using app = await spawnApp();
+
 describe("url-metadata", () => {
 	test("returns url-metadata", async () => {
 		const url = `https://example.com/`;
 
 		// Enqueue the URL metadata task
-		const enqueueRes = await client.POST("/tasks/url-metadata", {
+		const enqueueRes = await app.client.POST("/tasks/url-metadata", {
 			body: { url },
 		});
 		expect(enqueueRes.response.status).toBe(201);
@@ -12,7 +14,7 @@ describe("url-metadata", () => {
 		const res = await vi.waitFor(
 			async () => {
 				// Fetch the processed result
-				const res = await client.POST("/tasks/url-metadata", {
+				const res = await app.client.POST("/tasks/url-metadata", {
 					body: { url },
 				});
 				expect(res.response.status).toBe(200);

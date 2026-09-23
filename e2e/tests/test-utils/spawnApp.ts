@@ -80,7 +80,7 @@ export async function spawnApp() {
 	return {
 		baseUrl,
 		client,
-		async close() {
+		async [Symbol.asyncDispose]() {
 			console.log(`Closing app ${uuid}`);
 			dockerLogs.kill();
 			await dockerLogs.exit;
