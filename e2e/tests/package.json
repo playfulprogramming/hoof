@@ -1,14 +1,16 @@
 {
-	"name": "e2e",
+	"name": "@playfulprogramming/e2e-tests",
 	"version": "0.0.1",
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"typegen": "node --experimental-strip-types scripts/typegen.ts",
-		"test": "vitest run"
+		"test:eslint": "eslint ./src",
+		"test:build": "publint --strict",
+		"test": "vitest run",
+		"build": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@playfulprogramming/api": "workspace:*",
+		"@playfulprogramming/db": "workspace:*",
 		"openapi-fetch": "catalog:"
 	},
 	"devDependencies": {

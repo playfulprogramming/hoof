@@ -1,0 +1,42 @@
+{
+	"name": "e2e-tests",
+	"$schema": "../../node_modules/nx/schemas/project-schema.json",
+	"sourceRoot": "apps/e2e/src",
+	"projectType": "application",
+	"tags": [],
+	"targets": {
+		"lint": {
+			"executor": "nx:run-commands",
+			"options": {
+				"command": "eslint ./src",
+				"cwd": "e2e/tests"
+			}
+		},
+		"build:typegen": {
+			"executor": "nx:run-commands",
+			"options": {
+				"command": "node scripts/typegen.ts",
+				"cwd": "e2e/tests"
+			},
+			"outputs": ["{projectRoot}/src/generated/api-schema.d.ts"],
+			"cache": true,
+			"inputs": ["{workspaceRoot}/apps/api/**/*", "{projectRoot}/**/*"],
+			"dependsOn": ["docker:build", "docker:start"]
+		},
+		"build": {
+			"dependsOn": ["^build", "build:typegen"]
+		},
+		"docker:build": {
+			"dependsOn": ["^build:cert"],
+			"command": "docker compose -f ./docker-compose.yml -f ./docker-compose.e2e.yml build"
+		},
+		"docker:start": {
+			"dependsOn": ["docker:build"],
+			"command": "docker compose up -d --wait"
+		},
+		"test": {
+			"dependsOn": ["build", "docker:build", "docker:start"]
+		}
+	},
+	"implicitDependencies": ["e2e-mocks"]
+}

@@ -12,6 +12,9 @@
 		"erasableSyntaxOnly": true,
 		"allowImportingTsExtensions": true,
 		"esModuleInterop": true,
+		"noImplicitOverride": true,
+		"noFallthroughCasesInSwitch": true,
+		"forceConsistentCasingInFileNames": true,
 		"allowJs": true
 	},
 	"include": ["eslint.config.mjs"]
