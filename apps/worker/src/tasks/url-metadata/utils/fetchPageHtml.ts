@@ -30,9 +30,11 @@ export async function getOpenGraphImages(
 	if (!headNode) return results;
 
 	visit(headNode, { type: "element", tagName: "meta" }, (e: Element) => {
-		if (["twitter:image", "og:image"].includes(String(e.properties.property))) {
+		if (
+			["twitter:image", "og:image"].includes(String(e.properties["property"]))
+		) {
 			try {
-				const url = new URL(String(e.properties.content), baseUrl);
+				const url = new URL(String(e.properties["content"]), baseUrl);
 				results.push(url);
 			} catch (_e) {
 				// ignore

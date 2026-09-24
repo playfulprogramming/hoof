@@ -54,9 +54,9 @@ export async function getEmbedDataFromVideo(
 	let embedHeight: number | undefined = undefined;
 	if (videoData?.html) {
 		const attributes = getIFrameAttributes(videoData.html);
-		if (attributes.src) embedSrc = String(attributes.src);
-		const width = Number(attributes.width);
-		const height = Number(attributes.height);
+		if (attributes["src"]) embedSrc = String(attributes["src"]);
+		const width = Number(attributes["width"]);
+		const height = Number(attributes["height"]);
 		if (isFinite(width)) embedWidth = width;
 		if (isFinite(height)) embedHeight = height;
 	}

@@ -31,7 +31,7 @@ export default createProcessor(Tasks.GRANT_AUTHOR_ACHIEVEMENTS, async (job) => {
 		socials?: Record<string, string>;
 	};
 	const roles = meta.roles ?? [];
-	const githubLogin = meta.socials?.github;
+	const githubLogin = meta.socials?.["github"];
 
 	// ── Content stats ─────────────────────────────────────────────────────────
 

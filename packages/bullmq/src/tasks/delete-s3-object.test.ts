@@ -10,7 +10,7 @@ afterEach(() => {
 });
 
 function jobIdFromCall(callIndex: number): string {
-	return vi.mocked(createJob).mock.calls[callIndex][1] as string;
+	return vi.mocked(createJob).mock.calls[callIndex]?.[1] as string;
 }
 
 test("reuses the same job id when lastModified is unchanged across calls", async () => {
