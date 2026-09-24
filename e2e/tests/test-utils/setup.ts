@@ -4,4 +4,8 @@ declare global {
 	var spawnApp: typeof spawnAppImpl;
 }
 
-globalThis.spawnApp = spawnAppImpl;
+globalThis.spawnApp = async () => {
+	const app = await spawnAppImpl();
+	afterAll(app[Symbol.asyncDispose]);
+	return app;
+};
