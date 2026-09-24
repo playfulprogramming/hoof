@@ -1,4 +1,4 @@
-await using app = await spawnApp();
+const app = await spawnApp();
 
 describe("url-metadata", () => {
 	test("returns url-metadata", async () => {
