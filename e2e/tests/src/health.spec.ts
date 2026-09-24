@@ -1,4 +1,4 @@
-await using app = await spawnApp();
+const app = await spawnApp();
 
 describe("E2E: Health Check", () => {
 	it.each(["/", "/health/postgres", "/health/redis"] as const)(
