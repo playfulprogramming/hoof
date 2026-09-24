@@ -35,7 +35,11 @@ function exec({ command, env }: ExecOptions) {
 		kill() {
 			if (child.pid) process.kill(-child.pid);
 		},
-		exit: once(child, "close"),
+		exit: once(child, "close").then(() => {
+			if (child.exitCode !== null && child.exitCode !== 0) {
+				throw new Error(`'${command} exited with code ${child.exitCode}`);
+			}
+		}),
 	};
 }
 
