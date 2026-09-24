@@ -31,11 +31,8 @@
 			"command": "docker compose -f ./docker-compose.yml -f ./docker-compose.e2e.yml build"
 		},
 		"docker:start": {
-			"executor": "nx:run-commands",
-			"options": {
-				"commands": ["docker compose up -d --wait"],
-				"parallel": false
-			}
+			"dependsOn": ["docker:build"],
+			"command": "docker compose up -d --wait"
 		},
 		"test": {
 			"dependsOn": ["build", "docker:build", "docker:start"]
