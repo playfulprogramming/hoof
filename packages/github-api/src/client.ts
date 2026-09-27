@@ -19,7 +19,7 @@ export async function createOctokit(installationId: number): Promise<Octokit> {
 	return await app.getInstallationOctokit(installationId);
 }
 
-export const localClient = env.GITHUB_TOKEN
+export const localOctokit = env.GITHUB_TOKEN
 	? new Octokit({
 			userAgent: env.GITHUB_REPO_OWNER,
 			auth: env.GITHUB_TOKEN,
