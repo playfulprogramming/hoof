@@ -9,7 +9,7 @@ import { scheduleS3ObjectDeletion } from "../../utils/scheduleS3ObjectDeletion.t
 import { and, eq, inArray, not } from "drizzle-orm";
 import { type EmbedData, BUCKET } from "./common.ts";
 import * as crypto from "crypto";
-import { createGitHubClient } from "../../utils/createGitHubClient.ts";
+import { publicClient } from "@playfulprogramming/github-api";
 
 export const gistHosts = ["gist.github.com"];
 
@@ -28,14 +28,10 @@ export async function getEmbedDataFromGist(
 		error = true;
 	}
 
-	const data = await (
-		await createGitHubClient()
-	)
-		.getGistById({ gistId, signal })
-		.catch((e) => {
-			console.error(`Unable to fetch gist data for '${inputUrl}'`, e);
-			return undefined;
-		});
+	const data = await publicClient.getGistById({ gistId, signal }).catch((e) => {
+		console.error(`Unable to fetch gist data for '${inputUrl}'`, e);
+		return undefined;
+	});
 
 	if (!data) return { error: true };
 
