@@ -19,15 +19,13 @@ export async function createOctokit(installationId: number): Promise<Octokit> {
 	return await app.getInstallationOctokit(installationId);
 }
 
-export const localClient = env.GITHUB_TOKEN
-	? new Octokit({
-			userAgent: env.GITHUB_REPO_OWNER,
-			auth: env.GITHUB_TOKEN,
-			request: {
-				fetch: undici.fetch,
-			},
-		})
-	: undefined;
+export const publicOctokit = new Octokit({
+	userAgent: env.GITHUB_REPO_OWNER,
+	auth: env.GITHUB_TOKEN,
+	request: {
+		fetch: undici.fetch,
+	},
+});
 
 export function handleRequestError(e: unknown) {
 	if (e instanceof RequestError && typeof e.response?.status === "number") {

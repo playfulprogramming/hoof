@@ -55,14 +55,13 @@ vi.mock("@playfulprogramming/github-api", async (importOriginal) => {
 	const actual = await importOriginal();
 	return {
 		...(actual as object),
-		createAppClient: vi.fn().mockReturnValue({
+		publicClient: {
 			getGistById: vi.fn(),
-		}),
+		},
 		createInstallationClient: vi.fn().mockResolvedValue({
 			getContents: vi.fn(),
 			getContentsRaw: vi.fn(),
 			getContentsRawStream: vi.fn(),
-			getGistById: vi.fn(),
 			getAuthorGitHubStats: vi.fn().mockResolvedValue(undefined),
 		}),
 	};

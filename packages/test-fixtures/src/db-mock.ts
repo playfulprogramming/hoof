@@ -108,7 +108,7 @@ export function createDbMock() {
 				findMany: vi.fn(),
 			},
 			githubInstallations: {
-				findFirst: vi.fn(),
+				findFirst: vi.fn(() => ({ installationId: 0 })),
 			},
 		},
 	};
