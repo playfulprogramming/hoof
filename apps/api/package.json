@@ -12,7 +12,7 @@
 		"build": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@fastify/rate-limit": "^10.3.0",
+		"@fastify/rate-limit": "^11.2.0",
 		"@fastify/sensible": "^6.0.5",
 		"@fastify/swagger": "^9.7.0",
 		"@playfulprogramming/bullmq": "workspace:*",
