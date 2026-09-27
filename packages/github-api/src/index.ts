@@ -1,5 +1,5 @@
 import type { Octokit } from "octokit";
-import { app, localClient, createOctokit } from "./client.ts";
+import { localClient as localOctokitClient, createOctokit } from "./client.ts";
 import { getAuthorGitHubStats } from "./getAuthorGitHubStats.ts";
 import { getContents } from "./getContents.ts";
 import { getContentsRaw, getContentsRawStream } from "./getContentsRaw.ts";
@@ -31,15 +31,10 @@ function createClient(client: Octokit) {
 
 export type GitHubClient = ReturnType<typeof createClient>;
 
-export function createAppClient() {
-	if (localClient) return createClient(localClient);
-	return createClient(app.octokit);
-}
+export const localClient = localOctokitClient
+	? createClient(localOctokitClient)
+	: undefined;
 
-export async function createInstallationClient(installationId?: number) {
-	if (typeof installationId !== "undefined") {
-		return createClient(await createOctokit(installationId));
-	} else {
-		return createAppClient();
-	}
+export async function createInstallationClient(installationId: number) {
+	return createClient(await createOctokit(installationId));
 }

@@ -7,13 +7,13 @@ import {
 	authorRoles,
 	authorSlugs,
 } from "@playfulprogramming/db";
-import { createInstallationClient } from "@playfulprogramming/github-api";
 import { createProcessor } from "../../createProcessor.ts";
 import matter from "gray-matter";
 import { Value } from "typebox/value";
 import { and, eq, inArray } from "drizzle-orm";
 import { MANUAL_ACHIEVEMENT_IDS } from "../grant-author-achievements/achievement-ids.ts";
 import { uploadProcessedImage } from "../../utils/uploadProcessedImage.ts";
+import { createGitHubClient } from "../../utils/createGitHubClient.ts";
 
 const PROFILE_IMAGE_SIZE_MAX = 2048;
 
@@ -23,7 +23,7 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 		`content/${encodeURIComponent(authorSlug)}/index.md`,
 		"http://localhost",
 	);
-	const github = await createInstallationClient(job.data.installation.id);
+	const github = await createGitHubClient(job.data.installation.id);
 
 	const authorMetaResponse = await github.getContentsRaw({
 		ref: job.data.ref,

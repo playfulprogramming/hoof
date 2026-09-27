@@ -4,12 +4,12 @@ import {
 	Tasks,
 	type TaskInputs,
 } from "@playfulprogramming/bullmq";
-import { createAppClient } from "@playfulprogramming/github-api";
 import { createProcessor } from "../../createProcessor.ts";
 import type { FlowChildJob } from "bullmq";
+import { createGitHubClient } from "../../utils/createGitHubClient.ts";
 
 export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
-	const github = createAppClient();
+	const github = await createGitHubClient();
 	const installation = {};
 
 	const rootTree = await github.getTree({

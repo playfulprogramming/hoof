@@ -8,20 +8,20 @@ import {
 	collectionTags,
 	db,
 } from "@playfulprogramming/db";
-import { createInstallationClient } from "@playfulprogramming/github-api";
 import { createProcessor } from "../../createProcessor.ts";
 import { and, eq } from "drizzle-orm";
 import matter from "gray-matter";
 import { Value } from "typebox/value";
 import { extractLocale } from "../../utils/extractLocale.ts";
 import { resolveAttachment, syncAttachments } from "../../sync/attachments.ts";
+import { createGitHubClient } from "../../utils/createGitHubClient.ts";
 
 export default createProcessor(
 	Tasks.SYNC_COLLECTION,
 	async (job, { signal }) => {
 		const authorSlug = job.data.author;
 		const collectionSlug = job.data.collection;
-		const client = await createInstallationClient(job.data.installation.id);
+		const client = await createGitHubClient(job.data.installation.id);
 
 		const collectionMetaUrl = new URL(
 			`content/${encodeURIComponent(authorSlug)}/collections/${encodeURIComponent(collectionSlug)}/`,

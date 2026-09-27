@@ -1,4 +1,4 @@
-import { createAppClient } from "@playfulprogramming/github-api";
+import { createInstallationClient } from "@playfulprogramming/github-api";
 import { mockEndpoint } from "../../../test-utils/server.ts";
 import { getEmbedDataFromGist } from "./getEmbedDataFromGist.ts";
 import { type Mock } from "vitest";
@@ -9,7 +9,7 @@ import {
 } from "@playfulprogramming/db";
 import { scheduleS3ObjectDeletion } from "../../utils/scheduleS3ObjectDeletion.ts";
 
-const getGistById = createAppClient().getGistById;
+const getGistById = (await createInstallationClient(0)).getGistById;
 
 test("fetches the expected information for a successful gist response", async () => {
 	const gistUrl = new URL(
@@ -46,15 +46,15 @@ test("fetches the expected information for a successful gist response", async ()
 		gistId: "36fe5553219c05ea38bacf1c7396085b",
 	});
 
-	expect(db.insert(urlMetadataGist).values).toBeCalledTimes(1);
-	expect(db.insert(urlMetadataGist).values).toBeCalledWith({
+	expect(db.insert(urlMetadataGist).values).toHaveBeenCalledTimes(1);
+	expect(db.insert(urlMetadataGist).values).toHaveBeenCalledWith({
 		description: "This is a description of the gist.",
 		gistId: "36fe5553219c05ea38bacf1c7396085b",
 		username: "crutchcorn",
 	});
 
-	expect(db.insert(urlMetadataGistFile).values).toBeCalledTimes(1);
-	expect(db.insert(urlMetadataGistFile).values).toBeCalledWith({
+	expect(db.insert(urlMetadataGistFile).values).toHaveBeenCalledTimes(1);
+	expect(db.insert(urlMetadataGistFile).values).toHaveBeenCalledWith({
 		contentKey:
 			"remote-gist/36fe5553219c05ea38bacf1c7396085b/ba740aee12d1372d510bae546448ff60",
 		filename: "A text file in a gist.txt",
@@ -90,7 +90,7 @@ test("schedules S3 removal for gist files that were deleted from the gist", asyn
 
 	// Assert: S3 removal was scheduled (not performed immediately), keyed the
 	// same way getFileKey derives it - a hash of the filename under the gist's ID
-	expect(scheduleS3ObjectDeletion).toBeCalledWith(
+	expect(scheduleS3ObjectDeletion).toHaveBeenCalledWith(
 		"example-bucket",
 		"remote-gist/36fe5553219c05ea38bacf1c7396085b/775d94f3d7c5ee0d18ee08d4b65152b5",
 	);
