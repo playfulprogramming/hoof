@@ -527,8 +527,8 @@ importers:
         specifier: ^5.0.0
         version: 5.1.0
       xhtm:
-        specifier: ^1.6.3
-        version: 1.6.3
+        specifier: ^1.8.0
+        version: 1.8.0
     devDependencies:
       '@types/hast':
         specifier: 'catalog:'
@@ -5421,8 +5421,8 @@ packages:
     resolution: {integrity: sha512-h3Fbisa2nKGPxCpm89Hk33lBLsnaGBvctQopaBSOW/uIs6FTe1ATyAnKFJrzVs9vpGdsTe73WF3V4lIsk4Gacw==}
     engines: {node: '>=18'}
 
-  xhtm@1.6.3:
-    resolution: {integrity: sha512-Aa69fd0ug32GPbjnmXQflv0ECGndvcV1j/VFYCIYS6kJ37Kcag/AzwLAscVzdUC0ltmnpxiBJmUkzv8HvLfCFQ==}
+  xhtm@1.8.0:
+    resolution: {integrity: sha512-F0a0eiey70kIzjDOmvzRbZG2j47vCeR/Q0x76qr/c/mTsU4dAq+wg9IegrmCR70aBUYi3Jnv7X35DIFPxtLeAQ==}
 
   xml-naming@0.1.0:
     resolution: {integrity: sha512-k8KO9hrMyNk6tUWqUfkTEZbezRRpONVOzUTnc97VnCvyj6Tf9lyUR9EDAIeiVLv56jsMcoXEwjW8Kv5yPY52lw==}
@@ -10972,7 +10972,7 @@ snapshots:
     dependencies:
       is-wsl: 3.1.1
 
-  xhtm@1.6.3: {}
+  xhtm@1.8.0: {}
 
   xml-naming@0.1.0: {}
 

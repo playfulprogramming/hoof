@@ -24,7 +24,7 @@
 		"typebox": "catalog:",
 		"unified": "^11.0.5",
 		"unist-util-visit": "^5.0.0",
-		"xhtm": "^1.6.3"
+		"xhtm": "^1.8.0"
 	},
 	"devDependencies": {
 		"@types/hast": "catalog:",
