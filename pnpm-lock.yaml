@@ -296,8 +296,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/redis
       '@scalar/fastify-api-reference':
-        specifier: ^1.57.2
-        version: 1.57.2
+        specifier: ^1.69.2
+        version: 1.69.2
       drizzle-orm:
         specifier: 'catalog:'
         version: 1.0.0-beta.20(@types/mssql@9.1.9(supports-color@10.2.2))(@types/pg@8.20.0)(mssql@11.0.1(supports-color@10.2.2))(pg@8.21.0)(typebox@1.1.38)(zod@4.4.3)
@@ -2536,44 +2536,52 @@ packages:
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
-  '@scalar/client-side-rendering@0.1.9':
-    resolution: {integrity: sha512-Gv3CK0X+BqXYkVJLTQXNM8YgdquhuGV4hKlsM8S9k5GGonj8LBDSAiuU3W48JGX1pY7hRotBGcIIU+1a1X1mcw==}
+  '@scalar/client-side-rendering@0.4.1':
+    resolution: {integrity: sha512-4Ha2ihIPFwmhheSU6U9DlpjgRQ2YOqq2JSmc4ubT2ERApaA/HzuZ1IMyLXDvRICI+KbDducfGw5th9O+TQf+6A==}
     engines: {node: '>=22'}
 
-  '@scalar/fastify-api-reference@1.57.2':
-    resolution: {integrity: sha512-m9CpGNQdSlmjdCpTUl/elhuGm5L9pGg6CXY9m1qvKo54Bk+neq+UDGqn8hll6hs2Is4+xrYQeF8rjIoQY1TNAA==}
+  '@scalar/fastify-api-reference@1.69.2':
+    resolution: {integrity: sha512-O777Eeq2lxEcxRhn3EhwB+j0Flwwn2+ECodnYhUFduLWJHmufstUWyUhOL05Uik5L2icQOivizdMn8t7ZiSwzQ==}
+    engines: {node: '>=20'}
+
+  '@scalar/helpers@0.12.0':
+    resolution: {integrity: sha512-rcX0rFLiWWc0VBr/E+HkatubL0I0ZzxASQkd3032NWEMAEfNd2TiJ9kH46HwbSAOOl696ghxymWegjpjjvxwzA==}
     engines: {node: '>=22'}
 
-  '@scalar/helpers@0.8.0':
-    resolution: {integrity: sha512-gmOC6VravNB9VDl6wnt/GOj4K/hn48tj5bpW4AM4MhH8Ubil6uu7g1DSoKHwltu8Ks79KEtR6JmOrROi9R7jaQ==}
+  '@scalar/json-magic@0.14.0':
+    resolution: {integrity: sha512-p/ZRrZeKT0NbZ39BVuor+C055AYzfBAyCafMVuXF4/dOMy5pZHMmN/Y+t25rEYKVeXKmrHt1WbarOcvumfVt1w==}
     engines: {node: '>=22'}
 
-  '@scalar/json-magic@0.12.14':
-    resolution: {integrity: sha512-dWrCy3ew1r7OQ1pu2r4ZjiKEVy0yVd66kXdmsl41bteOG2F2I2IBlPjmPV6p8ckjImQHxtNBIntFaQfNrdBhJg==}
+  '@scalar/json-schema-validator@0.1.2':
+    resolution: {integrity: sha512-dUOKgITg2ZzrCtBtJIl8k2gciD+P93EO2jzwitcTn84cMIFH3wt6VI5AoWIo/xRLQf8j3ZXj7M2Z6we/zrYYbA==}
     engines: {node: '>=22'}
 
-  '@scalar/openapi-parser@0.28.4':
-    resolution: {integrity: sha512-OMrMzffQ7bfLKaIPdjQzVm1JE5Vlj781CA+qAo9YoxzGyoqLwI+YbctBbOlTgT5vNCY8qtP7vXkWWICl9E0Awg==}
+  '@scalar/openapi-parser@0.29.3':
+    resolution: {integrity: sha512-F5siOtCLhyx/B6NHAsyW+iPh9IPM9HoPmrAtfVx+uAKSt8SW/RobukoOtASv7rZIJwpubPRfZ6x6fxmxgx02zw==}
     engines: {node: '>=22'}
 
-  '@scalar/openapi-types@0.8.0':
-    resolution: {integrity: sha512-WmaxVSfvY5K/TwcG2B2TU1WOe1As1uc2s7myswtP6dBlcjU3hM08SApxv/jmyGaCE8t4gO5BBhmHY4pDUfmr2g==}
+  '@scalar/openapi-types@0.9.6':
+    resolution: {integrity: sha512-hge0dhllV70dwqgUiucmDY5yZLq91BOV/78lWSqQMTY67x+LHcQplJUZDomfFi5oepROpWDs5iaKMr7ubqDBOA==}
     engines: {node: '>=22'}
 
-  '@scalar/openapi-upgrader@0.2.7':
-    resolution: {integrity: sha512-sC/uLQOivfX+Oef2QhUpgmERL7KZc1z+hiYkcwZQaUyVOHh5e6OscW0skfzbxKPyJfQ6Ocv0Iom9wMToCGaAPw==}
+  '@scalar/openapi-upgrader@0.2.17':
+    resolution: {integrity: sha512-HoSgjb57UNH2OACVmbo4yLPnvP3BPnvtSMJVqRhjOspJhz945XEZYnfwgk2C3hET0bFvkc7aLSabm/K1nbjp8Q==}
     engines: {node: '>=22'}
 
-  '@scalar/schemas@0.2.0':
-    resolution: {integrity: sha512-FOpNecNoEKo8SogHEsdWlVRN4Q4PH3dzuOBWMA5tGt1xLZu5iFnPG2X/h6+Z/mOR34c7iW+hiKTqdUZoDgT9CA==}
+  '@scalar/openapi-validator@0.1.2':
+    resolution: {integrity: sha512-fGofbCKi8BoRX3QynohY7hcaDsXiDDJS/50afCgi2fRTeFt7OOUhFRRM/w/Kn2191rbMIujf+CKG9iu7tvtJ+w==}
     engines: {node: '>=22'}
 
-  '@scalar/types@0.11.0':
-    resolution: {integrity: sha512-TGZR8sys1jRlaWxLYfBo8y6D1W4UClYuDmkJ6Hmsb7oNuqokEAAK+AVYIzascVdBmaly0D1fqoqK7CzuGYHgyg==}
+  '@scalar/schemas@0.10.0':
+    resolution: {integrity: sha512-jFqfd+oqqlTfs87V+QkIrR9DiRv+/h1x3GzSGbGe1qrM6togeXwvVG4aurn+LZ+Ej9of54/6FmoI8DPuLOKx7A==}
     engines: {node: '>=22'}
 
-  '@scalar/validation@0.5.0':
-    resolution: {integrity: sha512-48CS1B0C7im57RQCHhS0GKt+qDLxB34IX8rO91jZj9D+Y/OosQZG3Gy57gJdHqZoD7l0sPUZtF8tVYry3BxRtw==}
+  '@scalar/types@0.20.0':
+    resolution: {integrity: sha512-+05slk/Q6MRMqEQt6eM77Jt9DnDPAvfcc/6r7mbrXhIqJSp3oAPrixpAnp1knBSlFaxgixcK/GMKw9QDfD+Zgg==}
+    engines: {node: '>=22'}
+
+  '@scalar/validation@0.6.3':
+    resolution: {integrity: sha512-j3s9XPv8Wo1EG5/naBi4XGF0uXYQ2A3QZNI0NKWgCMxRHVrDJGlZEYymcHDHY7fquRm73P8U3c8xqJqB5yad6w==}
     engines: {node: '>=20'}
 
   '@shuding/opentype.js@1.4.0-beta.0':
@@ -4024,10 +4032,6 @@ packages:
   jsonc-parser@3.3.1:
     resolution: {integrity: sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ==}
 
-  jsonpointer@5.0.1:
-    resolution: {integrity: sha512-p/nXbhSEcu3pZRdkW1OfJhpsVtW1gd4Wa1fnQc9YLiTfAjn0312eMKimbdIQzuZl9aa9xUGaRlP9T/CJE/ditQ==}
-    engines: {node: '>=0.10.0'}
-
   jsonwebtoken@9.0.3:
     resolution: {integrity: sha512-MT/xP0CrubFRNLNKvxJ2BYfy53Zkm++5bX9dtuPbqAeQpTVe0MQTFhao8+Cp//EmJp244xt6Drw/GVEGCUj40g==}
     engines: {node: '>=12', npm: '>=6'}
@@ -4049,10 +4053,6 @@ packages:
     resolution: {integrity: sha512-SN3Ly0ixzj5CQkY/rc4OPHpWrCC0XRIIjgdP76G9Cni5k72ur5jBYOyvJuF5oPTM14v8eHcMUgPbElHa+lnR0g==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
-
-  leven@4.1.0:
-    resolution: {integrity: sha512-KZ9W9nWDT7rF7Dazg8xyLHGLrmpgq2nVNFUckhqdW3szVP6YhCpp/RAnpmVExA9JvrMynjwSLVrEj3AepHR6ew==}
-    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
   levn@0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
@@ -5184,8 +5184,8 @@ packages:
     resolution: {integrity: sha512-TeTSQ6H5YHvpqVwBRcnLDCBnDOHWYu7IvGbHT6N8AOymcr9PJGjc1GTtiWZTYg0NCgYwvnYWEkVChQAr9bjfwA==}
     engines: {node: '>=16'}
 
-  type-fest@5.6.0:
-    resolution: {integrity: sha512-8ZiHFm91orbSAe2PSAiSVBVko18pbhbiB3U9GglSzF/zCGkR+rxpHx6sEMCUm4kxY4LjDIUGgCfUMtwfZfjfUA==}
+  type-fest@5.10.0:
+    resolution: {integrity: sha512-NoSdpq/WEiAg5sjmBkmV/hfxv6HJH4NqPNrqjtSO5CwRmpsDfaf4begxW34KdJykH/l1yHtwBWQkCRdoXO8mPA==}
     engines: {node: '>=20'}
 
   type-is@2.0.1:
@@ -5213,6 +5213,10 @@ packages:
 
   undici-types@8.9.0:
     resolution: {integrity: sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==}
+
+  undici@7.24.4:
+    resolution: {integrity: sha512-BM/JzwwaRXxrLdElV2Uo6cTLEjhSb3WXboncJamZ15NgUURmvlXvxa6xkwIOILIjPNo9i8ku136ZvWV0Uly8+w==}
+    engines: {node: '>=20.18.1'}
 
   undici@8.10.2:
     resolution: {integrity: sha512-/y4/bH9YNU5hi9NIrpOuvGXFcxrj3CMrV+/AYpowAYTpHn8gX/XPFjNy766FPoYY0miQhdW977JFWKGNhBdwyQ==}
@@ -7625,59 +7629,75 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.1': {}
 
-  '@scalar/client-side-rendering@0.1.9':
+  '@scalar/client-side-rendering@0.4.1':
     dependencies:
-      '@scalar/schemas': 0.2.0
-      '@scalar/types': 0.11.0
-      '@scalar/validation': 0.5.0
+      '@scalar/schemas': 0.10.0
+      '@scalar/types': 0.20.0
+      '@scalar/validation': 0.6.3
 
-  '@scalar/fastify-api-reference@1.57.2':
+  '@scalar/fastify-api-reference@1.69.2':
     dependencies:
-      '@scalar/client-side-rendering': 0.1.9
-      '@scalar/openapi-parser': 0.28.4
-      '@scalar/openapi-types': 0.8.0
+      '@scalar/client-side-rendering': 0.4.1
+      '@scalar/openapi-parser': 0.29.3
+      '@scalar/openapi-types': 0.9.6
       fastify-plugin: 4.5.1
       github-slugger: 2.0.0
 
-  '@scalar/helpers@0.8.0': {}
+  '@scalar/helpers@0.12.0': {}
 
-  '@scalar/json-magic@0.12.14':
+  '@scalar/json-magic@0.14.0':
     dependencies:
-      '@scalar/helpers': 0.8.0
+      '@scalar/helpers': 0.12.0
       pathe: 2.0.3
+      undici: 7.24.4
       yaml: 2.9.0
 
-  '@scalar/openapi-parser@0.28.4':
+  '@scalar/json-schema-validator@0.1.2':
     dependencies:
-      '@scalar/helpers': 0.8.0
-      '@scalar/json-magic': 0.12.14
-      '@scalar/openapi-types': 0.8.0
-      '@scalar/openapi-upgrader': 0.2.7
+      '@scalar/helpers': 0.12.0
+      '@scalar/types': 0.20.0
       ajv: 8.20.0
       ajv-draft-04: 1.0.0(ajv@8.20.0)
       ajv-formats: 3.0.1(ajv@8.20.0)
-      jsonpointer: 5.0.1
-      leven: 4.1.0
       yaml: 2.9.0
 
-  '@scalar/openapi-types@0.8.0': {}
-
-  '@scalar/openapi-upgrader@0.2.7':
+  '@scalar/openapi-parser@0.29.3':
     dependencies:
-      '@scalar/openapi-types': 0.8.0
+      '@scalar/helpers': 0.12.0
+      '@scalar/json-magic': 0.14.0
+      '@scalar/openapi-types': 0.9.6
+      '@scalar/openapi-upgrader': 0.2.17
+      '@scalar/openapi-validator': 0.1.2
+      '@scalar/types': 0.20.0
+      yaml: 2.9.0
 
-  '@scalar/schemas@0.2.0':
-    dependencies:
-      '@scalar/validation': 0.5.0
+  '@scalar/openapi-types@0.9.6': {}
 
-  '@scalar/types@0.11.0':
+  '@scalar/openapi-upgrader@0.2.17':
     dependencies:
-      '@scalar/helpers': 0.8.0
+      '@scalar/helpers': 0.12.0
+      '@scalar/openapi-types': 0.9.6
+
+  '@scalar/openapi-validator@0.1.2':
+    dependencies:
+      '@scalar/helpers': 0.12.0
+      '@scalar/json-schema-validator': 0.1.2
+      '@scalar/types': 0.20.0
+      yaml: 2.9.0
+
+  '@scalar/schemas@0.10.0':
+    dependencies:
+      '@scalar/helpers': 0.12.0
+      '@scalar/validation': 0.6.3
+
+  '@scalar/types@0.20.0':
+    dependencies:
+      '@scalar/helpers': 0.12.0
       nanoid: 5.1.11
-      type-fest: 5.6.0
+      type-fest: 5.10.0
       zod: 4.4.3
 
-  '@scalar/validation@0.5.0': {}
+  '@scalar/validation@0.6.3': {}
 
   '@shuding/opentype.js@1.4.0-beta.0':
     dependencies:
@@ -9106,8 +9126,6 @@ snapshots:
 
   jsonc-parser@3.3.1: {}
 
-  jsonpointer@5.0.1: {}
-
   jsonwebtoken@9.0.3:
     dependencies:
       jws: 4.0.1
@@ -9157,8 +9175,6 @@ snapshots:
     transitivePeerDependencies:
       - '@emnapi/core'
       - '@emnapi/runtime'
-
-  leven@4.1.0: {}
 
   levn@0.4.1:
     dependencies:
@@ -10766,7 +10782,7 @@ snapshots:
 
   type-fest@4.41.0: {}
 
-  type-fest@5.6.0:
+  type-fest@5.10.0:
     dependencies:
       tagged-tag: 1.0.0
 
@@ -10794,6 +10810,8 @@ snapshots:
   unbash@3.0.0: {}
 
   undici-types@8.9.0: {}
+
+  undici@7.24.4: {}
 
   undici@8.10.2: {}
 
