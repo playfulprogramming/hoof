@@ -1,6 +1,7 @@
 import fastify, { type FastifyInstance } from "fastify";
 import postsRoutes from "./posts.ts";
 import { db } from "@playfulprogramming/db";
+import { BRANCH_MAIN } from "@playfulprogramming/common";
 
 describe("Posts Routes Tests", () => {
 	let app: FastifyInstance;
@@ -240,6 +241,38 @@ describe("Posts Routes Tests", () => {
 
 			expect(response.statusCode).toBe(200);
 			expect(response.json()).toMatchInlineSnapshot(`[]`);
+		});
+
+		test("passes the requested branch through to the query", async () => {
+			vi.mocked(db.query.posts.findMany).mockResolvedValue([]);
+
+			await app.inject({
+				method: "GET",
+				url: "/content/posts",
+				query: { page: "0", limit: "10", branch: "pull/42" },
+			});
+
+			expect(db.query.posts.findMany).toHaveBeenCalledWith(
+				expect.objectContaining({
+					where: expect.objectContaining({ branch: "pull/42" }),
+				}),
+			);
+		});
+
+		test("defaults branch to BRANCH_MAIN when not provided", async () => {
+			vi.mocked(db.query.posts.findMany).mockResolvedValue([]);
+
+			await app.inject({
+				method: "GET",
+				url: "/content/posts",
+				query: { page: "0", limit: "10" },
+			});
+
+			expect(db.query.posts.findMany).toHaveBeenCalledWith(
+				expect.objectContaining({
+					where: expect.objectContaining({ branch: BRANCH_MAIN }),
+				}),
+			);
 		});
 	});
 });

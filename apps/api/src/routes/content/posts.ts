@@ -4,9 +4,11 @@ import { sql } from "drizzle-orm";
 import { Type, type Static } from "typebox";
 import { createImageUrl } from "../../utils.ts";
 import { PostBaseSchema } from "./postBaseSchema.ts";
+import { BranchQueryParamSchema } from "./common.ts";
 
 const PostsQueryParamsSchema = Type.Object({
 	locale: Type.String({ default: "en" }),
+	branch: BranchQueryParamSchema,
 	page: Type.Number({ minimum: 0, default: 0 }),
 	limit: Type.Number({ minimum: 1, maximum: 100, default: 20 }),
 	sort: Type.Union([Type.Literal("newest"), Type.Literal("oldest")], {
@@ -63,7 +65,7 @@ const postsRoutes: FastifyPluginAsync = async (fastify) => {
 			},
 		},
 		async (request, reply) => {
-			const { locale, page, limit, sort, author } = request.query;
+			const { locale, branch, page, limit, sort, author } = request.query;
 
 			const rows = await db.query.posts.findMany({
 				columns: {
@@ -75,7 +77,7 @@ const postsRoutes: FastifyPluginAsync = async (fastify) => {
 				},
 				where: {
 					locale,
-					branch: "main",
+					branch,
 					publishedAt: {
 						isNotNull: true,
 					},
