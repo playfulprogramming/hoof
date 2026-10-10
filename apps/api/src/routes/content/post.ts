@@ -3,6 +3,7 @@ import { db } from "@playfulprogramming/db";
 import { Type, type Static } from "typebox";
 import { createImageUrl } from "../../utils.ts";
 import { PostBaseSchema } from "./postBaseSchema.ts";
+import { BranchQueryParamSchema } from "./common.ts";
 
 const PostParamsSchema = Type.Object({
 	slug: Type.String(),
@@ -10,7 +11,7 @@ const PostParamsSchema = Type.Object({
 
 const PostQueryParamsSchema = Type.Object({
 	locale: Type.String({ default: "en" }),
-	branch: Type.String({ default: "main" }),
+	branch: BranchQueryParamSchema,
 });
 
 const PostResponseSchema = Type.Intersect(

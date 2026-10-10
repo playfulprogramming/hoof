@@ -1,6 +1,7 @@
 import fastify, { type FastifyInstance } from "fastify";
 import postRoutes from "./post.ts";
 import { db } from "@playfulprogramming/db";
+import { BRANCH_MAIN } from "@playfulprogramming/common";
 
 describe("Post Routes Tests", () => {
 	let app: FastifyInstance;
@@ -266,6 +267,46 @@ describe("Post Routes Tests", () => {
 				  "error": "Post not found",
 				}
 			`);
+		});
+
+		test("passes the requested branch through to the post, collection, and versions queries", async () => {
+			vi.mocked(db.query.posts.findFirst).mockResolvedValue(undefined);
+
+			await app.inject({
+				method: "GET",
+				url: "/content/post/example-post",
+				query: { locale: "en", branch: "pull/42" },
+			});
+
+			expect(db.query.posts.findFirst).toHaveBeenCalledWith(
+				expect.objectContaining({
+					where: expect.objectContaining({ branch: "pull/42" }),
+					with: expect.objectContaining({
+						collections: expect.objectContaining({
+							where: expect.objectContaining({ branch: "pull/42" }),
+						}),
+						versions: expect.objectContaining({
+							where: expect.objectContaining({ branch: "pull/42" }),
+						}),
+					}),
+				}),
+			);
+		});
+
+		test("defaults branch to BRANCH_MAIN when not provided", async () => {
+			vi.mocked(db.query.posts.findFirst).mockResolvedValue(undefined);
+
+			await app.inject({
+				method: "GET",
+				url: "/content/post/example-post",
+				query: { locale: "en" },
+			});
+
+			expect(db.query.posts.findFirst).toHaveBeenCalledWith(
+				expect.objectContaining({
+					where: expect.objectContaining({ branch: BRANCH_MAIN }),
+				}),
+			);
 		});
 	});
 });

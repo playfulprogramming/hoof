@@ -3,10 +3,11 @@ import { db, posts } from "@playfulprogramming/db";
 import { Type, type Static } from "typebox";
 import { eq } from "drizzle-orm";
 import { createImageUrl } from "../../utils.ts";
+import { BranchQueryParamSchema } from "./common.ts";
 
 const CollectionsQueryParamsSchema = Type.Object({
 	locale: Type.String({ default: "en" }),
-	branch: Type.String({ default: "main" }),
+	branch: BranchQueryParamSchema,
 	page: Type.Number({ minimum: 0 }),
 	limit: Type.Number({ minimum: 1 }),
 	author: Type.Optional(Type.String()),

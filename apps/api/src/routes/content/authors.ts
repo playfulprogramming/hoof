@@ -3,10 +3,12 @@ import { db, authors, postAuthors, posts } from "@playfulprogramming/db";
 import { and, asc, countDistinct, desc, eq, isNotNull } from "drizzle-orm";
 import { Type, type Static } from "typebox";
 import { createImageUrl } from "../../utils.ts";
+import { BranchQueryParamSchema } from "./common.ts";
 
 // ── List route ───────────────────────────────────────────────────────────────
 
 const AuthorsQueryParamsSchema = Type.Object({
+	branch: BranchQueryParamSchema,
 	page: Type.Number({ minimum: 0 }),
 	limit: Type.Number({ minimum: 1 }),
 	sortBy: Type.Union([Type.Literal("id"), Type.Literal("posts")], {
@@ -50,6 +52,10 @@ type AuthorsResponse = Static<typeof AuthorsResponseSchema>;
 
 const AuthorParamsSchema = Type.Object({
 	slug: Type.String(),
+});
+
+const AuthorQueryParamsSchema = Type.Object({
+	branch: BranchQueryParamSchema,
 });
 
 const AchievementSchema = Type.Object({
@@ -97,7 +103,7 @@ const authorsRoutes: FastifyPluginAsync = async (fastify) => {
 		},
 		async (request, reply) => {
 			const queryParams = request.query;
-			const { sortBy } = queryParams;
+			const { sortBy, branch } = queryParams;
 
 			const authorRows = await db
 				.select({
@@ -113,10 +119,12 @@ const authorsRoutes: FastifyPluginAsync = async (fastify) => {
 					posts,
 					and(
 						eq(posts.id, postAuthors.postId),
+						eq(posts.branch, branch),
 						isNotNull(posts.publishedAt),
 						eq(posts.noindex, false),
 					),
 				)
+				.where(eq(authors.branch, branch))
 				.groupBy(
 					authors.slug,
 					authors.name,
@@ -148,6 +156,7 @@ const authorsRoutes: FastifyPluginAsync = async (fastify) => {
 
 	fastify.get<{
 		Params: Static<typeof AuthorParamsSchema>;
+		Querystring: Static<typeof AuthorQueryParamsSchema>;
 		Reply: AuthorResponse | { error: string };
 	}>(
 		"/content/authors/:slug",
@@ -155,6 +164,7 @@ const authorsRoutes: FastifyPluginAsync = async (fastify) => {
 			schema: {
 				description: "Fetch an author profile with their earned achievements",
 				params: AuthorParamsSchema,
+				querystring: AuthorQueryParamsSchema,
 				response: {
 					200: {
 						description: "Successful",
@@ -173,9 +183,10 @@ const authorsRoutes: FastifyPluginAsync = async (fastify) => {
 		},
 		async (request, reply) => {
 			const { slug } = request.params;
+			const { branch } = request.query;
 
 			const author = await db.query.authors.findFirst({
-				where: { slug },
+				where: { slug, branch },
 				with: { achievements: true },
 			});
 
