@@ -8,7 +8,6 @@ import {
 	postAttachments,
 	postGroups,
 } from "@playfulprogramming/db";
-import { createInstallationClient } from "@playfulprogramming/github-api";
 import { createProcessor } from "../../createProcessor.ts";
 import { and, eq, isNotNull } from "drizzle-orm";
 import matter from "gray-matter";
@@ -16,10 +15,11 @@ import { Value } from "typebox/value";
 import { extractLocale } from "../../utils/extractLocale.ts";
 import { extractMarkdownExcerpt } from "../../utils/extractMarkdownExcerpt.ts";
 import { resolveAttachment, syncAttachments } from "../../sync/attachments.ts";
+import { createGitHubClient } from "../../utils/createGitHubClient.ts";
 
 export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 	const { author, post, collection, ref, branch, installation } = job.data;
-	const client = await createInstallationClient(installation.id);
+	const client = await createGitHubClient(installation.id);
 
 	const basePath = collection
 		? new URL(
