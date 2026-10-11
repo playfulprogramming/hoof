@@ -1,9 +1,14 @@
 import type { FastifyPluginAsync } from "fastify";
-import { db, posts } from "@playfulprogramming/db";
+import { db } from "@playfulprogramming/db";
+import { BRANCH_MAIN } from "@playfulprogramming/common";
 import { Type, type Static } from "typebox";
-import { eq } from "drizzle-orm";
 import { createImageUrl } from "../../utils.ts";
-import { BranchQueryParamSchema } from "./common.ts";
+import {
+	BranchQueryParamSchema,
+	branchFallbackFilter,
+	branchesWithFallback,
+	pickBranchRows,
+} from "./common.ts";
 
 const CollectionsQueryParamsSchema = Type.Object({
 	locale: Type.String({ default: "en" }),
@@ -97,21 +102,59 @@ const collectionsRoutes: FastifyPluginAsync = async (fastify) => {
 		},
 		async (request, reply) => {
 			const queryParams = request.query;
+			const { locale, branch } = queryParams;
+
+			// Every slug on the requested branch: a branch row always wins over main's.
+			const branchSlugs =
+				branch === BRANCH_MAIN
+					? []
+					: (
+							await db.query.collections.findMany({
+								columns: { slug: true },
+								where: { locale, branch },
+							})
+						).map((row) => row.slug);
+
+			// Every post slug on the requested branch, published or not, so a chapter
+			// the branch moved elsewhere or unpublished is not counted from main.
+			const branchPostSlugs =
+				branch === BRANCH_MAIN
+					? []
+					: (
+							await db.query.posts.findMany({
+								columns: { slug: true },
+								where: { locale, branch },
+							})
+						).map((row) => row.slug);
+
+			const relatedBranches = { in: branchesWithFallback(branch) };
 
 			const collections = await db.query.collections.findMany({
 				where: {
-					locale: queryParams.locale,
-					branch: queryParams.branch,
+					locale,
+					...branchFallbackFilter(branch, branchSlugs),
 					authors: queryParams.author
 						? { slug: queryParams.author }
 						: undefined,
 				},
 				with: {
-					authors: { columns: { slug: true, name: true, profileImage: true } },
-				},
-				extras: {
-					chapterCount: (collectionsTable) =>
-						db.$count(posts, eq(posts.collectionSlug, collectionsTable.slug)),
+					authors: {
+						columns: {
+							slug: true,
+							branch: true,
+							name: true,
+							profileImage: true,
+						},
+						where: { branch: relatedBranches },
+					},
+					posts: {
+						columns: { slug: true },
+						where: {
+							locale,
+							...branchFallbackFilter(branch, branchPostSlugs),
+							publishedAt: { isNotNull: true },
+						},
+					},
 				},
 				offset: queryParams.page * queryParams.limit,
 				limit: queryParams.limit,
@@ -126,11 +169,12 @@ const collectionsRoutes: FastifyPluginAsync = async (fastify) => {
 						: undefined,
 					title: collection.title,
 					description: collection.description,
-					chapterCount: collection.chapterCount,
+					// Same chapter rule as /content/post/:slug.
+					chapterCount: collection.posts.length,
 					authors: [],
 				};
 
-				for (const author of collection.authors) {
+				for (const author of pickBranchRows(collection.authors, branch)) {
 					formattedCollection.authors.push({
 						id: author.slug,
 						name: author.name,

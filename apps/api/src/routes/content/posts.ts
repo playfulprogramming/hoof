@@ -1,10 +1,16 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db, postAuthors } from "@playfulprogramming/db";
+import { BRANCH_MAIN } from "@playfulprogramming/common";
 import { sql } from "drizzle-orm";
 import { Type, type Static } from "typebox";
 import { createImageUrl } from "../../utils.ts";
 import { PostBaseSchema } from "./postBaseSchema.ts";
-import { BranchQueryParamSchema } from "./common.ts";
+import {
+	BranchQueryParamSchema,
+	branchFallbackFilter,
+	branchesWithFallback,
+	pickBranchRows,
+} from "./common.ts";
 
 const PostsQueryParamsSchema = Type.Object({
 	locale: Type.String({ default: "en" }),
@@ -67,6 +73,18 @@ const postsRoutes: FastifyPluginAsync = async (fastify) => {
 		async (request, reply) => {
 			const { locale, branch, page, limit, sort, author } = request.query;
 
+			// Every slug on the requested branch, published or not: a branch row
+			// always wins over main's, and the filters below then apply to it.
+			const branchSlugs =
+				branch === BRANCH_MAIN
+					? []
+					: (
+							await db.query.posts.findMany({
+								columns: { slug: true },
+								where: { locale, branch },
+							})
+						).map((row) => row.slug);
+
 			const rows = await db.query.posts.findMany({
 				columns: {
 					slug: true,
@@ -77,7 +95,7 @@ const postsRoutes: FastifyPluginAsync = async (fastify) => {
 				},
 				where: {
 					locale,
-					branch,
+					...branchFallbackFilter(branch, branchSlugs),
 					publishedAt: {
 						isNotNull: true,
 					},
@@ -91,9 +109,11 @@ const postsRoutes: FastifyPluginAsync = async (fastify) => {
 					authors: {
 						columns: {
 							slug: true,
+							branch: true,
 							name: true,
 							profileImage: true,
 						},
+						where: { branch: { in: branchesWithFallback(branch) } },
 					},
 					tags: {
 						columns: {
@@ -118,7 +138,7 @@ const postsRoutes: FastifyPluginAsync = async (fastify) => {
 				publishedAt: row.publishedAt
 					? row.publishedAt.toISOString()
 					: undefined,
-				authors: row.authors.map((authorRow) => ({
+				authors: pickBranchRows(row.authors, branch).map((authorRow) => ({
 					id: authorRow.slug,
 					name: authorRow.name,
 					profileImageUrl: authorRow.profileImage
