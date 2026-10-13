@@ -10,7 +10,6 @@
 .nx
 .pnpm-store
 .prettier*
-.husky
 **/node_modules
 **/dist
 npm-debug.log

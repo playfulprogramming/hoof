@@ -1,7 +1,7 @@
 {
 	"name": "e2e-mocks",
 	"$schema": "../../node_modules/nx/schemas/project-schema.json",
-	"sourceRoot": "apps/e2e/src",
+	"sourceRoot": "e2e/mocks/src",
 	"projectType": "application",
 	"tags": [],
 	"targets": {
