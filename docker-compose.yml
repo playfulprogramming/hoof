@@ -1,4 +1,4 @@
-name: playful-programming-cms
+name: playful-programming-hoof
 
 services:
   pgsql:
@@ -13,6 +13,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+      start_interval: 500ms
+    networks: [shared]
     ports:
       - "5432:5432"
 
@@ -20,6 +23,7 @@ services:
     image: redis:8.2.1-alpine3.22
     volumes:
       - redis_storage:/data
+    networks: [shared]
     ports:
       - "6379:6379"
     healthcheck:
@@ -27,9 +31,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+      start_interval: 500ms
 
   rustfs:
     image: rustfs/rustfs
+    networks: [shared]
     ports:
       - "9000:9000" # API Port
       - "9001:9001" # Web UI Port
@@ -49,33 +56,33 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+      start_interval: 500ms
 
-  app:
-    build: .
-    env_file:
-      - .env
+  proxy:
+    build:
+      context: .
+      target: e2e-proxy
+    image: playful-programming-hoof-e2e-proxy:latest
     environment:
-      S3_ENDPOINT: http://rustfs:9000
-      POSTGRES_URL: postgresql://postgres:unicorn@pgsql:5432/postgres
-      REDIS_URL: redis://redis:6379
-    ports:
-      - "3000:3000"
-    depends_on: [pgsql, redis, rustfs]
-    profiles: [app]
+      MOCK_PROXY_PORT: 3999
+    volumes:
+      - ./e2e/mocks/src:/var/app/e2e/mocks/src:ro
+    networks: [shared]
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://0.0.0.0:3000 && wget --no-verbose --tries=1 --spider http://0.0.0.0:3001 || exit 1
+      test: netstat -tln | grep :3999
       interval: 10s
       timeout: 5s
       retries: 5
-    develop:
-      watch:
-        - path: .
-          action: rebuild
-    post_start:
-      - command: node --experimental-strip-types packages/db/scripts/migrate.ts
+      start_period: 10s
+      start_interval: 100ms
 
 volumes:
   pgsql_storage: {}
   pgsql_backups: {}
   redis_storage: {}
   rustfs_storage: {}
+
+networks:
+  shared:
+    name: hoof_shared_network
