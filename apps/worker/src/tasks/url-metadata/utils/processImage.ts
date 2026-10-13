@@ -297,4 +297,5 @@ export async function processImages(
 			return result;
 		}
 	}
+	return undefined;
 }

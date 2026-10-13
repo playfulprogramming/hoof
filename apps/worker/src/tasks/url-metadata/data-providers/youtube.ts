@@ -25,7 +25,7 @@ export async function getYouTubeOEmbedDataFromUrl(
 	signal: AbortSignal,
 ): Promise<YouTubeOEmbedResponse | null> {
 	const splitPath = url.pathname.split("/").filter(Boolean);
-	let videoId: string;
+	let videoId: string | undefined;
 	if (url.host === youtubeShortHost) {
 		videoId = splitPath[0];
 	} else if (splitPath[0] === "watch") {
@@ -40,10 +40,9 @@ export async function getYouTubeOEmbedDataFromUrl(
 		// https://www.youtube.com/shorts/Fdbha07mFzo
 	} else if (splitPath[0] === "shorts") {
 		videoId = splitPath[1];
-	} else {
-		return null;
 	}
 
+	if (!videoId) return null;
 	const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
 	return await fetchAsBot({
