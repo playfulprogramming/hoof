@@ -1,5 +1,6 @@
 import { Queue } from "bullmq";
 import { redis } from "@playfulprogramming/redis";
+import { env } from "@playfulprogramming/common";
 import {
 	type TasksValues,
 	type TaskInputs,
@@ -18,6 +19,7 @@ export function createQueue<T extends TasksValues>(
 
 	const newQueue: Queue<TaskInputs[T], TaskOutputs[T]> = new Queue(task, {
 		connection: redis,
+		prefix: env.BULLMQ_PREFIX,
 		defaultJobOptions: {
 			attempts: 3,
 			backoff: {

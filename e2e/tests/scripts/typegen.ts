@@ -1,22 +1,16 @@
 import fs from "fs/promises";
 import path from "path";
-import { fileURLToPath } from "url";
-import { execSync } from "child_process";
-import { spawnApp } from "../src/lib/spawn-app.ts";
+import { spawnApp } from "../test-utils/spawnApp.ts";
+import openapiTypescript, { astToString } from "openapi-typescript";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const outputDir = path.join(__dirname, "../src/generated");
+const outputDir = path.join(import.meta.dirname, "../src/generated");
 const outputFile = path.join(outputDir, "api-schema.d.ts");
 
 export default async function generateTypes() {
 	await fs.mkdir(outputDir, { recursive: true });
 
 	await using app = await spawnApp();
-	const swaggerUrl = `${app.baseUrl}/openapi.json`;
-
-	const response = await fetch(swaggerUrl);
+	const response = await fetch(`${app.baseUrl}/openapi.json`);
 	if (!response.ok) {
 		throw new Error(
 			`Failed to fetch OpenAPI spec: ${response.status} ${response.statusText}`,
@@ -25,18 +19,10 @@ export default async function generateTypes() {
 	const spec = await response.json();
 
 	console.log("Generating types");
-	const tempSpecFile = path.join(outputDir, ".api-spec.json");
-	try {
-		await fs.writeFile(tempSpecFile, JSON.stringify(spec, null, 0));
-		execSync(
-			`pnpm exec openapi-typescript "${tempSpecFile}" -o "${outputFile}"`,
-			{
-				stdio: "inherit",
-			},
-		);
-	} finally {
-		await fs.unlink(tempSpecFile);
-	}
+	await fs.writeFile(
+		outputFile,
+		astToString(await openapiTypescript(spec, {})),
+	);
 
 	console.log(`Types generated successfully at ${outputFile}`);
 	console.log(
@@ -44,7 +30,7 @@ export default async function generateTypes() {
 	);
 }
 
-if (process.argv[1] === __filename) {
+if (process.argv[1] === import.meta.filename) {
 	generateTypes()
 		.then(() => process.exit(0))
 		.catch((err) => {

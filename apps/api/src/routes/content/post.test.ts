@@ -1,6 +1,25 @@
 import fastify, { type FastifyInstance } from "fastify";
 import postRoutes from "./post.ts";
 import { db } from "@playfulprogramming/db";
+import { BRANCH_MAIN } from "@playfulprogramming/common";
+
+const PR_BRANCH = "pull/42";
+
+function createPostRow(overrides: Record<string, unknown> = {}) {
+	return {
+		slug: "example-post",
+		title: "Example Post",
+		description: "An example post",
+		bannerImage: null,
+		socialImage: null,
+		wordCount: 100,
+		publishedAt: new Date("2024-01-15T00:00:00Z"),
+		authors: [],
+		collections: [],
+		versions: [],
+		...overrides,
+	};
+}
 
 describe("Post Routes Tests", () => {
 	let app: FastifyInstance;
@@ -26,6 +45,7 @@ describe("Post Routes Tests", () => {
 				authors: [
 					{
 						slug: "crutchcorn",
+						branch: BRANCH_MAIN,
 						name: "Corbin Crutchley",
 						profileImage: "content/profile.png",
 					},
@@ -33,6 +53,7 @@ describe("Post Routes Tests", () => {
 				collections: [
 					{
 						slug: "example-collection",
+						branch: BRANCH_MAIN,
 						title: "Example Collection",
 						posts: [
 							{
@@ -101,7 +122,12 @@ describe("Post Routes Tests", () => {
 				wordCount: 200,
 				publishedAt: new Date("2024-01-15T00:00:00Z"),
 				authors: [
-					{ slug: "crutchcorn", name: "Corbin Crutchley", profileImage: null },
+					{
+						slug: "crutchcorn",
+						branch: BRANCH_MAIN,
+						name: "Corbin Crutchley",
+						profileImage: null,
+					},
 				],
 				collections: [],
 				versions: [],
@@ -266,6 +292,334 @@ describe("Post Routes Tests", () => {
 				  "error": "Post not found",
 				}
 			`);
+		});
+
+		test("looks up the post on the requested branch and resolves related rows against that branch first", async () => {
+			vi.mocked(db.query.posts.findFirst).mockResolvedValue(undefined);
+			vi.mocked(db.query.posts.findMany).mockResolvedValue([
+				{ slug: "edited-post" },
+				{ slug: "moved-post" },
+			] as never);
+
+			await app.inject({
+				method: "GET",
+				url: "/content/post/example-post",
+				query: { locale: "en", branch: PR_BRANCH },
+			});
+
+			// Every post slug on the branch for the locale, with no publish or noindex filter.
+			expect(db.query.posts.findMany).toHaveBeenCalledExactlyOnceWith({
+				columns: { slug: true },
+				where: { locale: "en", branch: PR_BRANCH },
+			});
+
+			const relatedBranches = { in: [PR_BRANCH, BRANCH_MAIN] };
+			const relatedPosts = {
+				locale: "en",
+				OR: [
+					{ branch: PR_BRANCH },
+					{
+						branch: BRANCH_MAIN,
+						slug: { notIn: ["edited-post", "moved-post"] },
+					},
+				],
+				publishedAt: { isNotNull: true },
+			};
+			expect(db.query.posts.findFirst).toHaveBeenNthCalledWith(
+				1,
+				expect.objectContaining({
+					where: { slug: "example-post", locale: "en", branch: PR_BRANCH },
+					with: expect.objectContaining({
+						authors: expect.objectContaining({
+							where: { branch: relatedBranches },
+						}),
+						collections: expect.objectContaining({
+							where: { locale: "en", branch: relatedBranches },
+							with: {
+								posts: expect.objectContaining({ where: relatedPosts }),
+							},
+						}),
+						versions: expect.objectContaining({ where: relatedPosts }),
+					}),
+				}),
+			);
+		});
+
+		test("defaults branch to BRANCH_MAIN, skips the branch slug query, and does not look main up a second time", async () => {
+			vi.mocked(db.query.posts.findFirst).mockResolvedValue(undefined);
+
+			const response = await app.inject({
+				method: "GET",
+				url: "/content/post/example-post",
+				query: { locale: "en" },
+			});
+
+			const relatedPosts = {
+				locale: "en",
+				branch: BRANCH_MAIN,
+				publishedAt: { isNotNull: true },
+			};
+			expect(response.statusCode).toBe(404);
+			expect(db.query.posts.findMany).not.toHaveBeenCalled();
+			expect(db.query.posts.findFirst).toHaveBeenCalledTimes(1);
+			expect(db.query.posts.findFirst).toHaveBeenCalledWith(
+				expect.objectContaining({
+					where: { slug: "example-post", locale: "en", branch: BRANCH_MAIN },
+					with: expect.objectContaining({
+						authors: expect.objectContaining({
+							where: { branch: { in: [BRANCH_MAIN] } },
+						}),
+						collections: expect.objectContaining({
+							with: {
+								posts: expect.objectContaining({ where: relatedPosts }),
+							},
+						}),
+						versions: expect.objectContaining({ where: relatedPosts }),
+					}),
+				}),
+			);
+		});
+
+		test("returns the requested branch's post without looking main up", async () => {
+			vi.mocked(db.query.posts.findMany).mockResolvedValue([]);
+			vi.mocked(db.query.posts.findFirst)
+				.mockResolvedValue(undefined)
+				.mockResolvedValueOnce(createPostRow({ title: "PR Title" }) as never);
+
+			const response = await app.inject({
+				method: "GET",
+				url: "/content/post/example-post",
+				query: { locale: "en", branch: PR_BRANCH },
+			});
+
+			expect(response.statusCode).toBe(200);
+			expect(response.json().title).toBe("PR Title");
+			expect(db.query.posts.findFirst).toHaveBeenCalledTimes(1);
+		});
+
+		test("falls back to main's post when the requested branch has no row, still resolving related rows against the requested branch", async () => {
+			vi.mocked(db.query.posts.findMany).mockResolvedValue([
+				{ slug: "moved-post" },
+			] as never);
+			vi.mocked(db.query.posts.findFirst)
+				.mockResolvedValue(undefined)
+				.mockResolvedValueOnce(undefined)
+				.mockResolvedValueOnce(createPostRow({ title: "Main Title" }) as never);
+
+			const response = await app.inject({
+				method: "GET",
+				url: "/content/post/example-post",
+				query: { locale: "en", branch: PR_BRANCH },
+			});
+
+			const relatedPosts = {
+				locale: "en",
+				OR: [
+					{ branch: PR_BRANCH },
+					{ branch: BRANCH_MAIN, slug: { notIn: ["moved-post"] } },
+				],
+				publishedAt: { isNotNull: true },
+			};
+			expect(response.statusCode).toBe(200);
+			expect(response.json().title).toBe("Main Title");
+			expect(db.query.posts.findMany).toHaveBeenCalledTimes(1);
+			expect(db.query.posts.findFirst).toHaveBeenCalledTimes(2);
+			expect(db.query.posts.findFirst).toHaveBeenNthCalledWith(
+				2,
+				expect.objectContaining({
+					where: { slug: "example-post", locale: "en", branch: BRANCH_MAIN },
+					with: expect.objectContaining({
+						authors: expect.objectContaining({
+							where: { branch: { in: [PR_BRANCH, BRANCH_MAIN] } },
+						}),
+						collections: expect.objectContaining({
+							where: { locale: "en", branch: { in: [PR_BRANCH, BRANCH_MAIN] } },
+							with: {
+								posts: expect.objectContaining({ where: relatedPosts }),
+							},
+						}),
+						versions: expect.objectContaining({ where: relatedPosts }),
+					}),
+				}),
+			);
+		});
+
+		test("returns 404 when neither the requested branch nor main has the post", async () => {
+			vi.mocked(db.query.posts.findMany).mockResolvedValue([]);
+			vi.mocked(db.query.posts.findFirst).mockResolvedValue(undefined);
+
+			const response = await app.inject({
+				method: "GET",
+				url: "/content/post/example-post",
+				query: { locale: "en", branch: PR_BRANCH },
+			});
+
+			expect(response.statusCode).toBe(404);
+			expect(db.query.posts.findFirst).toHaveBeenCalledTimes(2);
+		});
+
+		test("returns 404 without falling back to main when the requested branch's post is unpublished", async () => {
+			vi.mocked(db.query.posts.findMany).mockResolvedValue([
+				{ slug: "example-post" },
+			] as never);
+			vi.mocked(db.query.posts.findFirst)
+				.mockResolvedValue(createPostRow({ title: "Main Title" }) as never)
+				.mockResolvedValueOnce(createPostRow({ publishedAt: null }) as never);
+
+			const response = await app.inject({
+				method: "GET",
+				url: "/content/post/example-post",
+				query: { locale: "en", branch: PR_BRANCH },
+			});
+
+			expect(response.statusCode).toBe(404);
+			expect(db.query.posts.findFirst).toHaveBeenCalledTimes(1);
+		});
+
+		test("does not send an empty not-in list for chapters and versions when the requested branch has no posts", async () => {
+			vi.mocked(db.query.posts.findMany).mockResolvedValue([]);
+			vi.mocked(db.query.posts.findFirst).mockResolvedValue(undefined);
+
+			await app.inject({
+				method: "GET",
+				url: "/content/post/example-post",
+				query: { locale: "en", branch: PR_BRANCH },
+			});
+
+			const relatedPosts = {
+				locale: "en",
+				OR: [{ branch: PR_BRANCH }, { branch: BRANCH_MAIN }],
+				publishedAt: { isNotNull: true },
+			};
+			expect(db.query.posts.findFirst).toHaveBeenNthCalledWith(
+				1,
+				expect.objectContaining({
+					with: expect.objectContaining({
+						collections: expect.objectContaining({
+							with: {
+								posts: expect.objectContaining({ where: relatedPosts }),
+							},
+						}),
+						versions: expect.objectContaining({ where: relatedPosts }),
+					}),
+				}),
+			);
+		});
+
+		test("excludes main's copy of a post the requested branch moved out of the collection or unpublished", async () => {
+			// The branch has rows for both slugs, so main's copies are excluded by slug
+			// even though the branch's rows no longer match this collection or are drafts.
+			vi.mocked(db.query.posts.findMany).mockResolvedValue([
+				{ slug: "moved-chapter" },
+				{ slug: "draft-chapter" },
+			] as never);
+			vi.mocked(db.query.posts.findFirst).mockResolvedValue(
+				createPostRow({
+					collections: [
+						{
+							slug: "example-collection",
+							branch: BRANCH_MAIN,
+							title: "Example Collection",
+							posts: [{ slug: "example-post", title: "Example Post" }],
+						},
+					],
+				}) as never,
+			);
+
+			const response = await app.inject({
+				method: "GET",
+				url: "/content/post/example-post",
+				query: { locale: "en", branch: PR_BRANCH },
+			});
+
+			expect(response.statusCode).toBe(200);
+			expect(response.json().collection.chapters).toEqual([
+				{ slug: "example-post", title: "Example Post" },
+			]);
+			expect(db.query.posts.findFirst).toHaveBeenNthCalledWith(
+				1,
+				expect.objectContaining({
+					with: expect.objectContaining({
+						collections: expect.objectContaining({
+							with: {
+								posts: expect.objectContaining({
+									where: {
+										locale: "en",
+										OR: [
+											{ branch: PR_BRANCH },
+											{
+												branch: BRANCH_MAIN,
+												slug: { notIn: ["moved-chapter", "draft-chapter"] },
+											},
+										],
+										publishedAt: { isNotNull: true },
+									},
+								}),
+							},
+						}),
+					}),
+				}),
+			);
+		});
+
+		test("prefers the requested branch's row for authors and the collection", async () => {
+			vi.mocked(db.query.posts.findMany).mockResolvedValue([]);
+			vi.mocked(db.query.posts.findFirst).mockResolvedValue(
+				createPostRow({
+					authors: [
+						{
+							slug: "crutchcorn",
+							branch: BRANCH_MAIN,
+							name: "Main Name",
+							profileImage: null,
+						},
+						{
+							slug: "crutchcorn",
+							branch: PR_BRANCH,
+							name: "PR Name",
+							profileImage: null,
+						},
+						{
+							slug: "fennifith",
+							branch: BRANCH_MAIN,
+							name: "James Fenn",
+							profileImage: null,
+						},
+					],
+					collections: [
+						{
+							slug: "example-collection",
+							branch: BRANCH_MAIN,
+							title: "Main Collection",
+							posts: [{ slug: "chapter-one", title: "Chapter One" }],
+						},
+						{
+							slug: "example-collection",
+							branch: PR_BRANCH,
+							title: "PR Collection",
+							posts: [{ slug: "chapter-one", title: "Chapter One" }],
+						},
+					],
+				}) as never,
+			);
+
+			const response = await app.inject({
+				method: "GET",
+				url: "/content/post/example-post",
+				query: { locale: "en", branch: PR_BRANCH },
+			});
+
+			expect(response.statusCode).toBe(200);
+			const body = response.json();
+			expect(body.authors).toEqual([
+				{ id: "crutchcorn", name: "PR Name" },
+				{ id: "fennifith", name: "James Fenn" },
+			]);
+			expect(body.collection).toEqual({
+				slug: "example-collection",
+				title: "PR Collection",
+				chapters: [{ slug: "chapter-one", title: "Chapter One" }],
+			});
 		});
 	});
 });

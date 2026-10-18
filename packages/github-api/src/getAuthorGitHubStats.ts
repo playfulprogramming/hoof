@@ -52,12 +52,12 @@ export async function getAuthorGitHubStats(
 	client: Octokit,
 	githubLogin: string,
 ): Promise<AuthorGitHubStats | undefined> {
-	const userResult = (await client.graphql<Record<string, { id: string }>>(
+	const userResult = await client.graphql<Record<string, { id: string }>>(
 		`query($login: String!) { user(login: $login) { id } }`,
 		{ login: githubLogin },
-	)) as Record<string, { id: string }>;
+	);
 
-	const userId = userResult?.user?.id;
+	const userId = userResult?.["user"]?.id;
 	if (!userId) return undefined;
 
 	const response = await client.graphql<StatsResponse>(statsQuery, {

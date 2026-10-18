@@ -1,8 +1,15 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "@playfulprogramming/db";
+import { BRANCH_MAIN } from "@playfulprogramming/common";
 import { Type, type Static } from "typebox";
 import { createImageUrl } from "../../utils.ts";
 import { PostBaseSchema } from "./postBaseSchema.ts";
+import {
+	BranchQueryParamSchema,
+	branchFallbackFilter,
+	branchesWithFallback,
+	pickBranchRows,
+} from "./common.ts";
 
 const PostParamsSchema = Type.Object({
 	slug: Type.String(),
@@ -10,7 +17,7 @@ const PostParamsSchema = Type.Object({
 
 const PostQueryParamsSchema = Type.Object({
 	locale: Type.String({ default: "en" }),
-	branch: Type.String({ default: "main" }),
+	branch: BranchQueryParamSchema,
 });
 
 const PostResponseSchema = Type.Intersect(
@@ -121,62 +128,94 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 			const { slug } = request.params;
 			const { locale, branch } = request.query;
 
-			const post = await db.query.posts.findFirst({
-				where: { slug, locale, branch },
-				columns: {
-					slug: true,
-					title: true,
-					description: true,
-					bannerImage: true,
-					socialImage: true,
-					wordCount: true,
-					publishedAt: true,
-				},
-				with: {
-					authors: { columns: { slug: true, name: true, profileImage: true } },
-					collections: {
-						columns: { slug: true, title: true },
-						where: { locale, branch },
-						with: {
-							posts: {
-								columns: {
-									slug: true,
-									title: true,
-								},
-								where: {
-									locale,
-									branch,
-									publishedAt: {
-										isNotNull: true,
+			// Authors and the collection are read from both the requested branch and
+			// main, then narrowed to one row per slug by pickBranchRows.
+			const relatedBranches = { in: branchesWithFallback(branch) };
+
+			// Every post slug on the requested branch, published or not. Chapters and
+			// versions take the branch's row, or main's only for slugs the branch does
+			// not have, so a post the branch moved elsewhere or unpublished stays out.
+			const branchPostSlugs =
+				branch === BRANCH_MAIN
+					? []
+					: (
+							await db.query.posts.findMany({
+								columns: { slug: true },
+								where: { locale, branch },
+							})
+						).map((row) => row.slug);
+			const relatedPosts = branchFallbackFilter(branch, branchPostSlugs);
+
+			const findPost = (postBranch: string) =>
+				db.query.posts.findFirst({
+					where: { slug, locale, branch: postBranch },
+					columns: {
+						slug: true,
+						title: true,
+						description: true,
+						bannerImage: true,
+						socialImage: true,
+						wordCount: true,
+						publishedAt: true,
+					},
+					with: {
+						authors: {
+							columns: {
+								slug: true,
+								branch: true,
+								name: true,
+								profileImage: true,
+							},
+							where: { branch: relatedBranches },
+						},
+						collections: {
+							columns: { slug: true, branch: true, title: true },
+							where: { locale, branch: relatedBranches },
+							with: {
+								posts: {
+									columns: {
+										slug: true,
+										title: true,
+									},
+									where: {
+										locale,
+										...relatedPosts,
+										publishedAt: {
+											isNotNull: true,
+										},
+									},
+									orderBy: {
+										collectionOrder: "asc",
+										publishedAt: "asc",
 									},
 								},
-								orderBy: {
-									collectionOrder: "asc",
-									publishedAt: "asc",
+							},
+						},
+						versions: {
+							columns: {
+								slug: true,
+								versionName: true,
+								publishedAt: true,
+							},
+							where: {
+								locale,
+								...relatedPosts,
+								publishedAt: {
+									isNotNull: true,
 								},
 							},
-						},
-					},
-					versions: {
-						columns: {
-							slug: true,
-							versionName: true,
-							publishedAt: true,
-						},
-						where: {
-							locale,
-							branch,
-							publishedAt: {
-								isNotNull: true,
+							orderBy: {
+								versionOrder: "asc",
+								publishedAt: "asc",
 							},
 						},
-						orderBy: {
-							versionOrder: "asc",
-							publishedAt: "asc",
-						},
 					},
-				},
-			});
+				});
+
+			let post = await findPost(branch);
+			if (!post && branch !== BRANCH_MAIN) {
+				post = await findPost(BRANCH_MAIN);
+			}
 
 			if (!post || post.publishedAt === null) {
 				reply.code(404);
@@ -184,19 +223,18 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 				return;
 			}
 
-			const collectionData = post.collections[0];
+			const collectionData = pickBranchRows(post.collections, branch)[0];
 
-			const collection: PostResponse["collection"] =
-				post.collections && collectionData
-					? {
-							slug: collectionData.slug,
-							title: collectionData.title,
-							chapters: collectionData.posts.map((chapter) => ({
-								slug: chapter.slug,
-								title: chapter.title,
-							})),
-						}
-					: undefined;
+			const collection: PostResponse["collection"] = collectionData
+				? {
+						slug: collectionData.slug,
+						title: collectionData.title,
+						chapters: collectionData.posts.map((chapter) => ({
+							slug: chapter.slug,
+							title: chapter.title,
+						})),
+					}
+				: undefined;
 
 			const versions: PostResponse["versions"] = post.versions.map(
 				(version) => ({
@@ -220,7 +258,7 @@ const postRoutes: FastifyPluginAsync = async (fastify) => {
 				publishedAt: post.publishedAt
 					? post.publishedAt.toISOString()
 					: undefined,
-				authors: post.authors.map((author) => ({
+				authors: pickBranchRows(post.authors, branch).map((author) => ({
 					id: author.slug,
 					name: author.name,
 					profileImageUrl: author.profileImage

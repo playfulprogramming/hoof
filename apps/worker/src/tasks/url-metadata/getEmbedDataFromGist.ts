@@ -6,10 +6,10 @@ import {
 import { s3 } from "@playfulprogramming/s3";
 import { fetchAsBot } from "../../utils/fetchAsBot.ts";
 import { scheduleS3ObjectDeletion } from "../../utils/scheduleS3ObjectDeletion.ts";
-import { createAppClient } from "@playfulprogramming/github-api";
 import { and, eq, inArray, not } from "drizzle-orm";
 import { type EmbedData, BUCKET } from "./common.ts";
 import * as crypto from "crypto";
+import { publicClient } from "@playfulprogramming/github-api";
 
 export const gistHosts = ["gist.github.com"];
 
@@ -17,23 +17,19 @@ export async function getEmbedDataFromGist(
 	inputUrl: URL,
 	signal: AbortSignal,
 ): Promise<EmbedData> {
-	let error = false;
-
 	// https://gist.github.com/crutchcorn/36fe5553219c05ea38bacf1c7396085b
 	const gistPathParts = inputUrl.pathname.split("/").filter(Boolean);
 	const githubUsername = gistPathParts[0];
 	const gistId = gistPathParts[1];
 	if (!githubUsername || !gistId) {
 		console.error(`Invalid gist URL: ${inputUrl}`);
-		error = true;
+		return { error: true };
 	}
 
-	const data = await createAppClient()
-		.getGistById({ gistId, signal })
-		.catch((e) => {
-			console.error(`Unable to fetch gist data for '${inputUrl}'`, e);
-			return undefined;
-		});
+	const data = await publicClient.getGistById({ gistId, signal }).catch((e) => {
+		console.error(`Unable to fetch gist data for '${inputUrl}'`, e);
+		return undefined;
+	});
 
 	if (!data) return { error: true };
 
@@ -114,6 +110,6 @@ export async function getEmbedDataFromGist(
 
 	return {
 		gistId,
-		error,
+		error: false,
 	};
 }

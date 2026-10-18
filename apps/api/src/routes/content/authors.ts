@@ -1,12 +1,15 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db, authors, postAuthors, posts } from "@playfulprogramming/db";
+import { BRANCH_MAIN } from "@playfulprogramming/common";
 import { and, asc, countDistinct, desc, eq, isNotNull } from "drizzle-orm";
 import { Type, type Static } from "typebox";
 import { createImageUrl } from "../../utils.ts";
+import { BranchQueryParamSchema, branchFallbackCondition } from "./common.ts";
 
 // ── List route ───────────────────────────────────────────────────────────────
 
 const AuthorsQueryParamsSchema = Type.Object({
+	branch: BranchQueryParamSchema,
 	page: Type.Number({ minimum: 0 }),
 	limit: Type.Number({ minimum: 1 }),
 	sortBy: Type.Union([Type.Literal("id"), Type.Literal("posts")], {
@@ -50,6 +53,10 @@ type AuthorsResponse = Static<typeof AuthorsResponseSchema>;
 
 const AuthorParamsSchema = Type.Object({
 	slug: Type.String(),
+});
+
+const AuthorQueryParamsSchema = Type.Object({
+	branch: BranchQueryParamSchema,
 });
 
 const AchievementSchema = Type.Object({
@@ -97,7 +104,28 @@ const authorsRoutes: FastifyPluginAsync = async (fastify) => {
 		},
 		async (request, reply) => {
 			const queryParams = request.query;
-			const { sortBy } = queryParams;
+			const { sortBy, branch } = queryParams;
+
+			// Every author slug and post slug on the requested branch: a branch row
+			// always wins over main's, and the post count filters then apply to it.
+			// Authors have no locale, so post slugs are taken across all locales.
+			const isMainBranch = branch === BRANCH_MAIN;
+			const branchAuthorSlugs = isMainBranch
+				? []
+				: (
+						await db.query.authors.findMany({
+							columns: { slug: true },
+							where: { branch },
+						})
+					).map((row) => row.slug);
+			const branchPostSlugs = isMainBranch
+				? []
+				: (
+						await db.query.posts.findMany({
+							columns: { slug: true },
+							where: { branch },
+						})
+					).map((row) => row.slug);
 
 			const authorRows = await db
 				.select({
@@ -113,10 +141,12 @@ const authorsRoutes: FastifyPluginAsync = async (fastify) => {
 					posts,
 					and(
 						eq(posts.id, postAuthors.postId),
+						branchFallbackCondition(posts, branch, branchPostSlugs),
 						isNotNull(posts.publishedAt),
 						eq(posts.noindex, false),
 					),
 				)
+				.where(branchFallbackCondition(authors, branch, branchAuthorSlugs))
 				.groupBy(
 					authors.slug,
 					authors.name,
@@ -148,6 +178,7 @@ const authorsRoutes: FastifyPluginAsync = async (fastify) => {
 
 	fastify.get<{
 		Params: Static<typeof AuthorParamsSchema>;
+		Querystring: Static<typeof AuthorQueryParamsSchema>;
 		Reply: AuthorResponse | { error: string };
 	}>(
 		"/content/authors/:slug",
@@ -155,6 +186,7 @@ const authorsRoutes: FastifyPluginAsync = async (fastify) => {
 			schema: {
 				description: "Fetch an author profile with their earned achievements",
 				params: AuthorParamsSchema,
+				querystring: AuthorQueryParamsSchema,
 				response: {
 					200: {
 						description: "Successful",
@@ -173,11 +205,18 @@ const authorsRoutes: FastifyPluginAsync = async (fastify) => {
 		},
 		async (request, reply) => {
 			const { slug } = request.params;
+			const { branch } = request.query;
 
-			const author = await db.query.authors.findFirst({
-				where: { slug },
-				with: { achievements: true },
-			});
+			const findAuthor = (authorBranch: string) =>
+				db.query.authors.findFirst({
+					where: { slug, branch: authorBranch },
+					with: { achievements: true },
+				});
+
+			let author = await findAuthor(branch);
+			if (!author && branch !== BRANCH_MAIN) {
+				author = await findAuthor(BRANCH_MAIN);
+			}
 
 			if (!author) {
 				reply.code(404);

@@ -76,6 +76,8 @@ const githubWebhookRoutes: FastifyPluginAsync = async (fastify) => {
 	);
 };
 
+const GITHUB_REPO_FULL_NAME = `${env.GITHUB_REPO_OWNER}/${env.GITHUB_REPO_NAME}`;
+
 webhooks.registerWebhookListener(async (event) => {
 	console.log("Received GitHub webhook", {
 		id: event.id,
@@ -83,12 +85,14 @@ webhooks.registerWebhookListener(async (event) => {
 	});
 
 	if (event.name === "installation") {
-		const organization = event.payload.organization?.login;
-		if (organization !== env.GITHUB_REPO_OWNER) {
+		const account = event.payload.installation.account;
+		const isOrgInstall =
+			account && "login" in account && account.login === env.GITHUB_REPO_OWNER;
+		if (!isOrgInstall) {
 			console.error(
 				`Ignoring installation webhook outside of GITHUB_REPO_OWNER ${env.GITHUB_REPO_OWNER}`,
 				{
-					organization,
+					accountLogin: String(account && "login" in account && account.login),
 					sender: event.payload.sender?.login,
 				},
 			);
@@ -105,10 +109,7 @@ webhooks.registerWebhookListener(async (event) => {
 		}
 	}
 	if (event.name === "pull_request") {
-		if (
-			event.payload.repository.full_name !==
-			`${env.GITHUB_REPO_OWNER}/${env.GITHUB_REPO_NAME}`
-		) {
+		if (event.payload.repository.full_name !== GITHUB_REPO_FULL_NAME) {
 			throw new Error(
 				"Attempted pull_request on a non-playful repository/owner.",
 			);
@@ -132,10 +133,7 @@ webhooks.registerWebhookListener(async (event) => {
 		}
 	}
 	if (event.name === "push") {
-		if (
-			event.payload.repository.full_name !==
-			`${env.GITHUB_REPO_OWNER}/${env.GITHUB_REPO_NAME}`
-		) {
+		if (event.payload.repository.full_name !== GITHUB_REPO_FULL_NAME) {
 			throw new Error("Attempted push on a non-playful repository/owner.");
 		}
 		if (event.payload.ref !== MAIN_BRANCH_REF) {
