@@ -20,7 +20,7 @@
 		"@playfulprogramming/db": "workspace:*",
 		"@playfulprogramming/github-api": "workspace:*",
 		"@playfulprogramming/redis": "workspace:*",
-		"@scalar/fastify-api-reference": "^1.57.2",
+		"@scalar/fastify-api-reference": "^1.72.4",
 		"drizzle-orm": "catalog:",
 		"fastify": "^5.12.4",
 		"fastify-plugin": "^5.0.1",
