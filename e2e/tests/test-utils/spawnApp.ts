@@ -19,13 +19,21 @@ function findOpenPort(): Promise<number> {
 	});
 }
 
+function killGroup(pid: number) {
+	if (process.platform === "win32") {
+		child_process.execSync(`taskkill /pid ${pid} /T /F`);
+	} else {
+		process.kill(-pid);
+	}
+}
+
 type ExecOptions = {
 	command: string;
 	env?: Record<string, string>;
 };
 function exec({ command, env }: ExecOptions) {
 	const child = child_process.spawn(command, {
-		env,
+		env: { ...process.env, ...env },
 		shell: true,
 		detached: true,
 		stdio: "inherit",
@@ -33,7 +41,7 @@ function exec({ command, env }: ExecOptions) {
 
 	return {
 		kill() {
-			if (child.pid) process.kill(-child.pid);
+			if (child.pid) killGroup(child.pid);
 		},
 		exit: once(child, "close").then(() => {
 			if (child.exitCode !== null && child.exitCode !== 0) {
@@ -52,6 +60,17 @@ export async function spawnApp() {
 	const database = `e2e-${uuid}`;
 	await db.execute(`CREATE DATABASE "${database}"`);
 
+	async function disposeApp() {
+		try {
+			await exec({
+				command: "docker compose down",
+				env,
+			}).exit;
+		} finally {
+			await db.execute(`DROP DATABASE "${database}"`);
+		}
+	}
+
 	const env = {
 		COMPOSE_PROJECT_NAME: `hoof-e2e-${uuid}`,
 		COMPOSE_FILE: path.resolve(
@@ -64,10 +83,16 @@ export async function spawnApp() {
 		E2E_BULLMQ_PREFIX: database,
 	};
 
-	await exec({
-		command: "docker compose up app --wait",
-		env,
-	}).exit;
+	try {
+		await exec({
+			command: "docker compose up app --wait",
+			env,
+		}).exit;
+	} catch (e) {
+		console.error("Failed to start app:", e);
+		await disposeApp();
+		throw e;
+	}
 
 	const dockerLogs = exec({
 		command: "docker compose logs --follow",
@@ -81,18 +106,21 @@ export async function spawnApp() {
 		baseUrl,
 	});
 
+	let isDisposed = false;
+
 	return {
 		baseUrl,
 		client,
 		async [Symbol.asyncDispose]() {
+			if (isDisposed) return;
 			console.log(`Closing app ${uuid}`);
-			dockerLogs.kill();
-			await dockerLogs.exit;
-			await exec({
-				command: "docker compose down",
-				env,
-			}).exit;
-			await db.execute(`DROP DATABASE "${database}"`);
+			try {
+				dockerLogs.kill();
+				await dockerLogs.exit;
+			} finally {
+				await disposeApp();
+			}
+			isDisposed = true;
 		},
 	};
 }
