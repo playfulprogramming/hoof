@@ -4,7 +4,7 @@ import pg from "pg";
 import { env } from "@playfulprogramming/common";
 import { relations } from "./relations.ts";
 
-const pool = new pg.Pool({
+export const pool = new pg.Pool({
 	connectionString: env.POSTGRES_URL,
 	idleTimeoutMillis: 60_000,
 	query_timeout: 30_000,

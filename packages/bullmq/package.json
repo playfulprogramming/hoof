@@ -11,6 +11,7 @@
 		"build": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@playfulprogramming/common": "workspace:*",
 		"@playfulprogramming/redis": "workspace:*",
 		"bullmq": "catalog:",
 		"typebox": "catalog:"
