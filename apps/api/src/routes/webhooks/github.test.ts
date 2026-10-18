@@ -60,9 +60,9 @@ test("installation webhook enqueues a job", async () => {
 		action: "created",
 		installation: {
 			id: 1234,
-		},
-		organization: {
-			login: env.GITHUB_REPO_OWNER,
+			account: {
+				login: env.GITHUB_REPO_OWNER,
+			},
 		},
 	};
 
@@ -97,9 +97,9 @@ test("installation webhook fails if called with a non-pfp org", async () => {
 		action: "created",
 		installation: {
 			id: 1234,
-		},
-		organization: {
-			login: "test",
+			account: {
+				login: "test",
+			},
 		},
 	};
 

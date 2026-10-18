@@ -7,14 +7,14 @@ import {
 	collections,
 	posts,
 } from "@playfulprogramming/db";
-import { createInstallationClient } from "@playfulprogramming/github-api";
 import { createProcessor } from "../../createProcessor.ts";
 import { and, eq, inArray, count, ne, isNotNull } from "drizzle-orm";
 import { ACHIEVEMENT_RULES, ALL_POSSIBLE_AUTO_IDS } from "./achievement-ids.ts";
+import { createGitHubClient } from "../../utils/createGitHubClient.ts";
 
 export default createProcessor(Tasks.GRANT_AUTHOR_ACHIEVEMENTS, async (job) => {
 	const { authorSlug, installation } = job.data;
-	const github = await createInstallationClient(installation.id);
+	const github = await createGitHubClient(installation.id);
 
 	const author = await db.query.authors.findFirst({
 		where: { slug: authorSlug },
