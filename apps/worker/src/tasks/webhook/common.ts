@@ -1,5 +1,5 @@
 import { type TaskInputs, Tasks } from "@playfulprogramming/bullmq";
-import type { FlowChildJob } from "bullmq";
+import type { FlowJob, FlowJobNode } from "bullmq";
 
 interface ProcessWebhookParams {
 	files: string[];
@@ -23,7 +23,7 @@ const newAuthorEntry = (): AuthorEntry => ({
 
 export function constructSyncJobs(
 	params: ProcessWebhookParams,
-): FlowChildJob | undefined {
+): FlowJob | undefined {
 	// Assemble a "task graph" with author -> collection? -> post dependencies from the changed files
 	const authorEntries: Map<string, AuthorEntry> = new Map();
 
@@ -70,7 +70,7 @@ export function constructSyncJobs(
 	}
 
 	// Construct a job definition to linearly process all entries
-	let jobDef: FlowChildJob | undefined = undefined;
+	let jobDef: FlowJobNode | undefined = undefined;
 
 	for (const [
 		author,
@@ -102,7 +102,7 @@ export function constructSyncJobs(
 					installation: params.installation,
 				} satisfies TaskInputs[typeof Tasks.SYNC_COLLECTION],
 				queueName: Tasks.SYNC_COLLECTION,
-				children: [jobDef],
+				children: jobDef ? [jobDef] : undefined,
 			};
 
 			for (const post of collectionPosts) {
@@ -117,7 +117,7 @@ export function constructSyncJobs(
 						installation: params.installation,
 					} satisfies TaskInputs[typeof Tasks.SYNC_POST],
 					queueName: Tasks.SYNC_POST,
-					children: [jobDef],
+					children: jobDef ? [jobDef] : undefined,
 				};
 			}
 		}
@@ -133,7 +133,7 @@ export function constructSyncJobs(
 					installation: params.installation,
 				} satisfies TaskInputs[typeof Tasks.SYNC_POST],
 				queueName: Tasks.SYNC_POST,
-				children: [jobDef],
+				children: jobDef ? [jobDef] : undefined,
 			};
 		}
 	}
