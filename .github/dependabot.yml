@@ -7,6 +7,13 @@ updates:
     cooldown:
       default-days: 14
     groups:
+      aws-sdk:
+        applies-to: version-updates
+        patterns:
+          - "@aws-sdk/*"
+        update-types:
+          - minor
+          - patch
       drizzle:
         applies-to: version-updates
         patterns:
