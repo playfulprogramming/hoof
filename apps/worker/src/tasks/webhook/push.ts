@@ -4,7 +4,7 @@ import { createInstallationClient } from "@playfulprogramming/github-api";
 import { BRANCH_MAIN, env } from "@playfulprogramming/common";
 import { constructSyncJobs, collectFileNames } from "./common.ts";
 
-export default createProcessor(Tasks.WEBHOOK_PUSH, async (job, { signal }) => {
+export default createProcessor(Tasks.WEBHOOK_PUSH, async (job) => {
 	const client = await createInstallationClient(job.data.installation.id);
 
 	const comparison = await client.getComparisonWithBasehead({
@@ -12,7 +12,7 @@ export default createProcessor(Tasks.WEBHOOK_PUSH, async (job, { signal }) => {
 		repo: env.GITHUB_REPO_NAME,
 		baseSha: job.data.commitBefore,
 		headSha: job.data.commitAfter,
-		signal,
+		signal: job.signal,
 	});
 
 	const jobDef = constructSyncJobs({

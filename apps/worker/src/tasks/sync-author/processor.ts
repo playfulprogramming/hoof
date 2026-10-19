@@ -17,7 +17,7 @@ import { createGitHubClient } from "../../utils/createGitHubClient.ts";
 
 const PROFILE_IMAGE_SIZE_MAX = 2048;
 
-export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
+export default createProcessor(Tasks.SYNC_AUTHOR, async (job) => {
 	const authorSlug = job.data.author;
 	const authorMetaUrl = new URL(
 		`content/${encodeURIComponent(authorSlug)}/index.md`,
@@ -30,7 +30,7 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 		path: authorMetaUrl.pathname,
 		repoOwner: env.GITHUB_REPO_OWNER,
 		repoName: env.GITHUB_REPO_NAME,
-		signal,
+		signal: job.signal,
 	});
 
 	if (authorMetaResponse.data === undefined) {
@@ -63,7 +63,7 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 			path: profileImgUrl.pathname,
 			repoOwner: env.GITHUB_REPO_OWNER,
 			repoName: env.GITHUB_REPO_NAME,
-			signal,
+			signal: job.signal,
 		});
 
 		if (profileImgStream === null || typeof profileImgStream === "undefined") {
@@ -77,7 +77,7 @@ export default createProcessor(Tasks.SYNC_AUTHOR, async (job, { signal }) => {
 			profileImgStream,
 			profileImgKey,
 			PROFILE_IMAGE_SIZE_MAX,
-			signal,
+			job.signal,
 		);
 	}
 

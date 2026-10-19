@@ -4,20 +4,22 @@ import { env } from "@playfulprogramming/common";
 import {
 	type TasksValues,
 	type TaskInputs,
-	type TaskOutputs,
+	type QueueValues,
+	Queues,
+	type QueueInputs,
 } from "./tasks/index.ts";
 
-type Queues = { [T in TasksValues]?: Queue<TaskInputs[T], TaskOutputs[T]> };
+type Queues = { [Q in QueueValues]?: Queue<QueueInputs[Q]> };
 
 const queues: Queues = {};
 
-export function createQueue<T extends TasksValues>(
-	task: T,
-): Queue<TaskInputs[T], TaskOutputs[T]> {
-	const existingQueue = queues[task];
+export function createQueue<Q extends QueueValues>(
+	queue: Q,
+): Queue<QueueInputs[Q]> {
+	const existingQueue = queues[queue];
 	if (existingQueue) return existingQueue;
 
-	const newQueue: Queue<TaskInputs[T], TaskOutputs[T]> = new Queue(task, {
+	const newQueue: Queue<QueueInputs[Q]> = new Queue(queue, {
 		connection: redis,
 		prefix: env.BULLMQ_PREFIX,
 		defaultJobOptions: {
@@ -29,7 +31,7 @@ export function createQueue<T extends TasksValues>(
 		},
 	});
 
-	queues[task] = newQueue as never;
+	queues[queue] = newQueue as never;
 	return newQueue;
 }
 
@@ -39,12 +41,19 @@ export async function createJob<T extends TasksValues>(
 	data: TaskInputs[T],
 	opts?: { delay?: number },
 ) {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const queue = createQueue(task) as Queue<any>;
-	await queue.add(id, data, {
-		deduplication: {
-			id: id,
+	const queue = createQueue(Queues.WORKER);
+	const jobId = `${task}:${id}`;
+	await queue.add(
+		jobId,
+		{
+			task,
+			data,
 		},
-		delay: opts?.delay,
-	});
+		{
+			deduplication: {
+				id: jobId,
+			},
+			delay: opts?.delay,
+		},
+	);
 }

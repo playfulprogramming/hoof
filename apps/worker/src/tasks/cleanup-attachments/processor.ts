@@ -14,7 +14,7 @@ const GRACE_PERIOD_MS = 60 * 60 * 1000;
 
 export default createProcessor(
 	Tasks.CLEANUP_ATTACHMENTS,
-	async (_job, { signal }) => {
+	async ({ signal }) => {
 		const bucket = await s3.ensureBucket(env.S3_BUCKET);
 		const staleBefore = new Date(Date.now() - GRACE_PERIOD_MS);
 

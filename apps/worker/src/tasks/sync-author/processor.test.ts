@@ -1,17 +1,13 @@
 import processor from "./processor.ts";
-import type { Job } from "bullmq";
 import { db, authors, authorRoles } from "@playfulprogramming/db";
 import { s3 } from "@playfulprogramming/s3";
 import { createInstallationClient } from "@playfulprogramming/github-api";
 import { Readable } from "node:stream";
 import { and, eq } from "drizzle-orm";
 import { uploadProcessedImage } from "../../utils/uploadProcessedImage.ts";
+import { fakeJob } from "../../../test-utils/fakeJob.ts";
 
 const github = await createInstallationClient(0);
-
-function fakeJob<Data>(data: Data): Job<Data> {
-	return { data } as unknown as Job<Data>;
-}
 
 const insertAuthorsValues = db.insert(authors).values;
 const deleteAuthorsWhere = db.delete(authors).where;

@@ -20,8 +20,11 @@ beforeEach(() => {
 
 vi.mock("@playfulprogramming/bullmq", async () => {
 	const tasks = await import("@playfulprogramming/bullmq/src/tasks/index.ts");
+	const flowProducer =
+		await import("@playfulprogramming/bullmq/src/flow-producer.ts");
 	return {
 		...tasks,
+		...flowProducer,
 		flowProducer: { add: vi.fn() },
 		createQueue: vi.fn(),
 		createJob: vi.fn(),

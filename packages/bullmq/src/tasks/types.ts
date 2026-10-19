@@ -67,3 +67,19 @@ export interface TaskOutputs {
 	[Tasks.WEBHOOK_PUSH]: object;
 	[Tasks.WEBHOOK_PULL_REQUEST]: object;
 }
+
+export const Queues = {
+	WORKER: "worker",
+} as const;
+
+type QueueKeys = keyof typeof Queues;
+export type QueueValues = (typeof Queues)[QueueKeys];
+
+interface QueueInput<T extends TasksValues> {
+	task: T;
+	data: TaskInputs[T];
+}
+
+export interface QueueInputs {
+	[Queues.WORKER]: QueueInput<TasksValues>;
+}

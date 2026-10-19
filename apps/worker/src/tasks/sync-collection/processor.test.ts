@@ -1,5 +1,4 @@
 import processor from "./processor.ts";
-import type { Job } from "bullmq";
 import {
 	collections,
 	collectionAuthors,
@@ -10,12 +9,9 @@ import {
 } from "@playfulprogramming/db";
 import { createInstallationClient } from "@playfulprogramming/github-api";
 import { and, eq } from "drizzle-orm";
+import { fakeJob } from "../../../test-utils/fakeJob.ts";
 
 const github = await createInstallationClient(0);
-
-function fakeJob<Data>(data: Data): Job<Data> {
-	return { data } as unknown as Job<Data>;
-}
 
 const deleteCollectionWhere = db.delete(collections).where;
 const insertCollectionSlugValues = db.insert(collectionSlugs).values;

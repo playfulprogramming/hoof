@@ -1,13 +1,16 @@
 {
   "children": undefined,
   "data": {
-    "author": "example-author",
-    "branch": "example-branch",
-    "installation": {
-      "id": 0,
+    "data": {
+      "author": "example-author",
+      "branch": "example-branch",
+      "installation": {
+        "id": 0,
+      },
+      "ref": "example-ref",
     },
-    "ref": "example-ref",
+    "task": "sync-author",
   },
-  "name": "example-author:example-branch:example-ref",
-  "queueName": "sync-author",
+  "name": "sync-author:example-author:example-branch:example-ref",
+  "queueName": "worker",
 }

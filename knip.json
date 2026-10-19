@@ -3,7 +3,7 @@
 	"ignoreDependencies": ["@aws-sdk/types"],
 	"workspaces": {
 		"apps/worker": {
-			"entry": ["src/tasks/*/*.ts"]
+			"entry": ["src/queues/*.ts"]
 		},
 		"packages/db": {
 			"entry": ["scripts/migrate.ts"]

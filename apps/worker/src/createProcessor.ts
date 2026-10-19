@@ -3,8 +3,6 @@ import type {
 	TaskOutputs,
 	TaskInputs,
 } from "@playfulprogramming/bullmq";
-import type { Job, Processor } from "bullmq";
-import { setTimeout } from "timers/promises";
 
 process.on("uncaughtException", function (err) {
 	console.error(err, "Uncaught exception");
@@ -14,38 +12,27 @@ process.on("unhandledRejection", (reason, promise) => {
 	console.error({ promise, reason }, "Unhandled Rejection at: Promise");
 });
 
-const JOB_TIMEOUT = 2 * 60 * 1000;
-
-type TaskContext = {
+type TaskJob<D> = {
+	id?: string;
+	data: D;
 	signal: AbortSignal;
 };
 
 type TaskProcessor<T extends TasksValues> = (
-	job: Job<TaskInputs[T]>,
-	context: TaskContext,
+	job: TaskJob<TaskInputs[T]>,
 ) => Promise<TaskOutputs[T]>;
 
-export function createProcessor<T extends TasksValues>(
-	_task: T,
-	processor: TaskProcessor<T>,
-): Processor<TaskInputs[T], TaskOutputs[T]> {
-	return async (job) => {
-		const controller = new AbortController();
-		try {
-			const result = await Promise.race([
-				processor(job, { signal: controller.signal }),
-				setTimeout(JOB_TIMEOUT, { signal: controller.signal }).then(
-					() => "timeout" as const,
-				),
-			]);
+export type TaskWrapper<T extends TasksValues> = TaskProcessor<T> & {
+	task: T;
+};
 
-			if (result === "timeout") {
-				throw new Error(`Reached job timeout after ${JOB_TIMEOUT}ms`);
-			} else {
-				return result;
-			}
-		} finally {
-			controller.abort();
-		}
+export function createProcessor<T extends TasksValues>(
+	task: T,
+	processor: TaskProcessor<T>,
+): TaskWrapper<T> {
+	const run: TaskWrapper<T> = async function run(job) {
+		return await processor(job);
 	};
+	run.task = task;
+	return run;
 }
