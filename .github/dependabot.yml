@@ -10,7 +10,7 @@ updates:
       aws-sdk:
         applies-to: version-updates
         patterns:
-          - '@aws-sdk/*'
+          - "@aws-sdk/*"
         update-types:
           - minor
           - patch
