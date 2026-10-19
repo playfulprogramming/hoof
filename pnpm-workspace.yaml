@@ -6,7 +6,7 @@ packages:
 catalog:
   "@types/hast": ^3.0.4
   "@vitest/coverage-v8": ^4.1.7
-  bullmq: ^5.76.10
+  bullmq: ^6.3.11
   drizzle-kit: 1.0.0-rc.5-5935859
   drizzle-orm: 1.0.0-rc.5-5935859
   gray-matter: ^4.0.3

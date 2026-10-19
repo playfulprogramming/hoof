@@ -5,7 +5,7 @@ import {
 	type TaskInputs,
 } from "@playfulprogramming/bullmq";
 import { createProcessor } from "../../createProcessor.ts";
-import type { FlowChildJob } from "bullmq";
+import type { FlowJobNode } from "bullmq";
 import { createGitHubClient } from "../../utils/createGitHubClient.ts";
 
 export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
@@ -39,7 +39,7 @@ export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
 			signal,
 		});
 
-		const authorJobDef: FlowChildJob = {
+		const authorJobDef: FlowJobNode = {
 			name: author.path,
 			data: {
 				author: author.path,
@@ -107,7 +107,7 @@ export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
 					})
 				: undefined;
 
-			const collectionJobDef: FlowChildJob = {
+			const collectionJobDef: FlowJobNode = {
 				name: collection.path,
 				data: {
 					author: author.path,

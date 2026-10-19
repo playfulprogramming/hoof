@@ -28,11 +28,9 @@ createHealthcheck();
 const CLEANUP_ATTACHMENTS_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
 createQueue(Tasks.CLEANUP_ATTACHMENTS)
-	.add(
-		Tasks.CLEANUP_ATTACHMENTS,
-		{},
-		{ repeat: { every: CLEANUP_ATTACHMENTS_INTERVAL_MS } },
-	)
+	.upsertJobScheduler(Tasks.CLEANUP_ATTACHMENTS, {
+		every: CLEANUP_ATTACHMENTS_INTERVAL_MS,
+	})
 	.catch((err) =>
 		console.error("Failed to schedule cleanup-attachments job:", err),
 	);
