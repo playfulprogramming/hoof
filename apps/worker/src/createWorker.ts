@@ -1,17 +1,17 @@
 import { Worker } from "bullmq";
-import type { TasksValues } from "@playfulprogramming/bullmq";
+import type { QueueValues } from "@playfulprogramming/bullmq";
 import { redis } from "@playfulprogramming/redis";
 import { env } from "@playfulprogramming/common";
 
-export function createWorker<T extends TasksValues>(
-	task: T,
+export function createWorker<Q extends QueueValues>(
+	queue: Q,
 	processor: string,
 ): Worker {
 	const processorFile = new URL(import.meta.resolve(processor));
-	const worker = new Worker(task, processorFile, {
+	const worker = new Worker(queue, processorFile, {
 		connection: redis as never,
 		prefix: env.BULLMQ_PREFIX,
-		concurrency: 2,
+		concurrency: 1,
 		removeOnComplete: { count: 1000 },
 		removeOnFail: { count: 5000 },
 		useWorkerThreads: true,
@@ -38,7 +38,7 @@ export function createWorker<T extends TasksValues>(
 	});
 
 	worker.on("stalled", (jobId) => {
-		console.warn("Job stalled:", { task, jobId });
+		console.warn("Job stalled:", { queue, jobId });
 	});
 
 	return worker;

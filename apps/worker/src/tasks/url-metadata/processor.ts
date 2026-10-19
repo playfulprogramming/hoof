@@ -9,7 +9,7 @@ import { getEmbedDataFromPost, isPostUrl } from "./getEmbedDataFromPost.ts";
 
 type UrlMetadataEmbedType = "gist" | "video" | "post";
 
-export default createProcessor(Tasks.URL_METADATA, async (job, { signal }) => {
+export default createProcessor(Tasks.URL_METADATA, async (job) => {
 	const jobId = job.id;
 	if (!jobId) throw new Error("Job ID is undefined!");
 	const inputUrl = new URL(job.data.url);
@@ -18,15 +18,15 @@ export default createProcessor(Tasks.URL_METADATA, async (job, { signal }) => {
 	let embedType: UrlMetadataEmbedType | undefined = undefined;
 	if (gistHosts.includes(inputUrl.hostname)) {
 		embedType = "gist";
-		embedPromise = getEmbedDataFromGist(inputUrl, signal);
+		embedPromise = getEmbedDataFromGist(inputUrl, job.signal);
 	} else if (isPostUrl(inputUrl)) {
 		embedType = "post";
-		embedPromise = getEmbedDataFromPost(jobId, inputUrl, signal);
+		embedPromise = getEmbedDataFromPost(jobId, inputUrl, job.signal);
 	} else if (videoHosts.includes(inputUrl.hostname)) {
 		embedType = "video";
-		embedPromise = getEmbedDataFromVideo(jobId, inputUrl, signal);
+		embedPromise = getEmbedDataFromVideo(jobId, inputUrl, job.signal);
 	} else {
-		embedPromise = getEmbedDataFromHtml(jobId, inputUrl, signal);
+		embedPromise = getEmbedDataFromHtml(jobId, inputUrl, job.signal);
 	}
 
 	const embedData: EmbedData = await embedPromise.catch((e) => {

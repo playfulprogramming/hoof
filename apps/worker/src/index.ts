@@ -1,25 +1,8 @@
 import { createHealthcheck } from "./createHealthcheck.ts";
 import { createWorker } from "./createWorker.ts";
-import { Tasks, createQueue } from "@playfulprogramming/bullmq";
+import { Queues, Tasks, createQueue } from "@playfulprogramming/bullmq";
 
-createWorker(Tasks.POST_IMAGES, "./tasks/post-images/processor.ts");
-createWorker(Tasks.URL_METADATA, "./tasks/url-metadata/processor.ts");
-createWorker(Tasks.SYNC_ALL, "./tasks/sync-all/processor.ts");
-createWorker(Tasks.SYNC_AUTHOR, "./tasks/sync-author/processor.ts");
-createWorker(Tasks.SYNC_COLLECTION, "./tasks/sync-collection/processor.ts");
-createWorker(Tasks.SYNC_POST, "./tasks/sync-post/processor.ts");
-createWorker(
-	Tasks.GRANT_AUTHOR_ACHIEVEMENTS,
-	"./tasks/grant-author-achievements/processor.ts",
-);
-createWorker(
-	Tasks.CLEANUP_ATTACHMENTS,
-	"./tasks/cleanup-attachments/processor.ts",
-);
-createWorker(Tasks.DELETE_S3_OBJECT, "./tasks/delete-s3-object/processor.ts");
-createWorker(Tasks.WEBHOOK_INSTALLATION, "./tasks/webhook/installation.ts");
-createWorker(Tasks.WEBHOOK_PULL_REQUEST, "./tasks/webhook/pull-request.ts");
-createWorker(Tasks.WEBHOOK_PUSH, "./tasks/webhook/push.ts");
+createWorker(Queues.WORKER, "./queues/worker.ts");
 createHealthcheck();
 
 // Repeatable job: BullMQ dedupes repeatable schedulers by name + repeat
@@ -27,10 +10,19 @@ createHealthcheck();
 // than creating duplicate schedules.
 const CLEANUP_ATTACHMENTS_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
-createQueue(Tasks.CLEANUP_ATTACHMENTS)
-	.upsertJobScheduler(Tasks.CLEANUP_ATTACHMENTS, {
-		every: CLEANUP_ATTACHMENTS_INTERVAL_MS,
-	})
+createQueue(Queues.WORKER)
+	.upsertJobScheduler(
+		Tasks.CLEANUP_ATTACHMENTS,
+		{
+			every: CLEANUP_ATTACHMENTS_INTERVAL_MS,
+		},
+		{
+			data: {
+				task: Tasks.CLEANUP_ATTACHMENTS,
+				data: {},
+			},
+		},
+	)
 	.catch((err) =>
 		console.error("Failed to schedule cleanup-attachments job:", err),
 	);

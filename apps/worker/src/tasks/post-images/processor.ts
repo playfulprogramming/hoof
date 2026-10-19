@@ -28,10 +28,10 @@ async function createAndUploadPostImage(
 	return key;
 }
 
-export default createProcessor(Tasks.POST_IMAGES, async (job, { signal }) => {
+export default createProcessor(Tasks.POST_IMAGES, async (job) => {
 	let error = false;
 
-	const dataPromise = fetchPostData(job.data, signal);
+	const dataPromise = fetchPostData(job.data, job.signal);
 
 	const bannerKeyLocal = `post-images/${job.data.slug}.banner.png`;
 	const linkPreviewKeyLocal = `post-images/${job.data.slug}.link-preview.png`;
@@ -39,7 +39,7 @@ export default createProcessor(Tasks.POST_IMAGES, async (job, { signal }) => {
 	const [bannerKey, linkPreviewKey] = await Promise.all([
 		dataPromise
 			.then((data) =>
-				createAndUploadPostImage(data, bannerKeyLocal, banner, signal),
+				createAndUploadPostImage(data, bannerKeyLocal, banner, job.signal),
 			)
 			.catch((e) => {
 				console.error(`Unable to generate post banner for ${job.data.slug}`, e);
@@ -52,7 +52,7 @@ export default createProcessor(Tasks.POST_IMAGES, async (job, { signal }) => {
 					data,
 					linkPreviewKeyLocal,
 					linkPreview,
-					signal,
+					job.signal,
 				),
 			)
 			.catch((e) => {

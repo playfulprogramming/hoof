@@ -17,7 +17,7 @@ import { extractMarkdownExcerpt } from "../../utils/extractMarkdownExcerpt.ts";
 import { resolveAttachment, syncAttachments } from "../../sync/attachments.ts";
 import { createGitHubClient } from "../../utils/createGitHubClient.ts";
 
-export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
+export default createProcessor(Tasks.SYNC_POST, async (job) => {
 	const { author, post, collection, ref, branch, installation } = job.data;
 	const client = await createGitHubClient(installation.id);
 
@@ -38,7 +38,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		path: basePath,
 		repoOwner: env.GITHUB_REPO_OWNER,
 		repoName: env.GITHUB_REPO_NAME,
-		signal,
+		signal: job.signal,
 	});
 
 	if (folderResponse.data === undefined) {
@@ -108,7 +108,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 				path: contentUrl.pathname,
 				repoOwner: env.GITHUB_REPO_OWNER,
 				repoName: env.GITHUB_REPO_NAME,
-				signal,
+				signal: job.signal,
 			});
 
 			if (contentResponse.data === undefined) {
@@ -138,7 +138,7 @@ export default createProcessor(Tasks.SYNC_POST, async (job, { signal }) => {
 		ref,
 		folder: folderResponse.data,
 		keyPrefix: `posts/${post}`,
-		signal,
+		signal: job.signal,
 	});
 
 	// =========================================================================

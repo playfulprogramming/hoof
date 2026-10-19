@@ -8,7 +8,7 @@ import { createProcessor } from "../../createProcessor.ts";
 import type { FlowJobNode } from "bullmq";
 import { createGitHubClient } from "../../utils/createGitHubClient.ts";
 
-export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
+export default createProcessor(Tasks.SYNC_ALL, async (job) => {
 	const github = await createGitHubClient();
 	const installation = {};
 
@@ -16,7 +16,7 @@ export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
 		treeSha: job.data.ref,
 		repoOwner: env.GITHUB_REPO_OWNER,
 		repoName: env.GITHUB_REPO_NAME,
-		signal,
+		signal: job.signal,
 	});
 
 	const contentSha = rootTree.tree.find((t) => t.path === "content")?.sha;
@@ -26,7 +26,7 @@ export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
 		treeSha: contentSha,
 		repoOwner: env.GITHUB_REPO_OWNER,
 		repoName: env.GITHUB_REPO_NAME,
-		signal,
+		signal: job.signal,
 	});
 
 	for (const author of contentTree.tree) {
@@ -36,7 +36,7 @@ export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
 			treeSha: author.sha,
 			repoOwner: env.GITHUB_REPO_OWNER,
 			repoName: env.GITHUB_REPO_NAME,
-			signal,
+			signal: job.signal,
 		});
 
 		const authorJobDef: FlowJobNode = {
@@ -56,7 +56,7 @@ export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
 					treeSha: postsSha,
 					repoOwner: env.GITHUB_REPO_OWNER,
 					repoName: env.GITHUB_REPO_NAME,
-					signal,
+					signal: job.signal,
 				})
 			: undefined;
 
@@ -83,7 +83,7 @@ export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
 					treeSha: collectionsSha,
 					repoOwner: env.GITHUB_REPO_OWNER,
 					repoName: env.GITHUB_REPO_NAME,
-					signal,
+					signal: job.signal,
 				})
 			: undefined;
 
@@ -92,7 +92,7 @@ export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
 				treeSha: collection.sha,
 				repoOwner: env.GITHUB_REPO_OWNER,
 				repoName: env.GITHUB_REPO_NAME,
-				signal,
+				signal: job.signal,
 			});
 
 			const collectionPostsSha = collectionTree.tree.find(
@@ -103,7 +103,7 @@ export default createProcessor(Tasks.SYNC_ALL, async (job, { signal }) => {
 						treeSha: collectionPostsSha,
 						repoOwner: env.GITHUB_REPO_OWNER,
 						repoName: env.GITHUB_REPO_NAME,
-						signal,
+						signal: job.signal,
 					})
 				: undefined;
 

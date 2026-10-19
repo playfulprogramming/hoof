@@ -3,6 +3,7 @@ import { db, attachments } from "@playfulprogramming/db";
 import { s3 } from "@playfulprogramming/s3";
 import { lt } from "drizzle-orm";
 import type * as DrizzleOrm from "drizzle-orm";
+import { fakeJob } from "../../../test-utils/fakeJob.ts";
 
 vi.mock("drizzle-orm", async (importOriginal) => {
 	const actual = await importOriginal<typeof DrizzleOrm>();
@@ -33,7 +34,7 @@ test("Removes an attachment returned by the delete query from S3", async () => {
 		])
 		.mockResolvedValueOnce([]);
 
-	await processor({} as never);
+	await processor(fakeJob({}));
 
 	expect(s3.remove).toHaveBeenCalledWith(
 		"example-bucket",
@@ -47,7 +48,7 @@ test("Uses a one-hour-old cutoff for the lastModified staleness check", async ()
 
 	vi.mocked(deleteAttachmentReturning).mockResolvedValueOnce([]);
 
-	await processor({} as never);
+	await processor(fakeJob({}));
 
 	expect(lt).toHaveBeenCalledWith(
 		attachments.lastModified,
@@ -60,7 +61,7 @@ test("Does nothing when the delete query returns no rows", async () => {
 
 	vi.mocked(deleteAttachmentReturning).mockResolvedValueOnce([]);
 
-	await processor({} as never);
+	await processor(fakeJob({}));
 
 	expect(s3.remove).not.toHaveBeenCalled();
 });
@@ -87,7 +88,7 @@ test("Keeps deleting and removing until the delete query returns no more rows", 
 		])
 		.mockResolvedValueOnce([]);
 
-	await processor({} as never);
+	await processor(fakeJob({}));
 
 	expect(s3.remove).toHaveBeenNthCalledWith(
 		1,
@@ -116,7 +117,7 @@ test("Re-inserts the row and fails the job when S3 removal rejects, rather than 
 	const s3Error = new Error("S3 removal failed");
 	vi.mocked(s3.remove).mockRejectedValue(s3Error);
 
-	await expect(processor({} as never)).rejects.toThrow(s3Error);
+	await expect(processor(fakeJob({}))).rejects.toThrow(s3Error);
 
 	expect(insertAttachmentValues).toHaveBeenCalledWith({
 		...orphan,

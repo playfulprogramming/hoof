@@ -1,6 +1,5 @@
 import processor from "./processor.ts";
 import { createJob, Tasks } from "@playfulprogramming/bullmq";
-import type { Job } from "bullmq";
 import {
 	posts,
 	postAuthors,
@@ -11,6 +10,7 @@ import {
 } from "@playfulprogramming/db";
 import { createInstallationClient } from "@playfulprogramming/github-api";
 import { and, eq } from "drizzle-orm";
+import { fakeJob } from "../../../test-utils/fakeJob.ts";
 
 const selectExistingAttachments = db
 	.select(expect.anything())
@@ -33,10 +33,6 @@ vi.mock(import("../../sync/attachments.ts"), async (importOriginal) => {
 		resolveAttachment: vi.fn(original.resolveAttachment),
 	};
 });
-
-function fakeJob<Data>(data: Data): Job<Data> {
-	return { data } as unknown as Job<Data>;
-}
 
 test("Syncs a standalone post successfully", async () => {
 	const postId = ":test-post-uuid:";
