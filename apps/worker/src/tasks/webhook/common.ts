@@ -1,4 +1,4 @@
-import { type TaskInputs, Tasks } from "@playfulprogramming/bullmq";
+import { createFlowJobNode, Tasks } from "@playfulprogramming/bullmq";
 import type { FlowJob, FlowJobNode } from "bullmq";
 
 interface ProcessWebhookParams {
@@ -76,23 +76,24 @@ export function constructSyncJobs(
 		author,
 		{ collections, posts: authorPosts },
 	] of authorEntries.entries()) {
-		jobDef = {
+		jobDef = createFlowJobNode({
+			task: Tasks.SYNC_AUTHOR,
 			name: `${author}:${params.branch}:${params.ref}`,
 			data: {
 				author,
 				branch: params.branch,
 				ref: params.ref,
 				installation: params.installation,
-			} satisfies TaskInputs[typeof Tasks.SYNC_AUTHOR],
-			queueName: Tasks.SYNC_AUTHOR,
+			},
 			children: jobDef ? [jobDef] : undefined,
-		};
+		});
 
 		for (const [
 			collection,
 			{ posts: collectionPosts },
 		] of collections.entries()) {
-			jobDef = {
+			jobDef = createFlowJobNode({
+				task: Tasks.SYNC_COLLECTION,
 				name: `${author}/${collection}:${params.branch}:${params.ref}`,
 				data: {
 					author,
@@ -100,13 +101,13 @@ export function constructSyncJobs(
 					branch: params.branch,
 					ref: params.ref,
 					installation: params.installation,
-				} satisfies TaskInputs[typeof Tasks.SYNC_COLLECTION],
-				queueName: Tasks.SYNC_COLLECTION,
+				},
 				children: jobDef ? [jobDef] : undefined,
-			};
+			});
 
 			for (const post of collectionPosts) {
-				jobDef = {
+				jobDef = createFlowJobNode({
+					task: Tasks.SYNC_POST,
 					name: `${author}/${collection}/${post}:${params.branch}:${params.ref}`,
 					data: {
 						author,
@@ -115,15 +116,15 @@ export function constructSyncJobs(
 						branch: params.branch,
 						ref: params.ref,
 						installation: params.installation,
-					} satisfies TaskInputs[typeof Tasks.SYNC_POST],
-					queueName: Tasks.SYNC_POST,
+					},
 					children: jobDef ? [jobDef] : undefined,
-				};
+				});
 			}
 		}
 
 		for (const post of authorPosts) {
-			jobDef = {
+			jobDef = createFlowJobNode({
+				task: Tasks.SYNC_POST,
 				name: `${author}/${post}:${params.branch}:${params.ref}`,
 				data: {
 					author,
@@ -131,10 +132,9 @@ export function constructSyncJobs(
 					branch: params.branch,
 					ref: params.ref,
 					installation: params.installation,
-				} satisfies TaskInputs[typeof Tasks.SYNC_POST],
-				queueName: Tasks.SYNC_POST,
+				},
 				children: jobDef ? [jobDef] : undefined,
-			};
+			});
 		}
 	}
 

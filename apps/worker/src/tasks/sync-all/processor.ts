@@ -1,8 +1,8 @@
 import { BRANCH_MAIN, env } from "@playfulprogramming/common";
 import {
+	createFlowJobNode,
 	flowProducer,
 	Tasks,
-	type TaskInputs,
 } from "@playfulprogramming/bullmq";
 import { createProcessor } from "../../createProcessor.ts";
 import type { FlowJobNode } from "bullmq";
@@ -39,16 +39,16 @@ export default createProcessor(Tasks.SYNC_ALL, async (job) => {
 			signal: job.signal,
 		});
 
-		const authorJobDef: FlowJobNode = {
+		const authorJobDef: FlowJobNode = createFlowJobNode({
+			task: Tasks.SYNC_AUTHOR,
 			name: author.path,
 			data: {
 				author: author.path,
 				branch: BRANCH_MAIN,
 				ref: job.data.ref,
 				installation,
-			} satisfies TaskInputs[typeof Tasks.SYNC_AUTHOR],
-			queueName: Tasks.SYNC_AUTHOR,
-		};
+			},
+		});
 
 		const postsSha = authorTree.tree.find((t) => t.path === "posts")?.sha;
 		const postsTree = postsSha
@@ -61,18 +61,20 @@ export default createProcessor(Tasks.SYNC_ALL, async (job) => {
 			: undefined;
 
 		for (const post of postsTree?.tree ?? []) {
-			await flowProducer.add({
-				name: post.path,
-				data: {
-					author: author.path,
-					post: post.path,
-					branch: BRANCH_MAIN,
-					ref: job.data.ref,
-					installation,
-				} satisfies TaskInputs[typeof Tasks.SYNC_POST],
-				queueName: Tasks.SYNC_POST,
-				children: [authorJobDef],
-			});
+			await flowProducer.add(
+				createFlowJobNode({
+					task: Tasks.SYNC_POST,
+					name: post.path,
+					data: {
+						author: author.path,
+						post: post.path,
+						branch: BRANCH_MAIN,
+						ref: job.data.ref,
+						installation,
+					},
+					children: [authorJobDef],
+				}),
+			);
 		}
 
 		const collectionsSha = authorTree.tree.find(
@@ -107,7 +109,8 @@ export default createProcessor(Tasks.SYNC_ALL, async (job) => {
 					})
 				: undefined;
 
-			const collectionJobDef: FlowJobNode = {
+			const collectionJobDef: FlowJobNode = createFlowJobNode({
+				task: Tasks.SYNC_COLLECTION,
 				name: collection.path,
 				data: {
 					author: author.path,
@@ -115,25 +118,26 @@ export default createProcessor(Tasks.SYNC_ALL, async (job) => {
 					branch: BRANCH_MAIN,
 					ref: job.data.ref,
 					installation,
-				} satisfies TaskInputs[typeof Tasks.SYNC_COLLECTION],
-				queueName: Tasks.SYNC_COLLECTION,
+				},
 				children: [authorJobDef],
-			};
+			});
 
 			for (const post of collectionPostsTree?.tree ?? []) {
-				await flowProducer.add({
-					name: post.path,
-					data: {
-						author: author.path,
-						collection: collection.path,
-						post: post.path,
-						branch: BRANCH_MAIN,
-						ref: job.data.ref,
-						installation,
-					} satisfies TaskInputs[typeof Tasks.SYNC_POST],
-					queueName: Tasks.SYNC_POST,
-					children: [collectionJobDef],
-				});
+				await flowProducer.add(
+					createFlowJobNode({
+						task: Tasks.SYNC_POST,
+						name: post.path,
+						data: {
+							author: author.path,
+							collection: collection.path,
+							post: post.path,
+							branch: BRANCH_MAIN,
+							ref: job.data.ref,
+							installation,
+						},
+						children: [collectionJobDef],
+					}),
+				);
 			}
 
 			if (!collectionPostsTree?.tree?.length) {
