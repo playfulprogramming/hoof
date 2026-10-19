@@ -192,8 +192,8 @@ catalogs:
       specifier: ^0.35.4
       version: 0.35.4
     typebox:
-      specifier: ^1.1.38
-      version: 1.3.34
+      specifier: ^1.3.34
+      version: 1.3.36
     undici:
       specifier: ^8.10.2
       version: 8.10.2
@@ -294,7 +294,7 @@ importers:
         version: 1.72.4
       drizzle-orm:
         specifier: 'catalog:'
-        version: 1.0.0-rc.5-5935859(@opentelemetry/api@1.9.0)(@types/mssql@9.1.9(supports-color@10.2.2))(@types/pg@8.23.1)(mssql@11.0.1(supports-color@10.2.2))(pg@8.23.0)(typebox@1.1.38)(zod@4.4.3)
+        version: 1.0.0-rc.5-5935859(@opentelemetry/api@1.9.0)(@types/mssql@9.1.9(supports-color@10.2.2))(@types/pg@8.23.1)(mssql@11.0.1(supports-color@10.2.2))(pg@8.23.0)(typebox@1.3.36)(zod@4.4.3)
       fastify:
         specifier: ^5.12.4
         version: 5.12.4
@@ -303,7 +303,7 @@ importers:
         version: 5.1.0
       typebox:
         specifier: 'catalog:'
-        version: 1.1.38
+        version: 1.3.36
     devDependencies:
       '@playfulprogramming/test-fixtures':
         specifier: workspace:*
@@ -337,10 +337,10 @@ importers:
         version: link:../../packages/s3
       bullmq:
         specifier: 'catalog:'
-        version: 6.3.11(ioredis@5.10.1(supports-color@10.2.2))(pg@8.21.0)
+        version: 6.3.11(ioredis@5.10.1(supports-color@10.2.2))(pg@8.23.0)
       drizzle-orm:
         specifier: 'catalog:'
-        version: 1.0.0-rc.5-5935859(@opentelemetry/api@1.9.0)(@types/mssql@9.1.9(supports-color@10.2.2))(@types/pg@8.23.1)(mssql@11.0.1(supports-color@10.2.2))(pg@8.23.0)(typebox@1.1.38)(zod@4.4.3)
+        version: 1.0.0-rc.5-5935859(@opentelemetry/api@1.9.0)(@types/mssql@9.1.9(supports-color@10.2.2))(@types/pg@8.23.1)(mssql@11.0.1(supports-color@10.2.2))(pg@8.23.0)(typebox@1.3.36)(zod@4.4.3)
       gray-matter:
         specifier: 'catalog:'
         version: 4.0.3
@@ -370,7 +370,7 @@ importers:
         version: 4.1.0
       typebox:
         specifier: 'catalog:'
-        version: 1.1.38
+        version: 1.3.36
       undici:
         specifier: 'catalog:'
         version: 8.10.2
@@ -410,7 +410,7 @@ importers:
         version: 5.5.0
       typebox:
         specifier: 'catalog:'
-        version: 1.3.34
+        version: 1.3.36
 
   e2e/tests:
     dependencies:
@@ -438,10 +438,10 @@ importers:
         version: link:../redis
       bullmq:
         specifier: 'catalog:'
-        version: 6.3.11(ioredis@5.10.1(supports-color@10.2.2))(pg@8.21.0)
+        version: 6.3.11(ioredis@5.10.1(supports-color@10.2.2))(pg@8.23.0)
       typebox:
         specifier: 'catalog:'
-        version: 1.1.38
+        version: 1.3.36
     devDependencies:
       vitest:
         specifier: 'catalog:'
@@ -451,7 +451,7 @@ importers:
     dependencies:
       typebox:
         specifier: 'catalog:'
-        version: 1.1.38
+        version: 1.3.36
 
   packages/db:
     dependencies:
@@ -460,7 +460,7 @@ importers:
         version: link:../common
       drizzle-orm:
         specifier: 'catalog:'
-        version: 1.0.0-rc.5-5935859(@opentelemetry/api@1.9.0)(@types/mssql@9.1.9(supports-color@10.2.2))(@types/pg@8.23.1)(mssql@11.0.1(supports-color@10.2.2))(pg@8.23.0)(typebox@1.3.34)(zod@4.4.3)
+        version: 1.0.0-rc.5-5935859(@opentelemetry/api@1.9.0)(@types/mssql@9.1.9(supports-color@10.2.2))(@types/pg@8.23.1)(mssql@11.0.1(supports-color@10.2.2))(pg@8.23.0)(typebox@1.3.36)(zod@4.4.3)
       pg:
         specifier: ^8.23.0
         version: 8.23.0
@@ -528,7 +528,7 @@ importers:
         version: 0.35.4(@types/node@26.5.1)
       typebox:
         specifier: 'catalog:'
-        version: 1.1.38
+        version: 1.3.36
       unified:
         specifier: ^11.0.5
         version: 11.0.5
@@ -6054,11 +6054,8 @@ packages:
     resolution: {integrity: sha512-OZs6gsjF4vMp32qrCbiVSkrFmXtG/AZhY3t0iAMrMBiAZyV9oALtXO8hsrHbMXF9x6L3grlFuwW2oAz7cav+Gw==}
     engines: {node: '>= 0.6'}
 
-  typebox@1.1.38:
-    resolution: {integrity: sha512-pZ0aQPmMmXoUvSbeuWf/Hzsc+avNw/Zd6VeE8CFgkVGWyuHPJvqeJJDeJqLve+K70LvjYIoleGcoJHPT17cWoA==}
-
-  typebox@1.3.34:
-    resolution: {integrity: sha512-wbnzrXXDW8xEFHDZZs2jo1MkhaYlKAY4FRhpBc1+2LF1fZVBGCXGdLEhA/Z/NBbgzJMFfeM8m7elKPa/+KxaUQ==}
+  typebox@1.3.36:
+    resolution: {integrity: sha512-bu2Ec2Ti9B4IFSFj1FcZbtLNB/W7igQwxocMGJLAG2NTv1nI+ImtIA34YgHW4CVyGVlJqNXR1GJyLmdWgV3DuA==}
 
   typescript-eslint@8.59.4:
     resolution: {integrity: sha512-Rw6+44QNFaXtgHSjPy+Kw8hrJniMYzR85E9yLmOLcfZ91/rz+JXQbDTCmc6ccxMPY6K6PgAq26f0JCBfR7LIPQ==}
@@ -10042,7 +10039,7 @@ snapshots:
       ieee754: 1.2.1
     optional: true
 
-  bullmq@6.3.11(ioredis@5.10.1(supports-color@10.2.2))(pg@8.21.0):
+  bullmq@6.3.11(ioredis@5.10.1(supports-color@10.2.2))(pg@8.23.0):
     dependencies:
       cron-parser: 5.10.1
       msgpackr: 2.1.0
@@ -10051,7 +10048,7 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       ioredis: 5.10.1(supports-color@10.2.2)
-      pg: 8.21.0
+      pg: 8.23.0
 
   bundle-name@4.1.0:
     dependencies:
@@ -10331,24 +10328,14 @@ snapshots:
       get-tsconfig: 4.14.0
       jiti: 2.7.0
 
-  drizzle-orm@1.0.0-rc.5-5935859(@opentelemetry/api@1.9.0)(@types/mssql@9.1.9(supports-color@10.2.2))(@types/pg@8.23.1)(mssql@11.0.1(supports-color@10.2.2))(pg@8.23.0)(typebox@1.1.38)(zod@4.4.3):
+  drizzle-orm@1.0.0-rc.5-5935859(@opentelemetry/api@1.9.0)(@types/mssql@9.1.9(supports-color@10.2.2))(@types/pg@8.23.1)(mssql@11.0.1(supports-color@10.2.2))(pg@8.23.0)(typebox@1.3.36)(zod@4.4.3):
     optionalDependencies:
       '@opentelemetry/api': 1.9.0
       '@types/mssql': 9.1.9(supports-color@10.2.2)
       '@types/pg': 8.23.1
       mssql: 11.0.1(supports-color@10.2.2)
       pg: 8.23.0
-      typebox: 1.1.38
-      zod: 4.4.3
-
-  drizzle-orm@1.0.0-rc.5-5935859(@opentelemetry/api@1.9.0)(@types/mssql@9.1.9(supports-color@10.2.2))(@types/pg@8.23.1)(mssql@11.0.1(supports-color@10.2.2))(pg@8.23.0)(typebox@1.3.34)(zod@4.4.3):
-    optionalDependencies:
-      '@opentelemetry/api': 1.9.0
-      '@types/mssql': 9.1.9(supports-color@10.2.2)
-      '@types/pg': 8.23.1
-      mssql: 11.0.1(supports-color@10.2.2)
-      pg: 8.23.0
-      typebox: 1.3.34
+      typebox: 1.3.36
       zod: 4.4.3
 
   dunder-proto@1.0.1:
@@ -13065,9 +13052,7 @@ snapshots:
       media-typer: 1.1.0
       mime-types: 3.0.2
 
-  typebox@1.1.38: {}
-
-  typebox@1.3.34: {}
+  typebox@1.3.36: {}
 
   typescript-eslint@8.59.4(eslint@10.10.0(jiti@2.7.0)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3):
     dependencies:
