@@ -39,4 +39,7 @@ const EnvSchema = Type.Object({
 });
 
 Settings.Set({ correctiveParse: true });
-export const env = Value.Parse(EnvSchema, { ...process.env });
+export const env = Value.Decode(
+	EnvSchema,
+	Value.Parse(EnvSchema, { ...process.env }),
+);
