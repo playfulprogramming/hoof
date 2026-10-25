@@ -10,7 +10,7 @@ catalog:
   drizzle-kit: 1.0.0-rc.5-5935859
   drizzle-orm: 1.0.0-rc.5-5935859
   gray-matter: ^4.0.3
-  ioredis: ^5.10.1
+  ioredis: ^6.0.0
   openapi-fetch: ^0.17.0
   openapi-typescript: ^7.13.0
   sharp: ^0.35.4
