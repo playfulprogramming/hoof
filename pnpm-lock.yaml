@@ -205,7 +205,7 @@ catalogs:
       version: 4.1.7
 
 overrides:
-  ioredis: ^5.10.1
+  ioredis: ^6.0.0
 
 importers:
 
@@ -337,7 +337,7 @@ importers:
         version: link:../../packages/s3
       bullmq:
         specifier: 'catalog:'
-        version: 6.3.11(ioredis@5.10.1(supports-color@10.2.2))(pg@8.23.0)
+        version: 6.3.11(ioredis@6.0.0(supports-color@10.2.2))(pg@8.23.0)
       drizzle-orm:
         specifier: 'catalog:'
         version: 1.0.0-rc.5-5935859(@opentelemetry/api@1.9.0)(@types/mssql@9.1.9(supports-color@10.2.2))(@types/pg@8.23.1)(mssql@11.0.1(supports-color@10.2.2))(pg@8.23.0)(typebox@1.3.36)(zod@4.4.3)
@@ -438,7 +438,7 @@ importers:
         version: link:../redis
       bullmq:
         specifier: 'catalog:'
-        version: 6.3.11(ioredis@5.10.1(supports-color@10.2.2))(pg@8.23.0)
+        version: 6.3.11(ioredis@6.0.0(supports-color@10.2.2))(pg@8.23.0)
       typebox:
         specifier: 'catalog:'
         version: 1.3.36
@@ -555,8 +555,8 @@ importers:
         specifier: workspace:*
         version: link:../common
       ioredis:
-        specifier: ^5.10.1
-        version: 5.10.1(supports-color@10.2.2)
+        specifier: ^6.0.0
+        version: 6.0.0(supports-color@10.2.2)
 
   packages/s3:
     dependencies:
@@ -1833,8 +1833,8 @@ packages:
   '@internationalized/number@3.6.8':
     resolution: {integrity: sha512-8UmMFia46DUt+k97zKd9fKWXcWHR+k8ae3eYzILETuT2KbIvLyOfac7zesw+sJdRAAZ7Q9pM1Mk22aXp2LD0Ig==}
 
-  '@ioredis/commands@1.5.1':
-    resolution: {integrity: sha512-JH8ZL/ywcJyR9MmJ5BNqZllXNZQqQbnVZOqpPQqE1vHiFgAw4NHbvE0FOduNU8IX9babitBT46571OnPTT0Zcw==}
+  '@ioredis/commands@2.0.0':
+    resolution: {integrity: sha512-vrx0AE/T0h7cRZwfo1M39Cr+ZhZrkf0V8mQN75wucKCxCLD9l/VX6no3gFvrLqD1IlG/1LtzWovqEw3t0Vr9zg==}
 
   '@jaredwray/mockhttp@1.9.0':
     resolution: {integrity: sha512-KqT40wMA5sghoCr2t57sHwAjFoeaxslAQJCkECBMVqcO6L/85ow0xSZyezOoYSr3EPMLHfteJu6CqcHP0/TXUA==}
@@ -3418,7 +3418,7 @@ packages:
     engines: {node: '>=14.17.0'}
     peerDependencies:
       bullmq-otel: '>=2.0.0'
-      ioredis: ^5.10.1
+      ioredis: ^6.0.0
       pg: '>=8.0.0'
       redis: '>=5.0.0'
     peerDependenciesMeta:
@@ -3511,8 +3511,8 @@ packages:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
     engines: {node: '>=6'}
 
-  cluster-key-slot@1.1.2:
-    resolution: {integrity: sha512-RMr0FhtfXemyinomL4hrWcYJxmX6deFdCxpJzhDttxgO1+bcCnkk+9drydLVDmAMG7NE6aN/fl4F7ucU/90gAA==}
+  cluster-key-slot@1.1.1:
+    resolution: {integrity: sha512-rwHwUfXL40Chm1r08yrhU3qpUvdVlgkKNeyeGPOxnW8/SyVDvgRaed/Uz54AqWNaTCAThlj6QAs3TZcKI0xDEw==}
     engines: {node: '>=0.10.0'}
 
   color-convert@0.5.3:
@@ -4457,9 +4457,9 @@ packages:
   inherits@2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
 
-  ioredis@5.10.1:
-    resolution: {integrity: sha512-HuEDBTI70aYdx1v6U97SbNx9F1+svQKBDo30o0b9fw055LMepzpOOd0Ccg9Q6tbqmBSJaMuY0fB7yw9/vjBYCA==}
-    engines: {node: '>=12.22.0'}
+  ioredis@6.0.0:
+    resolution: {integrity: sha512-f+Dtubxfpf6KYFq7WVXJoOLn0bk4TJrMrN9SzeE+jrWrCWj7XX3fA6vkryafhADX+GMymRxgDJDOI33COkJc0w==}
+    engines: {node: '>=20.0.0'}
 
   ip-address@10.7.2:
     resolution: {integrity: sha512-7H/2gFSIitxc0hG3nOI1glS8QLo/EHBFFLk8vEUjXY/xu0AdL8jZ9U1IzO2PUm0d2D/ofQcAifb0g6OBkt8U7w==}
@@ -4771,14 +4771,8 @@ packages:
   lodash.debounce@4.0.8:
     resolution: {integrity: sha512-FT1yDzDYEoYWhnSGnpE/4Kj1fLZkDFyqRb7fNt6FdYOSxlUWAtp42Eh6Wb0rGIv/m9Bgo7x4GhQbm5Ys4SG5ow==}
 
-  lodash.defaults@4.2.0:
-    resolution: {integrity: sha512-qjxPLHd3r5DnsdGacqOMU6pb/avJzdh9tFX2ymgoZE27BmjXrNy/y4LoaiTeAb+O3gL8AfpJGtqfX/ae2leYYQ==}
-
   lodash.includes@4.3.0:
     resolution: {integrity: sha512-W3Bx6mdkRTGtlJISOvVD/lbqjTlPPUDTMnlXZFnVwi9NKJ6tiAk6LVdlhZMm17VZisqhKcgzpO5Wz91PCt5b0w==}
-
-  lodash.isarguments@3.1.0:
-    resolution: {integrity: sha512-chi4NHZlZqZD18a0imDHnZPrDeBbTtVN7GXMwuGdRH9qotxAjYs3aVLKc7zNOG9eddR5Ksd8rvFEBc9SsggPpg==}
 
   lodash.isboolean@3.0.3:
     resolution: {integrity: sha512-Bz5mupy2SVbPHURB98VAcw+aHh4vRV5IPNhILUCsOzRmsTmSQ17jIuqopAentWoehktxGd9e/hbIXq980/1QJg==}
@@ -5419,10 +5413,6 @@ packages:
 
   redis-errors@1.2.0:
     resolution: {integrity: sha512-1qny3OExCf0UvUV/5wpYKf2YwPcOqXzkwKKSmKHiE6ZMQs5heeE/c8eXK+PNllPvmjgAbfnsbpkGZWy8cBpn9w==}
-    engines: {node: '>=4'}
-
-  redis-parser@3.0.0:
-    resolution: {integrity: sha512-DJnGAeenTdpMEH6uAJRK/uiyEIH9WVsUmoLwzudwGJUwZPp80PDBWPHXSAGNPwNvIXAbe7MSUB1zQFugFml66A==}
     engines: {node: '>=4'}
 
   reflect-metadata@0.2.2:
@@ -7872,7 +7862,7 @@ snapshots:
     dependencies:
       '@swc/helpers': 0.5.23
 
-  '@ioredis/commands@1.5.1': {}
+  '@ioredis/commands@2.0.0': {}
 
   '@jaredwray/mockhttp@1.9.0(axios@1.18.1(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2))(change-case@5.4.4)(supports-color@10.2.2)(tailwindcss@4.3.3)(typescript@6.0.3)(zod@4.4.3)':
     dependencies:
@@ -9781,7 +9771,7 @@ snapshots:
       ieee754: 1.2.1
     optional: true
 
-  bullmq@6.3.11(ioredis@5.10.1(supports-color@10.2.2))(pg@8.23.0):
+  bullmq@6.3.11(ioredis@6.0.0(supports-color@10.2.2))(pg@8.23.0):
     dependencies:
       cron-parser: 5.10.1
       msgpackr: 2.1.0
@@ -9789,7 +9779,7 @@ snapshots:
       semver: 7.8.5
       tslib: 2.8.1
     optionalDependencies:
-      ioredis: 5.10.1(supports-color@10.2.2)
+      ioredis: 6.0.0(supports-color@10.2.2)
       pg: 8.23.0
 
   bundle-name@4.1.0:
@@ -9861,7 +9851,7 @@ snapshots:
 
   clsx@2.1.1: {}
 
-  cluster-key-slot@1.1.2: {}
+  cluster-key-slot@1.1.1: {}
 
   color-convert@0.5.3: {}
 
@@ -10736,16 +10726,13 @@ snapshots:
 
   inherits@2.0.4: {}
 
-  ioredis@5.10.1(supports-color@10.2.2):
+  ioredis@6.0.0(supports-color@10.2.2):
     dependencies:
-      '@ioredis/commands': 1.5.1
-      cluster-key-slot: 1.1.2
+      '@ioredis/commands': 2.0.0
+      cluster-key-slot: 1.1.1
       debug: 4.4.3(supports-color@10.2.2)
       denque: 2.1.0
-      lodash.defaults: 4.2.0
-      lodash.isarguments: 3.1.0
       redis-errors: 1.2.0
-      redis-parser: 3.0.0
       standard-as-callback: 2.1.0
     transitivePeerDependencies:
       - supports-color
@@ -11029,12 +11016,8 @@ snapshots:
 
   lodash.debounce@4.0.8: {}
 
-  lodash.defaults@4.2.0: {}
-
   lodash.includes@4.3.0:
     optional: true
-
-  lodash.isarguments@3.1.0: {}
 
   lodash.isboolean@3.0.3:
     optional: true
@@ -12195,10 +12178,6 @@ snapshots:
   real-require@1.0.0: {}
 
   redis-errors@1.2.0: {}
-
-  redis-parser@3.0.0:
-    dependencies:
-      redis-errors: 1.2.0
 
   reflect-metadata@0.2.2: {}
 
