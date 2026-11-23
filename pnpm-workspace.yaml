@@ -13,7 +13,7 @@ catalog:
   ioredis: ^5.10.1
   openapi-fetch: ^0.17.0
   openapi-typescript: ^7.13.0
-  sharp: ^0.35.4
+  sharp: ^0.35.5
   typebox: ^1.3.34
   undici: ^8.10.2
   vite: ^8.2.2
