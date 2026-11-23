@@ -201,8 +201,8 @@ catalogs:
       specifier: ^8.2.2
       version: 8.2.2
     vitest:
-      specifier: ^4.1.7
-      version: 4.1.7
+      specifier: ^4.1.11
+      version: 4.1.12
 
 overrides:
   ioredis: ^5.10.1
@@ -216,13 +216,13 @@ importers:
         version: 10.0.1(eslint@10.10.0(jiti@2.7.0)(supports-color@7.2.0))
       '@nx/vitest':
         specifier: 22.7.2
-        version: 22.7.2(@babel/traverse@7.29.0(supports-color@7.2.0))(debug@4.4.3(supports-color@7.2.0))(nx@23.2.1)(supports-color@7.2.0)(typescript@6.0.3)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))(vitest@4.1.7)
+        version: 22.7.2(@babel/traverse@7.29.0(supports-color@7.2.0))(debug@4.4.3(supports-color@7.2.0))(nx@23.2.1)(supports-color@7.2.0)(typescript@6.0.3)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))(vitest@4.1.12)
       '@types/node':
         specifier: ^26.4.1
         version: 26.5.1
       '@vitest/coverage-v8':
         specifier: 'catalog:'
-        version: 4.1.7(vitest@4.1.7)
+        version: 4.1.7(vitest@4.1.12)
       eslint:
         specifier: ^10.10.0
         version: 10.10.0(jiti@2.7.0)(supports-color@7.2.0)
@@ -261,7 +261,7 @@ importers:
         version: 8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0)
       vitest:
         specifier: 'catalog:'
-        version: 4.1.7(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
+        version: 4.1.12(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
 
   apps/api:
     dependencies:
@@ -310,7 +310,7 @@ importers:
         version: link:../../packages/test-fixtures
       vitest:
         specifier: 'catalog:'
-        version: 4.1.7(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
+        version: 4.1.12(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
 
   apps/worker:
     dependencies:
@@ -398,7 +398,7 @@ importers:
         version: 4.0.4
       vitest:
         specifier: 'catalog:'
-        version: 4.1.7(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
+        version: 4.1.12(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
 
   e2e/mocks:
     dependencies:
@@ -426,7 +426,7 @@ importers:
         version: 7.13.0(typescript@6.0.3)
       vitest:
         specifier: 'catalog:'
-        version: 4.1.7(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
+        version: 4.1.12(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
 
   packages/bullmq:
     dependencies:
@@ -445,7 +445,7 @@ importers:
     devDependencies:
       vitest:
         specifier: 'catalog:'
-        version: 4.1.7(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
+        version: 4.1.12(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
 
   packages/common:
     dependencies:
@@ -495,7 +495,7 @@ importers:
         version: link:../test-fixtures
       vitest:
         specifier: 'catalog:'
-        version: 4.1.7(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
+        version: 4.1.12(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
 
   packages/post-images:
     dependencies:
@@ -547,7 +547,7 @@ importers:
         version: 10.0.1
       vitest:
         specifier: 'catalog:'
-        version: 4.1.7(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
+        version: 4.1.12(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
 
   packages/redis:
     dependencies:
@@ -578,7 +578,7 @@ importers:
     dependencies:
       vitest:
         specifier: 'catalog:'
-        version: 4.1.7(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
+        version: 4.1.12(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
 
 packages:
 
@@ -2859,6 +2859,9 @@ packages:
   '@smithy/core@3.35.2':
     resolution: {integrity: sha512-ejTukBuP/Pg3t9N8Ux+0zKsXeHWm7p6W3HbXFOyltKasSxZwCFmvTut7kBdZSCF3m9y1bXXyVu6p2xuMFcsTyQ==}
     engines: {node: '>=18.0.0'}
+    deprecated: |-
+      Deprecated due to a bug in custom logger data redaction. Upgrade to the latest version. If you used a custom logger with this
+        version, review your logs and rotate any credentials or other secrets. See https://github.com/aws/aws-sdk-js-v3/issues/8393.
 
   '@smithy/core@3.36.2':
     resolution: {integrity: sha512-oRw0rB9QSUiCZfEs23G5F4Af+b2rQt1lItIICWu5IejFNd+uPM8SWqiKLMpQ6bX1Q7slsLbjuoE2niErFtkVPQ==}
@@ -3058,11 +3061,11 @@ packages:
       '@vitest/browser':
         optional: true
 
-  '@vitest/expect@4.1.7':
-    resolution: {integrity: sha512-1R+tw0ortHEbZDGMymm+pN7/AFQ/RkFFdtd7EN+VBpynKmLbP8A3rpEXdshBJ7+8hQ9zBJh/i1s0yKNtxAnU7w==}
+  '@vitest/expect@4.1.12':
+    resolution: {integrity: sha512-vFlTt+YEu9WBpNjdGayNmlMVzrWPi1+sv853/7t2FU7hpO5gAFBKHzQmkCq5Xjpr+evegF2994LQT3hF3mRlqQ==}
 
-  '@vitest/mocker@4.1.7':
-    resolution: {integrity: sha512-vY7nuamKgfvpA1Koa3oYIw/k7D6kZnpGyNMZW8loow2bsBYla1TFdqTaXncWdRn4pgwNs+90RhnXhJScDwQeJA==}
+  '@vitest/mocker@4.1.12':
+    resolution: {integrity: sha512-fKShNpKZzupWZuY0z7egydvL0sqW4INEZBEExMBMAa6izlENEVHwoXgdaTCaBZ5fwlr4xf2o1wXC83n9RpO+NA==}
     peerDependencies:
       msw: ^2.4.9
       vite: ^6.0.0 || ^7.0.0 || ^8.0.0
@@ -3072,17 +3075,23 @@ packages:
       vite:
         optional: true
 
+  '@vitest/pretty-format@4.1.12':
+    resolution: {integrity: sha512-XW9O8+Mxx4VpCtkYdMJLZQQwsVryP9wk7cPKDxtXFfwSak6yRh5+2fep/Y0XF/ElBvJHq8bcYdi6aeuai0opZA==}
+
   '@vitest/pretty-format@4.1.7':
     resolution: {integrity: sha512-umgCarTOYQWIaDMvGDRZij+6b9oVeLIyJzfN+AS88e0ZOU3QTgNNSTtjQOpcvWr3np1N0j4WgZj+sb3oYBDscw==}
 
-  '@vitest/runner@4.1.7':
-    resolution: {integrity: sha512-BapjmAQ2aI78WdMEfeUWivnfVzB+VPGwWRQcJE0OUq7qEeEcBsCSf+0T5iREBNE5nBb4wA5Ya0W6IA+sghdEFw==}
+  '@vitest/runner@4.1.12':
+    resolution: {integrity: sha512-NKlVKCr5QnCe8jijdMnmkpHHU+WTqiLFR6G0pHji9uRjXK9xJl1k1nTw6F3pOOj2PDcsDt2GKQMI7wIsaT491w==}
 
-  '@vitest/snapshot@4.1.7':
-    resolution: {integrity: sha512-ZacLzja+TmJeZ1h14xW2FB/WpeimUD3haBXQPyJqxvo8jQTmfeA8zv58mtjN2C7EHXZDYVcVYdYmAxjkWVvKCw==}
+  '@vitest/snapshot@4.1.12':
+    resolution: {integrity: sha512-ko1y1Qgb/slzQ9mr+b89Cuqud8WG1TKtsPD8r7ZUBdvVOGt85Af2HwCqHujrhwJq95hs/9RM7fcAPg57o1vlzw==}
 
-  '@vitest/spy@4.1.7':
-    resolution: {integrity: sha512-kbkI5LMWakyuTIvs6fUJ5qdIVb1XVKsYJAT4OJ938cHMROYMSfmoQdZy0aaAnjbbc8F61vkoTqz/Az+/HiIu5Q==}
+  '@vitest/spy@4.1.12':
+    resolution: {integrity: sha512-RGq9x4JNGNTZHEJxvN0oSiJjeSCExm0n2gZKKJZHY9cX5AVA6M7VJILBT3ZJ/tJ/0J9uWT7fETV9/btoi//vSg==}
+
+  '@vitest/utils@4.1.12':
+    resolution: {integrity: sha512-Q3awXrwOfEV+qc3WmO5ONyE0yO7Q1gQ9/oyHxGLZ/pl7N3NO/ZztqQwKLuwMkV+CA1JYSIeO3gkHnRDIo4AVaA==}
 
   '@vitest/utils@4.1.7':
     resolution: {integrity: sha512-T532WBu791cBxJlCl6SO+J14l81DQx6uQHm1bQbmCDY7nqlEIgkza/UFnSBNaUtSf41unldDFjdOBYEQC4b5Hw==}
@@ -5083,6 +5092,7 @@ packages:
 
   node-abort-controller@3.1.1:
     resolution: {integrity: sha512-AGK2yQKIjRuqnc6VkX2Xj5d+QW8xZ87pa1UK6yA6ouUyuxfHuMP6umE5QK7UmTeOAymo+Zx1Fxiuw9rVx8taHQ==}
+    deprecated: This package is no longer needed on supported Node.js versions. Node.js 16+ includes AbortController and AbortSignal as built-in globals. All Node.js versions requiring this polyfill are end-of-life. Use the built-in globals instead.
 
   node-gyp-build-optional-packages@5.2.2:
     resolution: {integrity: sha512-s+w+rBWnpTMwSFbaE0UXsRlg7hU4FjekKU4eyAih5T8nJuNZT1nNsskXpxmeqSK9UzkBl6UgRlnKc8hz8IEqOw==}
@@ -6105,20 +6115,20 @@ packages:
       yaml:
         optional: true
 
-  vitest@4.1.7:
-    resolution: {integrity: sha512-flYyaFd2CgoCoU+0UKt3pxksgC+S02iTDN0n3LtqaMeXsI9SBcdNujc2k0DeFLzUn/0k538yNjOSdwgCqcrwJA==}
+  vitest@4.1.12:
+    resolution: {integrity: sha512-5eWdz2yb3ajxWF3C8C4TjkXl7FGm3n2E/VlazALrQHzK7nYMSGFnCZto0bbPNl77AwkOZVLk0YnBAejUu0NiWA==}
     engines: {node: ^20.0.0 || ^22.0.0 || >=24.0.0}
     hasBin: true
     peerDependencies:
       '@edge-runtime/vm': '*'
       '@opentelemetry/api': ^1.9.0
       '@types/node': ^20.0.0 || ^22.0.0 || >=24.0.0
-      '@vitest/browser-playwright': 4.1.7
-      '@vitest/browser-preview': 4.1.7
-      '@vitest/browser-webdriverio': 4.1.7
-      '@vitest/coverage-istanbul': 4.1.7
-      '@vitest/coverage-v8': 4.1.7
-      '@vitest/ui': 4.1.7
+      '@vitest/browser-playwright': 4.1.12
+      '@vitest/browser-preview': 4.1.12
+      '@vitest/browser-webdriverio': ^4.1.11
+      '@vitest/coverage-istanbul': 4.1.12
+      '@vitest/coverage-v8': 4.1.12
+      '@vitest/ui': 4.1.12
       happy-dom: '*'
       jsdom: '*'
       vite: ^6.0.0 || ^7.0.0 || ^8.0.0
@@ -8166,7 +8176,7 @@ snapshots:
   '@nx/nx-win32-x64-msvc@23.2.1':
     optional: true
 
-  '@nx/vitest@22.7.2(@babel/traverse@7.29.0(supports-color@7.2.0))(debug@4.4.3(supports-color@7.2.0))(nx@23.2.1)(supports-color@7.2.0)(typescript@6.0.3)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))(vitest@4.1.7)':
+  '@nx/vitest@22.7.2(@babel/traverse@7.29.0(supports-color@7.2.0))(debug@4.4.3(supports-color@7.2.0))(nx@23.2.1)(supports-color@7.2.0)(typescript@6.0.3)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))(vitest@4.1.12)':
     dependencies:
       '@nx/devkit': 22.7.2(nx@23.2.1)
       '@nx/js': 22.7.2(@babel/traverse@7.29.0(supports-color@7.2.0))(debug@4.4.3(supports-color@7.2.0))(nx@23.2.1)(supports-color@7.2.0)
@@ -8175,7 +8185,7 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       vite: 8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0)
-      vitest: 4.1.7(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
+      vitest: 4.1.12(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@swc-node/register'
@@ -9368,7 +9378,7 @@ snapshots:
 
   '@vercel/oidc@3.1.0': {}
 
-  '@vitest/coverage-v8@4.1.7(vitest@4.1.7)':
+  '@vitest/coverage-v8@4.1.7(vitest@4.1.12)':
     dependencies:
       '@bcoe/v8-coverage': 1.0.2
       '@vitest/utils': 4.1.7
@@ -9380,42 +9390,52 @@ snapshots:
       obug: 2.1.1
       std-env: 4.1.0
       tinyrainbow: 3.1.0
-      vitest: 4.1.7(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
+      vitest: 4.1.12(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
 
-  '@vitest/expect@4.1.7':
+  '@vitest/expect@4.1.12':
     dependencies:
       '@standard-schema/spec': 1.1.0
       '@types/chai': 5.2.3
-      '@vitest/spy': 4.1.7
-      '@vitest/utils': 4.1.7
+      '@vitest/spy': 4.1.12
+      '@vitest/utils': 4.1.12
       chai: 6.2.2
       tinyrainbow: 3.1.0
 
-  '@vitest/mocker@4.1.7(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))':
+  '@vitest/mocker@4.1.12(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))':
     dependencies:
-      '@vitest/spy': 4.1.7
+      '@vitest/spy': 4.1.12
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
       vite: 8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0)
 
+  '@vitest/pretty-format@4.1.12':
+    dependencies:
+      tinyrainbow: 3.1.0
+
   '@vitest/pretty-format@4.1.7':
     dependencies:
       tinyrainbow: 3.1.0
 
-  '@vitest/runner@4.1.7':
+  '@vitest/runner@4.1.12':
     dependencies:
-      '@vitest/utils': 4.1.7
+      '@vitest/utils': 4.1.12
       pathe: 2.0.3
 
-  '@vitest/snapshot@4.1.7':
+  '@vitest/snapshot@4.1.12':
     dependencies:
-      '@vitest/pretty-format': 4.1.7
-      '@vitest/utils': 4.1.7
+      '@vitest/pretty-format': 4.1.12
+      '@vitest/utils': 4.1.12
       magic-string: 0.30.21
       pathe: 2.0.3
 
-  '@vitest/spy@4.1.7': {}
+  '@vitest/spy@4.1.12': {}
+
+  '@vitest/utils@4.1.12':
+    dependencies:
+      '@vitest/pretty-format': 4.1.12
+      convert-source-map: 2.0.0
+      tinyrainbow: 3.1.0
 
   '@vitest/utils@4.1.7':
     dependencies:
@@ -12906,15 +12926,15 @@ snapshots:
       jiti: 2.7.0
       yaml: 2.9.0
 
-  vitest@4.1.7(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0)):
+  vitest@4.1.12(@opentelemetry/api@1.9.0)(@types/node@26.5.1)(@vitest/coverage-v8@4.1.7)(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0)):
     dependencies:
-      '@vitest/expect': 4.1.7
-      '@vitest/mocker': 4.1.7(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
-      '@vitest/pretty-format': 4.1.7
-      '@vitest/runner': 4.1.7
-      '@vitest/snapshot': 4.1.7
-      '@vitest/spy': 4.1.7
-      '@vitest/utils': 4.1.7
+      '@vitest/expect': 4.1.12
+      '@vitest/mocker': 4.1.12(vite@8.2.2(@types/node@26.5.1)(jiti@2.7.0)(yaml@2.9.0))
+      '@vitest/pretty-format': 4.1.12
+      '@vitest/runner': 4.1.12
+      '@vitest/snapshot': 4.1.12
+      '@vitest/spy': 4.1.12
+      '@vitest/utils': 4.1.12
       es-module-lexer: 2.1.0
       expect-type: 1.3.0
       magic-string: 0.30.21
@@ -12931,7 +12951,7 @@ snapshots:
     optionalDependencies:
       '@opentelemetry/api': 1.9.0
       '@types/node': 26.5.1
-      '@vitest/coverage-v8': 4.1.7(vitest@4.1.7)
+      '@vitest/coverage-v8': 4.1.7(vitest@4.1.12)
     transitivePeerDependencies:
       - msw
 
