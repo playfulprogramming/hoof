@@ -35,7 +35,7 @@ services:
       start_interval: 500ms
 
   rustfs:
-    image: rustfs/rustfs
+    image: rustfs/rustfs:1.0.6@sha256:ee717072290bec9b11abfc0365f8310b00df1cd9b3639943edae47bdef05044a
     networks: [shared]
     ports:
       - "9000:9000" # API Port
@@ -45,6 +45,7 @@ services:
     environment:
       RUSTFS_ACCESS_KEY: ${S3_KEY_ID}
       RUSTFS_SECRET_KEY: ${S3_KEY_SECRET}
+      RUSTFS_REGION: ${S3_REGION:-us-east-1}
     healthcheck:
       test: [
           "CMD",

@@ -18,6 +18,7 @@ primary_region = 'ewr'
   SITE_URL = "https://playfulprogramming.com"
   S3_PUBLIC_URL = "https://fly.storage.tigris.dev"
   S3_ENDPOINT = "https://fly.storage.tigris.dev"
+  S3_REGION = "auto"
   S3_BUCKET = "hoof-storage"
   REDIS_URL = "redis://hoof-redis.internal:6379"
 

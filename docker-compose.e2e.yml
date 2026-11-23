@@ -11,6 +11,7 @@ services:
       HTTPS_PROXY: http://proxy:3999
       NO_PROXY: "localhost, 127.0.0.1"
       S3_ENDPOINT: http://rustfs:9000
+      S3_REGION: ${S3_REGION:-us-east-1}
       POSTGRES_URL: postgresql://postgres:unicorn@pgsql:5432/${E2E_POSTGRES_DATABASE}
       REDIS_URL: redis://redis:6379
       BULLMQ_PREFIX: ${E2E_BULLMQ_PREFIX}
