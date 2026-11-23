@@ -18,7 +18,7 @@
 		"hast-util-to-string": "^3.0.1",
 		"remark-parse": "^11.0.0",
 		"remark-rehype": "^11.1.2",
-		"satori": "0.33.5",
+		"satori": "0.63.2",
 		"sharp": "catalog:",
 		"typebox": "catalog:",
 		"unified": "^11.0.5",
