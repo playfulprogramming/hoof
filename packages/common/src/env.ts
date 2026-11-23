@@ -14,6 +14,7 @@ const EnvSchema = Type.Object({
 
 	S3_PUBLIC_URL: Type.String(),
 	S3_ENDPOINT: Type.String(),
+	S3_REGION: Type.String({ default: "auto" }),
 	S3_KEY_ID: Type.String(),
 	S3_KEY_SECRET: Type.String(),
 	S3_BUCKET: Type.String(),
