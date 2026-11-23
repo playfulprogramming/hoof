@@ -9,7 +9,6 @@ import type { PostImageData } from "./types.ts";
 import matter from "gray-matter";
 import { Type } from "typebox";
 import { Value } from "typebox/value";
-import dayjs from "dayjs";
 import sharp from "sharp";
 import { createHash } from "crypto";
 
@@ -157,7 +156,14 @@ export async function fetchPostData(
 		tags,
 		wordCount,
 		code,
-		publishedMeta: dayjs(indexInfo.published).format("MMMM D, YYYY"),
+		publishedMeta: Temporal.PlainDate.from(indexInfo.published).toLocaleString(
+			"en-US",
+			{
+				month: "long",
+				day: "numeric",
+				year: "numeric",
+			},
+		),
 		indexMd5,
 	};
 }
